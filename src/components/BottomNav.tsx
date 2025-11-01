@@ -6,7 +6,7 @@ import {
   faUpload, 
   faUser,
   faSearch,
-  faBookmark
+  
 } from '@fortawesome/free-solid-svg-icons';
 
 interface NavItem {
@@ -38,12 +38,6 @@ const BottomNav: React.FC = () => {
       label: 'Upload',
       icon: <FontAwesomeIcon icon={faUpload} className="w-5 h-5" />,
       path: '/upload'
-    },
-    {
-      id: 'bookmarks',
-      label: 'Saved',
-      icon: <FontAwesomeIcon icon={faBookmark} className="w-5 h-5" />,
-      path: '/bookmarks'
     },
     {
       id: 'profile',

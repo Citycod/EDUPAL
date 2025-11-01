@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import  { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import BottomNav from '../components/BottomNav';
@@ -68,20 +69,28 @@ const Home: React.FC = () => {
     }
   ];
 
-  const handleResourceClick = (resourceId: string) => {
-    navigate(`/resource/${resourceId}`);
+  
+const handleResourceClick = (resourceId: string) => {
+  navigate(`/resource/${resourceId}`);
+};
+  const handleUploadClick = () => {
+    navigate('/upload');
   };
 
-  const getTypeIcon = (type: string) => {
+  const handleProfileClick = () => {
+    navigate('/profile');
+  };
+
+  const getTypeColor = (type: string) => {
     switch (type) {
       case 'past-questions':
-        return '📝';
+        return 'bg-blue-100 text-blue-800';
       case 'lecture-notes':
-        return '🧾';
+        return 'bg-green-100 text-green-800';
       case 'summaries':
-        return '📋';
+        return 'bg-purple-100 text-purple-800';
       default:
-        return '📄';
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
@@ -94,16 +103,16 @@ const Home: React.FC = () => {
 
   return (
     <div className="relative flex min-h-screen w-full flex-col bg-white justify-between overflow-x-hidden font-['Manrope','Noto_Sans',sans-serif]">
-      {/* Header */}
-      <Header title="EduPal" showBackButton={false} showSettings={true} />
+      {/* Header - Using only props that exist in Header component */}
+      <Header title="EduPal" showBackButton={false} />
 
       {/* Main Content */}
-      <div className="flex-1 pb-24"> {/* Added padding for bottom nav */}
+      <div className="flex-1 pb-24">
         {/* Search Bar */}
         <div className="px-4 py-3">
           <label className="flex flex-col min-w-40 h-12 w-full">
-            <div className="flex w-full flex-1 items-stretch rounded-lg h-full">
-              <div className="text-[#616f89] flex border-none bg-[#f0f2f4] items-center justify-center pl-4 rounded-l-lg border-r-0">
+            <div className="flex w-full flex-1 items-stretch rounded-lg h-full bg-[#f0f2f4] focus-within:ring-2 focus-within:ring-blue-500 focus-within:bg-white transition-all duration-200">
+              <div className="text-[#616f89] flex items-center justify-center pl-4">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
                   <path d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z"></path>
                 </svg>
@@ -112,71 +121,108 @@ const Home: React.FC = () => {
                 placeholder="Search courses, materials..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#111318] focus:outline-0 focus:ring-0 border-none bg-[#f0f2f4] focus:border-none h-full placeholder:text-[#616f89] px-4 rounded-l-none border-l-0 pl-2 text-base font-normal leading-normal"
+                className="flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#111318] focus:outline-0 border-none bg-transparent h-full placeholder:text-[#616f89] px-4 text-base font-normal leading-normal"
               />
             </div>
           </label>
         </div>
 
         {/* Filter Chips */}
-        <div className="flex gap-3 p-3 overflow-x-auto">
+        <div className="flex gap-3 px-4 py-3 overflow-x-auto">
           {[
-            { id: 'all', label: 'All', icon: 'ListBullets' },
-            { id: 'past-questions', label: 'Past Questions', icon: 'File' },
-            { id: 'lecture-notes', label: 'Lecture Notes', icon: 'Note' },
-            { id: 'summaries', label: 'Summaries', icon: 'TextB' }
+            { id: 'all', label: 'All', icon: '📚' },
+            { id: 'past-questions', label: 'Past Questions', icon: '📝' },
+            { id: 'lecture-notes', label: 'Lecture Notes', icon: '🧾' },
+            { id: 'summaries', label: 'Summaries', icon: '📋' }
           ].map((filter) => (
             <button
               key={filter.id}
               onClick={() => setActiveFilter(filter.id)}
-              className={`flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-lg pl-2 pr-4 transition-colors ${
+              className={`flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-full px-4 transition-all duration-200 ${
                 activeFilter === filter.id 
-                  ? 'bg-[#276cec] text-white' 
-                  : 'bg-[#f0f2f4] text-[#111318] hover:bg-gray-200'
+                  ? 'bg-[#276cec] text-white shadow-lg shadow-blue-500/25' 
+                  : 'bg-[#f0f2f4] text-[#111318] hover:bg-gray-200 hover:scale-105'
               }`}
             >
-              <div className={activeFilter === filter.id ? 'text-white' : 'text-[#111318]'}>
-                {/* Icons would be implemented here */}
-              </div>
-              <p className="text-sm font-medium leading-normal">{filter.label}</p>
+              <span className="text-sm">{filter.icon}</span>
+              <p className="text-sm font-medium leading-normal whitespace-nowrap">{filter.label}</p>
             </button>
           ))}
         </div>
 
+        {/* Resources Count */}
+        <div className="px-4 py-2">
+          <p className="text-[#616f89] text-sm font-normal">
+            {filteredResources.length} resource{filteredResources.length !== 1 ? 's' : ''} found
+          </p>
+        </div>
+
         {/* Resources List */}
-        <div>
-          {filteredResources.map((resource) => (
-            <div 
-              key={resource.id} 
-              className="p-4 border-b border-[#f0f2f4] cursor-pointer hover:bg-gray-50 transition-colors"
-              onClick={() => handleResourceClick(resource.id)}
-            >
-              <div className="flex items-stretch justify-between gap-4 rounded-lg">
-                <div className="flex flex-col gap-1 flex-[2_2_0px]">
-                  <p className="text-[#616f89] text-sm font-normal leading-normal">
-                    {resource.courseCode}
-                  </p>
-                  <p className="text-[#111318] text-base font-bold leading-tight">
-                    {resource.title}
-                  </p>
-                  <p className="text-[#616f89] text-sm font-normal leading-normal">
-                    {getTypeIcon(resource.type)} {resource.author} • {resource.timeAgo} • ⭐️ {resource.rating} • 📥 {resource.downloads}
-                  </p>
-                </div>
-                <div 
-                  className="w-full bg-center bg-no-repeat aspect-video bg-cover rounded-lg flex-1"
-                  style={{ backgroundImage: `url("${resource.thumbnail}")` }}
-                ></div>
-              </div>
+        <div className="pb-4">
+          {filteredResources.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+              <div className="text-6xl mb-4">🔍</div>
+              <h3 className="text-[#111318] text-lg font-bold mb-2">No resources found</h3>
+              <p className="text-[#616f89] text-base">
+                Try adjusting your search or filter criteria
+              </p>
             </div>
-          ))}
+          ) : (
+            filteredResources.map((resource) => (
+              <div 
+                key={resource.id} 
+                className="px-4 py-3 border-b border-[#f0f2f4] cursor-pointer hover:bg-gray-50 active:bg-gray-100 transition-colors duration-200"
+                onClick={() => handleResourceClick(resource.id)}
+              >
+                <div className="flex items-stretch justify-between gap-4">
+                  {/* Thumbnail */}
+                  <div 
+                    className="w-20 h-20 bg-center bg-no-repeat bg-cover rounded-xl flex-shrink-0 shadow-sm"
+                    style={{ backgroundImage: `url("${resource.thumbnail}")` }}
+                  ></div>
+                  
+                  {/* Content */}
+                  <div className="flex flex-col gap-2 flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getTypeColor(resource.type)}`}>
+                        {resource.type.replace('-', ' ')}
+                      </span>
+                      <span className="text-[#616f89] text-xs font-medium">
+                        {resource.courseCode}
+                      </span>
+                    </div>
+                    
+                    <h3 className="text-[#111318] text-base font-bold leading-tight truncate">
+                      {resource.title}
+                    </h3>
+                    
+                    <div className="flex items-center gap-4 text-[#616f89] text-xs font-normal">
+                      <span>By {resource.author}</span>
+                      <span>•</span>
+                      <span>{resource.timeAgo}</span>
+                    </div>
+                    
+                    <div className="flex items-center gap-4 text-[#616f89] text-xs font-normal">
+                      <span className="flex items-center gap-1">
+                        ⭐ {resource.rating}
+                      </span>
+                      <span>•</span>
+                      <span className="flex items-center gap-1">
+                        📥 {resource.downloads}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
 
       {/* Floating Action Button */}
-      <FloatingActionButton />
+      <FloatingActionButton onClick={handleUploadClick} />
 
-      {/* Bottom Navigation */}
+      {/* Bottom Navigation - Using without props if they don't exist */}
       <BottomNav />
     </div>
   );
