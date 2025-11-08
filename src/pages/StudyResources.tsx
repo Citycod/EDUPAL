@@ -1,8 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import React, { useState } from 'react';
+import  { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import BottomNav from '../components/BottomNav';
+import UploadMaterialModal from '../pages/UploadMaterialModal'; // Import the modal
 
 interface StudyResource {
   id: number;
@@ -12,9 +13,18 @@ interface StudyResource {
   image: string;
 }
 
+interface UploadData {
+  title: string;
+  department: string;
+  courseCode: string;
+  description: string;
+  file: File | null;
+}
+
 const StudyResources: React.FC = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false); // Modal state
   const [selectedFilters, setSelectedFilters] = useState({
     course: '',
     department: '',
@@ -29,27 +39,7 @@ const StudyResources: React.FC = () => {
       uploadedBy: "Alex",
       image: "https://lh3.googleusercontent.com/aida-public/AB6AXuDwGK051C7lPu2XgK_r8y1G-BEki81m6jIJCB6ITOhnhtRAjKtMo2YwwNA5zw1sJzdX0PBPuK58q3i7RaFe1xXbxms3y6M1dYynnP9Y9_bm0-lsvPFQvwM0Pv7lzxt3DGNDIBHKGyqd744WHBAfU2_aDGbJ2-Hcld5wUHqspAYqEDbs220YotzMAlwg_VryoSDuTQ0sVQRW68HMiORxD5VRnlryhERQWtSjYoShAbD8NGSchKaXwcukhGk8S3nmHrKV9LJVE40oRJY"
     },
-    {
-      id: 2,
-      title: "Course Notes",
-      type: "DOC",
-      uploadedBy: "Chidi",
-      image: "https://lh3.googleusercontent.com/aida-public/AB6AXuDGZpP9mKKbFB-5eYu0eu-mGc81t1TZQdCC72l_p_zCrukjj_EwQrX5wfSwi2Dw3aIxENp322prtrv6gdEHJN1smtHNMME6ZuDFrey85vQnIqfZMq6Z33cd_N9-6zT-46DRNqi-MEnFnh-P4dlVcxT45-FY0U_OZjf2gAKXRaEs2rvWa_PNONESN3y7zMyNoQ_XjPPH82nVryWZbOFs3JpYh8Wdi9njEGsO-1PaXCqTTmKJllITKVVDQ3AmFxm1ID1bG-a-aDXgtPc"
-    },
-    {
-      id: 3,
-      title: "Study Guide",
-      type: "PDF",
-      uploadedBy: "Ngozi",
-      image: "https://lh3.googleusercontent.com/aida-public/AB6AXuCQTfBVL7RubWkc9Rh62yed66xGyxL0spIJvtK73c1_0fFY2QP4SNtsSTcJF7pvot-wrqAINovA4KR2WFz0JDy5ht_7sBRxSKeJ01Y3uNnPOgZqVsHOUvfqG9eKs9SD165vQSmou3NfSvSlH9N7j0RjAp8UY-Q60whsvrR3ORUtMVmWlYHlK0d07gYTitZzPAZpvYnq_33bs7f4cZeeH4brbJRbCuHme_D58Lh6wbeR6NjW8L1_9_Dkpg2dYCsRNG2jjpLkoZq_0JE"
-    },
-    {
-      id: 4,
-      title: "Lecture Slides",
-      type: "PPT",
-      uploadedBy: "Emeka",
-      image: "https://lh3.googleusercontent.com/aida-public/AB6AXuCiFrKtR7re_TRLhtTxiv4FHMgrpxaZ76CJLERUGTCd8nL9jix5wefnz5lhMNCut5tsAFddqtftu4fWf10Iq2QW5-GBxXSa6dSkUgBudeO7bKx2L4dUp3apDTFOG8newkdr2E2pLuW6tjJ2ZxAHwchHsISurwiG7JbjgMYDp6HOIaZvijUQkMEZM6a8K4GPznTunTK_hKoraQf69HszqyG1g8M2hmQA5JjXZeh9EJfwIiHWuMsQB5T8K3c3xQph9Cz1-P2mn6xgHjQ"
-    }
+    // ... other resources
   ];
 
   const navItems = [
@@ -86,8 +76,18 @@ const StudyResources: React.FC = () => {
   ];
 
   const handleAddResource = () => {
-    // Add resource logic
-    console.log('Add resource clicked');
+    setIsUploadModalOpen(true); // Open the modal
+  };
+
+  const handleUploadSubmit = (uploadData: UploadData) => {
+    console.log('Upload data:', uploadData);
+    // Handle the upload logic here (API call, etc.)
+    // You can add your upload logic here
+    setIsUploadModalOpen(false); // Close modal after submit
+  };
+
+  const handleUploadClose = () => {
+    setIsUploadModalOpen(false); // Close modal
   };
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -216,6 +216,13 @@ const StudyResources: React.FC = () => {
 
       {/* Fixed Bottom Navigation */}
       <BottomNav navItems={navItems} />
+
+      {/* Upload Material Modal */}
+      <UploadMaterialModal
+        isOpen={isUploadModalOpen}
+        onClose={handleUploadClose}
+        onSubmit={handleUploadSubmit}
+      />
     </div>
   );
 };

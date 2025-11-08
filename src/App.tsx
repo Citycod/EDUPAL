@@ -8,8 +8,10 @@ import Verification from './auth/Verification';
 import Home from './pages/Home';
 import StudyResources from './pages/StudyResources';
 import ResourceDetail from './pages/ResourceDetail';
+import ClassesPage from './pages/ClassesPage';
+import CommunityPage from './pages/CommunityPage';
+import CommunityPostDetail from './pages/CommunityPostDetail';
 // import Search from './pages/main/Search';
-
 // import Profile from './pages/main/Profile';
 // import Notifications from './pages/main/Notifications';
 // import Settings from './pages/main/Settings';
@@ -32,6 +34,9 @@ const App: React.FC = () => {
             <Route path="/home" element={<Home />} />
             <Route path="/study" element={<StudyResources />} />
             <Route path="/resource/:id" element={<ResourceDetail />} />
+            <Route path="/classes" element={<ClassesPage />} />
+            <Route path="/community" element={<CommunityPage />} />
+            <Route path="/community-detail" element={<CommunityPostDetail />} />
             
             {/* <Route path="/search" element={<Search />} />
             <Route path="/profile" element={<Profile />} />
