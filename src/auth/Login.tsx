@@ -9,6 +9,7 @@ const Login: React.FC = () => {
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     // Add login logic here
+    navigate('/home')
     console.log('Login attempted with:', { email, password });
   };
 
