@@ -1,4 +1,3 @@
-import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import SplashScreen from './pages/splashscreen';
 import Onboarding from './pages/Onboarding';
@@ -7,9 +6,9 @@ import Signup from './auth/Signup'
 import ResetPassword from './auth/ResetPassword';;
 import Verification from './auth/Verification';
 import Home from './pages/Home';
+import StudyResources from './pages/StudyResources';
 import ResourceDetail from './pages/ResourceDetail';
 // import Search from './pages/main/Search';
- import Upload from './pages/Upload';
 
 // import Profile from './pages/main/Profile';
 // import Notifications from './pages/main/Notifications';
@@ -31,8 +30,9 @@ const App: React.FC = () => {
             
             {/* Main App */}
             <Route path="/home" element={<Home />} />
-            <Route path="/resource/:id" element={<ResourceDetail/>} />
-            <Route path="/upload" element={<Upload />} />
+            <Route path="/study" element={<StudyResources />} />
+            <Route path="/resource/:id" element={<ResourceDetail />} />
+            
             {/* <Route path="/search" element={<Search />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/notifications" element={<Notifications />} />

@@ -1,5 +1,6 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import BottomNav from '../components/BottomNav';
 
@@ -36,6 +37,7 @@ interface ResourceData {
 
 const ResourceDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [userRating, setUserRating] = useState(0);
   const [reviewText, setReviewText] = useState('');
   const [resource, setResource] = useState<ResourceData | null>(null);
@@ -165,6 +167,23 @@ const ResourceDetail: React.FC = () => {
     setUserRating(0);
   };
 
+  const handleDownload = () => {
+    console.log('Downloading resource:', resource?.title);
+    // Add actual download logic here
+  };
+
+  const handleBackClick = () => {
+    navigate(-1); // Go back to previous page
+  };
+
+  const handleNotificationClick = () => {
+    navigate('/notifications');
+  };
+
+  const handleRelatedResourceClick = (resourceId: number) => {
+    navigate(`/resource/${resourceId}`);
+  };
+
   const renderStars = (rating: number, size: number = 20) => {
     return Array.from({ length: 5 }, (_, index) => {
       const isFilled = index < rating;
@@ -183,9 +202,43 @@ const ResourceDetail: React.FC = () => {
     });
   };
 
+  // Navigation items for BottomNav
+  const navItems = [
+    { 
+      icon: "House", 
+      label: "Home", 
+      active: false,
+      onClick: () => navigate('/home')
+    },
+    { 
+      icon: "BookOpen", 
+      label: "Study", 
+      active: true,
+      onClick: () => navigate('/study')
+    },
+    { 
+      icon: "UsersThree", 
+      label: "Classes", 
+      active: false,
+      onClick: () => navigate('/classes')
+    },
+    { 
+      icon: "Users", 
+      label: "Community", 
+      active: false,
+      onClick: () => navigate('/community')
+    },
+    { 
+      icon: "User", 
+      label: "Profile", 
+      active: false,
+      onClick: () => navigate('/profile')
+    }
+  ];
+
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="flex items-center justify-center min-h-screen">
         <div className="text-lg">Loading resource...</div>
       </div>
     );
@@ -193,24 +246,25 @@ const ResourceDetail: React.FC = () => {
 
   if (!resource) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="flex items-center justify-center min-h-screen">
         <div className="text-lg">Resource not found</div>
       </div>
     );
   }
 
   return (
-    <div className="relative flex min-h-screen w-full flex-col bg-white justify-between overflow-x-hidden font-['Manrope','Noto_Sans',sans-serif]">
-      {/* Header - Now using only props that exist in your Header component */}
+    <div className="min-h-screen bg-white">
+      {/* Fixed Header - Using only valid props */}
       <Header 
         title={resource.courseCode} 
         showBackButton={true}
-        showSettings={true}
         showNotifications={true}
+        onBackClick={handleBackClick}
+        onNotificationClick={handleNotificationClick}
       />
       
-      {/* Main Content */}
-      <div className="flex-1 pb-20">
+      {/* Main Content with padding for fixed header and bottom nav */}
+      <div className="pt-20 pb-24">
         {/* Resource Header Image */}
         <div className="@container">
           <div className="@[480px]:px-4 @[480px]:py-3">
@@ -260,7 +314,10 @@ const ResourceDetail: React.FC = () => {
 
         {/* Download Button */}
         <div className="flex px-4 py-3">
-          <button className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 px-5 flex-1 bg-[#276cec] text-white text-base font-bold leading-normal tracking-[0.015em] hover:bg-blue-700 transition-colors duration-200">
+          <button 
+            onClick={handleDownload}
+            className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 px-5 flex-1 bg-[#276cec] text-white text-base font-bold leading-normal tracking-[0.015em] hover:bg-blue-700 transition-colors duration-200"
+          >
             <span className="truncate">Download</span>
           </button>
         </div>
@@ -269,7 +326,7 @@ const ResourceDetail: React.FC = () => {
         <h3 className="text-[#111318] text-lg font-bold leading-tight tracking-[-0.015em] px-4 pb-2 pt-4">
           Rate this resource
         </h3>
-        <div className="flex flex-wrap gap-4 px-4 py-2 justify-between">
+        <div className="flex flex-wrap justify-between gap-4 px-4 py-2">
           {[1, 2, 3, 4, 5].map((rating) => (
             <button
               key={rating}
@@ -297,7 +354,7 @@ const ResourceDetail: React.FC = () => {
           Reviews
         </h3>
         <div className="flex max-w-[480px] flex-wrap items-end gap-4 px-4 py-3">
-          <label className="flex flex-col min-w-40 flex-1">
+          <label className="flex flex-col flex-1 min-w-40">
             <input
               placeholder="Add review (optional)"
               value={reviewText}
@@ -308,19 +365,19 @@ const ResourceDetail: React.FC = () => {
           <button
             onClick={handleSubmitReview}
             disabled={!userRating}
-            className="flex items-center justify-center px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors duration-200"
+            className="flex items-center justify-center px-6 py-3 font-medium text-white transition-colors duration-200 bg-blue-600 rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
           >
             Submit
           </button>
         </div>
 
         {/* Existing Reviews */}
-        <div className="flex flex-col gap-8 overflow-x-hidden bg-white p-4">
+        <div className="flex flex-col gap-8 p-4 overflow-x-hidden bg-white">
           {reviews.map((review) => (
             <div key={review.id} className="flex flex-col gap-3 bg-white">
               <div className="flex items-center gap-3">
                 <div
-                  className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10"
+                  className="bg-center bg-no-repeat bg-cover rounded-full aspect-square size-10"
                   style={{ backgroundImage: `url("${review.userAvatar}")` }}
                 />
                 <div className="flex-1">
@@ -341,16 +398,20 @@ const ResourceDetail: React.FC = () => {
           You might also like
         </h3>
         <div className="flex overflow-y-auto [-ms-scrollbar-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <div className="flex items-stretch p-4 gap-3">
-            {relatedResources.map((resource) => (
-              <div key={resource.id} className="flex h-full flex-1 flex-col gap-4 rounded-lg min-w-40">
+          <div className="flex items-stretch gap-3 p-4">
+            {relatedResources.map((relatedResource) => (
+              <div 
+                key={relatedResource.id} 
+                className="flex flex-col flex-1 h-full gap-4 rounded-lg cursor-pointer min-w-40"
+                onClick={() => handleRelatedResourceClick(relatedResource.id)}
+              >
                 <div
                   className="w-full bg-center bg-no-repeat aspect-[3/4] bg-cover rounded-lg flex flex-col shadow-lg hover:shadow-xl transition-shadow duration-300"
-                  style={{ backgroundImage: `url("${resource.image}")` }}
+                  style={{ backgroundImage: `url("${relatedResource.image}")` }}
                 />
                 <div>
-                  <p className="text-[#111318] text-base font-medium leading-normal">{resource.title}</p>
-                  <p className="text-[#616f89] text-sm font-normal leading-normal">Uploaded by {resource.uploader}</p>
+                  <p className="text-[#111318] text-base font-medium leading-normal">{relatedResource.title}</p>
+                  <p className="text-[#616f89] text-sm font-normal leading-normal">Uploaded by {relatedResource.uploader}</p>
                 </div>
               </div>
             ))}
@@ -358,8 +419,8 @@ const ResourceDetail: React.FC = () => {
         </div>
       </div>
 
-      {/* Bottom Navigation */}
-      <BottomNav />
+      {/* Fixed Bottom Navigation */}
+      <BottomNav navItems={navItems} />
     </div>
   );
 };
