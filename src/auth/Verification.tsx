@@ -1,4 +1,4 @@
-import React from 'react';
+
 import Header from '../components/Header';
 import BottomNav from '../components/BottomNav';
 
@@ -12,7 +12,7 @@ const Verification: React.FC = () => {
   return (
     <div className="relative flex min-h-screen w-full flex-col bg-white justify-between overflow-x-hidden font-['Manrope','Noto_Sans',sans-serif]">
       {/* Header */}
-      <Header title="Verify Email" showBackButton={true} showSettings={false} />
+      <Header title="Verify Email" showBackButton={true}  />
 
       {/* Main Content */}
       <div className="flex-1 pb-24">
@@ -50,7 +50,7 @@ const Verification: React.FC = () => {
       </div>
 
       {/* Bottom Navigation */}
-      <BottomNav />
+      <BottomNav navItems={[]} />
     </div>
   );
 };
