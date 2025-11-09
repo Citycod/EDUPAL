@@ -10,7 +10,7 @@ const ClassesPage: React.FC = () => {
       icon: "House",
       label: "Home",
       active: false,
-      onClick: () => navigate("/")
+      onClick: () => navigate("/home")
     },
     {
       icon: "BookOpen",
