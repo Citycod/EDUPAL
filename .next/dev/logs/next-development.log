@@ -1,0 +1,19 @@
+[00:00:19.837] Server  LOG     ✓ Ready in 11.8s
+[00:01:03.472] Server  LOG     ○ Compiling / ...
+[00:01:18.443] Server  ERROR   ⨯ ReferenceError: EduPalLogo is not defined
+[00:01:22.762] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:01:23.508] Browser ERROR   uncaughtError: ReferenceError: EduPalLogo is not defined
+[00:09:34.436] Server  LOG     ✓ Compiled in 2.6s
+[00:09:37.541] Server  WARN    ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+[00:09:44.485] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:09:46.514] Browser WARN    Image with src "/_next/static/media/edupallogo.08178770.jpg" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+[00:09:52.816] Server  LOG     ○ Compiling /onboarding ...
+[00:10:21.959] Server  LOG     ✓ Compiled in 715ms
+[00:10:24.810] Server  LOG     ✓ Compiled in 1431ms
+[00:10:48.845] Server  LOG     ✓ Compiled in 1251ms
+[00:13:59.625] Server  LOG     ✓ Compiled in 477ms
+[00:14:45.299] Server  LOG     ✓ Compiled in 2.6s
+[00:14:49.605] Server  LOG     ✓ Compiled in 376ms
+[00:16:57.470] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:17:08.759] Server  LOG     ○ Compiling /login ...
