@@ -1,4 +1,6 @@
-import { useNavigate } from 'react-router-dom';
+'use client';
+
+import { useRouter } from 'next/navigation';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus } from '@fortawesome/free-solid-svg-icons';
 
@@ -6,16 +8,16 @@ interface FloatingActionButtonProps {
   onClick?: () => void;
 }
 
-const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({ 
-  onClick 
+const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
+  onClick
 }) => {
-  const navigate = useNavigate();
+  const router = useRouter();
 
   const handleClick = () => {
     if (onClick) {
       onClick();
     } else {
-      navigate('/upload');
+      router.push('/upload');
     }
   };
 
