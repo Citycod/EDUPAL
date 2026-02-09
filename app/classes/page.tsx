@@ -1,7 +1,7 @@
 'use client';
 
-import Header from "../components/Header";
-import BottomNav from "../components/BottomNav";
+import Header from "@/components/Header";
+import BottomNav from "@/components/BottomNav";
 import { useRouter } from "next/navigation";
 
 const ClassesPage: React.FC = () => {

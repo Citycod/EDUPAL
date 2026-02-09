@@ -1,7 +1,7 @@
 'use client';
 
-import Header from "../components/Header";
-import BottomNav from "../components/BottomNav";
+import Header from "@/components/Header";
+import BottomNav from "@/components/BottomNav";
 import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
 
@@ -311,8 +311,8 @@ const CommunityPage: React.FC = () => {
       <button
         onClick={onClick}
         className={`flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg transition-all duration-200 ${isActive
-            ? 'text-[#0d191c] bg-[#e7f1f4]'
-            : 'text-[#498a9c] hover:bg-[#f0f7fa] hover:text-[#0d191c]'
+          ? 'text-[#0d191c] bg-[#e7f1f4]'
+          : 'text-[#498a9c] hover:bg-[#f0f7fa] hover:text-[#0d191c]'
           }`}
       >
         <div className={`${isActive && type === 'like' ? 'text-red-500' : ''}`}>

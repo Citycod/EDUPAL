@@ -3,8 +3,8 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import Header from '../components/Header';
-import BottomNav from '../components/BottomNav';
+import Header from "@/components/Header";
+import BottomNav from "@/components/BottomNav";
 
 interface Review {
   id: number;
