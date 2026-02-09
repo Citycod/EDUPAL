@@ -2,10 +2,10 @@
 
 import Header from "../components/Header";
 import BottomNav from "../components/BottomNav";
-import { useRouter } from "react-router-dom";
+import { useRouter } from "next/navigation";
 
 const ClassesPage: React.FC = () => {
-  const navigate = useRouter();
+  const router = useRouter();
 
   const navItems = [
     {
@@ -47,7 +47,7 @@ const ClassesPage: React.FC = () => {
     >
       <div className="pt-6">
         <Header title="Classes" />
-        
+
         <h3 className="text-[#0d191c] text-lg font-bold leading-tight tracking-[-0.015em] px-4 pb-2 pt-4">
           Live Classes
         </h3>

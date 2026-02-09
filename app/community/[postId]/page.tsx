@@ -1,4 +1,6 @@
-import { useNavigate, useParams } from "react-router-dom";
+'use client';
+
+import { useRouter, useParams } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
 
 interface Comment {
@@ -34,8 +36,8 @@ interface Post {
 }
 
 const CommunityPostDetail: React.FC = () => {
-  const navigate = useNavigate();
-  useParams<{ postId: string; }>();
+  const router = useRouter();
+  const params = useParams();
   const [newComment, setNewComment] = useState("");
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const commentInputRef = useRef<HTMLInputElement>(null);
@@ -115,9 +117,9 @@ const CommunityPostDetail: React.FC = () => {
   };
 
   const handleLikeComment = (commentId: string) => {
-    setComments(prev => 
-      prev.map(comment => 
-        comment.id === commentId 
+    setComments(prev =>
+      prev.map(comment =>
+        comment.id === commentId
           ? { ...comment, likes: comment.isLiked ? comment.likes - 1 : comment.likes + 1, isLiked: !comment.isLiked }
           : comment
       )
@@ -147,9 +149,9 @@ const CommunityPostDetail: React.FC = () => {
         prev.map(comment =>
           comment.id === replyingTo
             ? {
-                ...comment,
-                replies: [...(comment.replies || []), commentData]
-              }
+              ...comment,
+              replies: [...(comment.replies || []), commentData]
+            }
             : comment
         )
       );
@@ -195,30 +197,29 @@ const CommunityPostDetail: React.FC = () => {
   }> = ({ count, isActive, onClick, type }) => (
     <button
       onClick={onClick}
-      className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200 ${
-        isActive 
-          ? 'text-[#4c669a] bg-[#e7ebf3]' 
+      className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200 ${isActive
+          ? 'text-[#4c669a] bg-[#e7ebf3]'
           : 'text-[#4c669a] hover:bg-[#f0f3f9] hover:text-[#0d121b]'
-      }`}
+        }`}
     >
       {type === 'like' ? (
-        <svg 
-          xmlns="http://www.w3.org/2000/svg" 
-          width="20" 
-          height="20" 
-          fill="currentColor" 
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="20"
+          height="20"
+          fill="currentColor"
           viewBox="0 0 256 256"
           className={isActive ? 'text-red-500' : ''}
         >
           {isActive ? (
-            <path d="M240,94c0,70-103.79,126.66-108.21,129a8,8,0,0,1-7.58,0C119.79,220.66,16,164,16,94A62.07,62.07,0,0,1,78,32c20.65,0,38.73,8.88,50,23.89C139.27,40.88,157.35,32,178,32A62.07,62.07,0,0,1,240,94Z"/>
+            <path d="M240,94c0,70-103.79,126.66-108.21,129a8,8,0,0,1-7.58,0C119.79,220.66,16,164,16,94A62.07,62.07,0,0,1,78,32c20.65,0,38.73,8.88,50,23.89C139.27,40.88,157.35,32,178,32A62.07,62.07,0,0,1,240,94Z" />
           ) : (
-            <path d="M178,32c-20.65,0-38.73,8.88-50,23.89C116.73,40.88,98.65,32,78,32A62.07,62.07,0,0,0,16,94c0,70,103.79,126.66,108.21,129a8,8,0,0,0,7.58,0C136.21,220.66,240,164,240,94A62.07,62.07,0,0,0,178,32ZM128,206.8C109.74,196.16,32,147.69,32,94A46.06,46.06,0,0,1,78,48c19.45,0,35.78,10.36,42.6,27a8,8,0,0,0,14.8,0c6.82-16.67,23.15-27,42.6-27a46.06,46.06,0,0,1,46,46C224,147.61,146.24,196.15,128,206.8Z"/>
+            <path d="M178,32c-20.65,0-38.73,8.88-50,23.89C116.73,40.88,98.65,32,78,32A62.07,62.07,0,0,0,16,94c0,70,103.79,126.66,108.21,129a8,8,0,0,0,7.58,0C136.21,220.66,240,164,240,94A62.07,62.07,0,0,0,178,32ZM128,206.8C109.74,196.16,32,147.69,32,94A46.06,46.06,0,0,1,78,48c19.45,0,35.78,10.36,42.6,27a8,8,0,0,0,14.8,0c6.82-16.67,23.15-27,42.6-27a46.06,46.06,0,0,1,46,46C224,147.61,146.24,196.15,128,206.8Z" />
           )}
         </svg>
       ) : (
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 256 256">
-          <path d="M140,128a12,12,0,1,1-12-12A12,12,0,0,1,140,128ZM84,116a12,12,0,1,0,12,12A12,12,0,0,0,84,116Zm88,0a12,12,0,1,0,12,12A12,12,0,0,0,172,116Zm60,12A104,104,0,0,1,79.12,219.82L45.07,231.17a16,16,0,0,1-20.24-20.24l11.35-34.05A104,104,0,1,1,232,128Zm-16,0A88,88,0,1,0,51.81,172.06a8,8,0,0,1,.66,6.54L40,216,77.4,203.53a7.85,7.85,0,0,1,2.53-.42,8,8,0,0,1,4,1.08A88,88,0,0,0,216,128Z"/>
+          <path d="M140,128a12,12,0,1,1-12-12A12,12,0,0,1,140,128ZM84,116a12,12,0,1,0,12,12A12,12,0,0,0,84,116Zm88,0a12,12,0,1,0,12,12A12,12,0,0,0,172,116Zm60,12A104,104,0,0,1,79.12,219.82L45.07,231.17a16,16,0,0,1-20.24-20.24l11.35-34.05A104,104,0,1,1,232,128Zm-16,0A88,88,0,1,0,51.81,172.06a8,8,0,0,1,.66,6.54L40,216,77.4,203.53a7.85,7.85,0,0,1,2.53-.42,8,8,0,0,1,4,1.08A88,88,0,0,0,216,128Z" />
         </svg>
       )}
       <span className="text-sm font-semibold min-w-[20px] text-center">{count}</span>
@@ -263,7 +264,7 @@ const CommunityPostDetail: React.FC = () => {
           </div>
         </div>
       </div>
-      
+
       {/* Nested Replies */}
       {comment.replies?.map(reply => (
         <CommentItem key={reply.id} comment={reply} depth={depth + 1} />
@@ -275,12 +276,12 @@ const CommunityPostDetail: React.FC = () => {
     <div className="flex flex-col h-screen bg-[#f8f9fc]">
       {/* Header */}
       <div className="flex items-center bg-white p-4 border-b border-[#e7ebf3] sticky top-0 z-10">
-        <button 
-          onClick={() => navigate(-1)}
+        <button
+          onClick={() => router.back()}
           className="flex items-center justify-center w-10 h-10 text-[#0d121b] hover:bg-[#f0f3f9] rounded-lg transition-colors"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 256 256">
-            <path d="M224,128a8,8,0,0,1-8,8H59.31l58.35,58.34a8,8,0,0,1-11.32,11.32l-72-72a8,8,0,0,1,0-11.32l72-72a8,8,0,0,1,11.32,11.32L59.31,120H216A8,8,0,0,1,224,128Z"/>
+            <path d="M224,128a8,8,0,0,1-8,8H59.31l58.35,58.34a8,8,0,0,1-11.32,11.32l-72-72a8,8,0,0,1,0-11.32l72-72a8,8,0,0,1,11.32,11.32L59.31,120H216A8,8,0,0,1,224,128Z" />
           </svg>
         </button>
         <h1 className="flex-1 text-center text-lg font-bold text-[#0d121b] pr-12">
@@ -304,7 +305,7 @@ const CommunityPostDetail: React.FC = () => {
                 <span className="text-sm text-[#4c669a]">{post.timestamp}</span>
               </div>
               <p className="text-[#0d121b] mb-3 leading-relaxed">{post.content}</p>
-              
+
               {/* Tags */}
               <div className="flex flex-wrap gap-2 mb-4">
                 {post.tags.map(tag => (
@@ -346,13 +347,13 @@ const CommunityPostDetail: React.FC = () => {
           <h3 className="px-6 py-4 text-lg font-bold text-[#0d121b] border-b border-[#e7ebf3]">
             Comments ({post.comments})
           </h3>
-          
+
           <div className="divide-y divide-[#f0f3f9]">
             {comments.map(comment => (
               <CommentItem key={comment.id} comment={comment} />
             ))}
           </div>
-          
+
           <div ref={commentsEndRef} />
         </div>
       </div>
@@ -369,12 +370,12 @@ const CommunityPostDetail: React.FC = () => {
               className="text-[#4c669a] hover:text-[#0d121b] transition-colors"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 256 256">
-                <path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z"/>
+                <path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z" />
               </svg>
             </button>
           </div>
         )}
-        
+
         <div className="flex gap-3 items-center">
           <img
             src="https://lh3.googleusercontent.com/aida-public/default-avatar"
@@ -394,14 +395,13 @@ const CommunityPostDetail: React.FC = () => {
             <button
               onClick={handleSubmitComment}
               disabled={!newComment.trim()}
-              className={`ml-2 p-2 rounded-lg transition-colors ${
-                newComment.trim()
+              className={`ml-2 p-2 rounded-lg transition-colors ${newComment.trim()
                   ? 'text-[#4c669a] hover:text-[#0d121b] hover:bg-[#e7ebf3]'
                   : 'text-[#c7d1e3] cursor-not-allowed'
-              }`}
+                }`}
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 256 256">
-                <path d="M227.32,28.68a16,16,0,0,0-15.66-4.08l-.15,0L19.57,82.84a16,16,0,0,0-2.42,29.84l85.62,40.55,40.55,85.62A15.86,15.86,0,0,0,157.74,248q.69,0,1.38-.06a15.88,15.88,0,0,0,14-11.51l58.2-191.94c0-.05,0-.1,0-.15A16,16,0,0,0,227.32,28.68Z"/>
+                <path d="M227.32,28.68a16,16,0,0,0-15.66-4.08l-.15,0L19.57,82.84a16,16,0,0,0-2.42,29.84l85.62,40.55,40.55,85.62A15.86,15.86,0,0,0,157.74,248q.69,0,1.38-.06a15.88,15.88,0,0,0,14-11.51l58.2-191.94c0-.05,0-.1,0-.15A16,16,0,0,0,227.32,28.68Z" />
               </svg>
             </button>
           </div>

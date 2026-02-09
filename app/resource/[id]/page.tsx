@@ -1,6 +1,8 @@
+'use client';
+
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useRouter } from 'next/navigation';
 import Header from '../components/Header';
 import BottomNav from '../components/BottomNav';
 
@@ -37,7 +39,7 @@ interface ResourceData {
 
 const ResourceDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
+  const router = useRouter();
   const [userRating, setUserRating] = useState(0);
   const [reviewText, setReviewText] = useState('');
   const [resource, setResource] = useState<ResourceData | null>(null);
@@ -173,15 +175,15 @@ const ResourceDetail: React.FC = () => {
   };
 
   const handleBackClick = () => {
-    navigate(-1); // Go back to previous page
+    router.back(); // Go back to previous page
   };
 
   const handleNotificationClick = () => {
-    navigate('/notifications');
+    router.push('/notifications');
   };
 
   const handleRelatedResourceClick = (resourceId: number) => {
-    navigate(`/resource/${resourceId}`);
+    router.push(`/resource/${resourceId}`);
   };
 
   const renderStars = (rating: number, size: number = 20) => {
@@ -191,7 +193,7 @@ const ResourceDetail: React.FC = () => {
         <div key={index} className={`${isFilled ? 'text-yellow-400' : 'text-gray-300'}`}>
           <svg xmlns="http://www.w3.org/2000/svg" width={`${size}px`} height={`${size}px`} fill="currentColor" viewBox="0 0 256 256">
             <path
-              d={isFilled 
+              d={isFilled
                 ? "M234.5,114.38l-45.1,39.36,13.51,58.6a16,16,0,0,1-23.84,17.34l-51.11-31-51,31a16,16,0,0,1-23.84-17.34L66.61,153.8,21.5,114.38a16,16,0,0,1,9.11-28.06l59.46-5.15,23.21-55.36a15.95,15.95,0,0,1,29.44,0h0L166,81.17l59.44,5.15a16,16,0,0,1,9.11,28.06Z"
                 : "M239.2,97.29a16,16,0,0,0-13.81-11L166,81.17,142.72,25.81h0a15.95,15.95,0,0,0-29.44,0L90.07,81.17,30.61,86.32a16,16,0,0,0-9.11,28.06L66.61,153.8,53.09,212.34a16,16,0,0,0,23.84,17.34l51-31,51.11,31a16,16,0,0,0,23.84-17.34l-13.51-58.6,45.1-39.36A16,16,0,0,0,239.2,97.29Zm-15.22,5-45.1,39.36a16,16,0,0,0-5.08,15.71L187.35,216v0l-51.07-31a15.9,15.9,0,0,0-16.54,0l-51,31h0L82.2,157.4a16,16,0,0,0-5.08-15.71L32,102.35a.37.37,0,0,1,0-.09l59.44-5.14a16,16,0,0,0,13.35-9.75L128,32.08l23.2,55.29a16,16,0,0,0,13.35,9.75L224,102.26S224,102.32,224,102.33Z"
               }
@@ -204,35 +206,35 @@ const ResourceDetail: React.FC = () => {
 
   // Navigation items for BottomNav
   const navItems = [
-    { 
-      icon: "House", 
-      label: "Home", 
+    {
+      icon: "House",
+      label: "Home",
       active: false,
-      onClick: () => navigate('/home')
+      onClick: () => router.push('/home')
     },
-    { 
-      icon: "BookOpen", 
-      label: "Study", 
+    {
+      icon: "BookOpen",
+      label: "Study",
       active: true,
-      onClick: () => navigate('/study')
+      onClick: () => router.push('/study')
     },
-    { 
-      icon: "UsersThree", 
-      label: "Classes", 
+    {
+      icon: "UsersThree",
+      label: "Classes",
       active: false,
-      onClick: () => navigate('/classes')
+      onClick: () => router.push('/classes')
     },
-    { 
-      icon: "Users", 
-      label: "Community", 
+    {
+      icon: "Users",
+      label: "Community",
       active: false,
-      onClick: () => navigate('/community')
+      onClick: () => router.push('/community')
     },
-    { 
-      icon: "User", 
-      label: "Profile", 
+    {
+      icon: "User",
+      label: "Profile",
       active: false,
-      onClick: () => navigate('/profile')
+      onClick: () => router.push('/profile')
     }
   ];
 
@@ -255,14 +257,14 @@ const ResourceDetail: React.FC = () => {
   return (
     <div className="min-h-screen bg-white">
       {/* Fixed Header - Using only valid props */}
-      <Header 
-        title={resource.courseCode} 
+      <Header
+        title={resource.courseCode}
         showBackButton={true}
         showNotifications={true}
         onBackClick={handleBackClick}
         onNotificationClick={handleNotificationClick}
       />
-      
+
       {/* Main Content with padding for fixed header and bottom nav */}
       <div className="pt-20 pb-24">
         {/* Resource Header Image */}
@@ -314,7 +316,7 @@ const ResourceDetail: React.FC = () => {
 
         {/* Download Button */}
         <div className="flex px-4 py-3">
-          <button 
+          <button
             onClick={handleDownload}
             className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 px-5 flex-1 bg-[#276cec] text-white text-base font-bold leading-normal tracking-[0.015em] hover:bg-blue-700 transition-colors duration-200"
           >
@@ -331,14 +333,13 @@ const ResourceDetail: React.FC = () => {
             <button
               key={rating}
               onClick={() => handleRatingClick(rating)}
-              className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg transition-colors duration-200 ${
-                userRating >= rating ? 'bg-blue-50 border border-blue-200' : 'hover:bg-gray-50'
-              }`}
+              className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg transition-colors duration-200 ${userRating >= rating ? 'bg-blue-50 border border-blue-200' : 'hover:bg-gray-50'
+                }`}
             >
               <div className={`${userRating >= rating ? 'text-blue-600' : 'text-[#616f89]'}`}>
                 <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
                   <path
-                    d={userRating >= rating 
+                    d={userRating >= rating
                       ? "M234.5,114.38l-45.1,39.36,13.51,58.6a16,16,0,0,1-23.84,17.34l-51.11-31-51,31a16,16,0,0,1-23.84-17.34L66.61,153.8,21.5,114.38a16,16,0,0,1,9.11-28.06l59.46-5.15,23.21-55.36a15.95,15.95,0,0,1,29.44,0h0L166,81.17l59.44,5.15a16,16,0,0,1,9.11,28.06Z"
                       : "M239.2,97.29a16,16,0,0,0-13.81-11L166,81.17,142.72,25.81h0a15.95,15.95,0,0,0-29.44,0L90.07,81.17,30.61,86.32a16,16,0,0,0-9.11,28.06L66.61,153.8,53.09,212.34a16,16,0,0,0,23.84,17.34l51-31,51.11,31a16,16,0,0,0,23.84-17.34l-13.51-58.6,45.1-39.36A16,16,0,0,0,239.2,97.29Zm-15.22,5-45.1,39.36a16,16,0,0,0-5.08,15.71L187.35,216v0l-51.07-31a15.9,15.9,0,0,0-16.54,0l-51,31h0L82.2,157.4a16,16,0,0,0-5.08-15.71L32,102.35a.37.37,0,0,1,0-.09l59.44-5.14a16,16,0,0,0,13.35-9.75L128,32.08l23.2,55.29a16,16,0,0,0,13.35,9.75L224,102.26S224,102.32,224,102.33Z"
                     }
@@ -400,8 +401,8 @@ const ResourceDetail: React.FC = () => {
         <div className="flex overflow-y-auto [-ms-scrollbar-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <div className="flex items-stretch gap-3 p-4">
             {relatedResources.map((relatedResource) => (
-              <div 
-                key={relatedResource.id} 
+              <div
+                key={relatedResource.id}
                 className="flex flex-col flex-1 h-full gap-4 rounded-lg cursor-pointer min-w-40"
                 onClick={() => handleRelatedResourceClick(relatedResource.id)}
               >

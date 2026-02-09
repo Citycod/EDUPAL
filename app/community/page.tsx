@@ -2,7 +2,7 @@
 
 import Header from "../components/Header";
 import BottomNav from "../components/BottomNav";
-import { useRouter } from "react-router-dom";
+import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
 
 interface User {
@@ -39,7 +39,7 @@ interface Post {
 }
 
 const CommunityPage: React.FC = () => {
-  const navigate = useRouter();
+  const router = useRouter();
   const [newPostContent, setNewPostContent] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const postInputRef = useRef<HTMLInputElement>(null);
@@ -183,7 +183,7 @@ const CommunityPage: React.FC = () => {
     if (!newPostContent.trim()) return;
 
     setIsLoading(true);
-    
+
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 500));
 
@@ -209,7 +209,7 @@ const CommunityPage: React.FC = () => {
   const extractTags = (content: string): string[] => {
     const tags: string[] = [];
     const commonSubjects = ["Economics", "Calculus", "Physics", "Chemistry", "Biology", "History", "Programming"];
-    
+
     commonSubjects.forEach(subject => {
       if (content.toLowerCase().includes(subject.toLowerCase())) {
         tags.push(subject);
@@ -228,27 +228,27 @@ const CommunityPage: React.FC = () => {
 
   const handleLikePost = (postId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    setPosts(prev => prev.map(post => 
-      post.id === postId 
-        ? { 
-            ...post, 
-            likes: post.isLiked ? post.likes - 1 : post.likes + 1,
-            isLiked: !post.isLiked
-          }
+    setPosts(prev => prev.map(post =>
+      post.id === postId
+        ? {
+          ...post,
+          likes: post.isLiked ? post.likes - 1 : post.likes + 1,
+          isLiked: !post.isLiked
+        }
         : post
     ));
   };
 
   const handleLikeComment = (postId: string, commentId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    setPosts(prev => prev.map(post => 
-      post.id === postId 
+    setPosts(prev => prev.map(post =>
+      post.id === postId
         ? {
-            ...post,
-            commentsList: post.commentsList.map(comment => 
-              updateCommentLikes(comment, commentId)
-            )
-          }
+          ...post,
+          commentsList: post.commentsList.map(comment =>
+            updateCommentLikes(comment, commentId)
+          )
+        }
         : post
     ));
   };
@@ -261,14 +261,14 @@ const CommunityPage: React.FC = () => {
         isLiked: !comment.isLiked
       };
     }
-    
+
     if (comment.replies) {
       return {
         ...comment,
         replies: comment.replies.map(reply => updateCommentLikes(reply, targetId))
       };
     }
-    
+
     return comment;
   };
 
@@ -289,20 +289,20 @@ const CommunityPage: React.FC = () => {
       like: (
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 256 256">
           {isActive ? (
-            <path d="M240,94c0,70-103.79,126.66-108.21,129a8,8,0,0,1-7.58,0C119.79,220.66,16,164,16,94A62.07,62.07,0,0,1,78,32c20.65,0,38.73,8.88,50,23.89C139.27,40.88,157.35,32,178,32A62.07,62.07,0,0,1,240,94Z"/>
+            <path d="M240,94c0,70-103.79,126.66-108.21,129a8,8,0,0,1-7.58,0C119.79,220.66,16,164,16,94A62.07,62.07,0,0,1,78,32c20.65,0,38.73,8.88,50,23.89C139.27,40.88,157.35,32,178,32A62.07,62.07,0,0,1,240,94Z" />
           ) : (
-            <path d="M178,32c-20.65,0-38.73,8.88-50,23.89C116.73,40.88,98.65,32,78,32A62.07,62.07,0,0,0,16,94c0,70,103.79,126.66,108.21,129a8,8,0,0,0,7.58,0C136.21,220.66,240,164,240,94A62.07,62.07,0,0,0,178,32ZM128,206.8C109.74,196.16,32,147.69,32,94A46.06,46.06,0,0,1,78,48c19.45,0,35.78,10.36,42.6,27a8,8,0,0,0,14.8,0c6.82-16.67,23.15-27,42.6-27a46.06,46.06,0,0,1,46,46C224,147.61,146.24,196.15,128,206.8Z"/>
+            <path d="M178,32c-20.65,0-38.73,8.88-50,23.89C116.73,40.88,98.65,32,78,32A62.07,62.07,0,0,0,16,94c0,70,103.79,126.66,108.21,129a8,8,0,0,0,7.58,0C136.21,220.66,240,164,240,94A62.07,62.07,0,0,0,178,32ZM128,206.8C109.74,196.16,32,147.69,32,94A46.06,46.06,0,0,1,78,48c19.45,0,35.78,10.36,42.6,27a8,8,0,0,0,14.8,0c6.82-16.67,23.15-27,42.6-27a46.06,46.06,0,0,1,46,46C224,147.61,146.24,196.15,128,206.8Z" />
           )}
         </svg>
       ),
       comment: (
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 256 256">
-          <path d="M140,128a12,12,0,1,1-12-12A12,12,0,0,1,140,128ZM84,116a12,12,0,1,0,12,12A12,12,0,0,0,84,116Zm88,0a12,12,0,1,0,12,12A12,12,0,0,0,172,116Zm60,12A104,104,0,0,1,79.12,219.82L45.07,231.17a16,16,0,0,1-20.24-20.24l11.35-34.05A104,104,0,1,1,232,128Zm-16,0A88,88,0,1,0,51.81,172.06a8,8,0,0,1,.66,6.54L40,216,77.4,203.53a7.85,7.85,0,0,1,2.53-.42,8,8,0,0,1,4,1.08A88,88,0,0,0,216,128Z"/>
+          <path d="M140,128a12,12,0,1,1-12-12A12,12,0,0,1,140,128ZM84,116a12,12,0,1,0,12,12A12,12,0,0,0,84,116Zm88,0a12,12,0,1,0,12,12A12,12,0,0,0,172,116Zm60,12A104,104,0,0,1,79.12,219.82L45.07,231.17a16,16,0,0,1-20.24-20.24l11.35-34.05A104,104,0,1,1,232,128Zm-16,0A88,88,0,1,0,51.81,172.06a8,8,0,0,1,.66,6.54L40,216,77.4,203.53a7.85,7.85,0,0,1,2.53-.42,8,8,0,0,1,4,1.08A88,88,0,0,0,216,128Z" />
         </svg>
       ),
       share: (
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 256 256">
-          <path d="M227.32,28.68a16,16,0,0,0-15.66-4.08l-.15,0L19.57,82.84a16,16,0,0,0-2.42,29.84l85.62,40.55,40.55,85.62A15.86,15.86,0,0,0,157.74,248q.69,0,1.38-.06a15.88,15.88,0,0,0,14-11.51l58.2-191.94c0-.05,0-.1,0-.15A16,16,0,0,0,227.32,28.68ZM157.83,231.85l-.05.14L118.42,148.9l47.24-47.25a8,8,0,0,0-11.31-11.31L107.1,137.58,24,98.22l.14,0L216,40Z"/>
+          <path d="M227.32,28.68a16,16,0,0,0-15.66-4.08l-.15,0L19.57,82.84a16,16,0,0,0-2.42,29.84l85.62,40.55,40.55,85.62A15.86,15.86,0,0,0,157.74,248q.69,0,1.38-.06a15.88,15.88,0,0,0,14-11.51l58.2-191.94c0-.05,0-.1,0-.15A16,16,0,0,0,227.32,28.68ZM157.83,231.85l-.05.14L118.42,148.9l47.24-47.25a8,8,0,0,0-11.31-11.31L107.1,137.58,24,98.22l.14,0L216,40Z" />
         </svg>
       )
     };
@@ -310,11 +310,10 @@ const CommunityPage: React.FC = () => {
     return (
       <button
         onClick={onClick}
-        className={`flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg transition-all duration-200 ${
-          isActive 
-            ? 'text-[#0d191c] bg-[#e7f1f4]' 
+        className={`flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg transition-all duration-200 ${isActive
+            ? 'text-[#0d191c] bg-[#e7f1f4]'
             : 'text-[#498a9c] hover:bg-[#f0f7fa] hover:text-[#0d191c]'
-        }`}
+          }`}
       >
         <div className={`${isActive && type === 'like' ? 'text-red-500' : ''}`}>
           {icons[type]}
@@ -326,8 +325,8 @@ const CommunityPage: React.FC = () => {
     );
   };
 
-  const CommentItem: React.FC<{ 
-    comment: Comment; 
+  const CommentItem: React.FC<{
+    comment: Comment;
     onLike: (commentId: string, e: React.MouseEvent) => void;
     depth?: number;
   }> = ({ comment, onLike, depth = 0 }) => (
@@ -353,12 +352,11 @@ const CommunityPage: React.FC = () => {
           <div className="flex items-center gap-4">
             <button
               onClick={(e) => onLike(comment.id, e)}
-              className={`flex items-center gap-1 text-xs font-medium transition-colors ${
-                comment.isLiked ? 'text-[#0d191c]' : 'text-[#498a9c] hover:text-[#0d191c]'
-              }`}
+              className={`flex items-center gap-1 text-xs font-medium transition-colors ${comment.isLiked ? 'text-[#0d191c]' : 'text-[#498a9c] hover:text-[#0d191c]'
+                }`}
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 256 256">
-                <path d="M178,32c-20.65,0-38.73,8.88-50,23.89C116.73,40.88,98.65,32,78,32A62.07,62.07,0,0,0,16,94c0,70,103.79,126.66,108.21,129a8,8,0,0,0,7.58,0C136.21,220.66,240,164,240,94A62.07,62.07,0,0,0,178,32Z"/>
+                <path d="M178,32c-20.65,0-38.73,8.88-50,23.89C116.73,40.88,98.65,32,78,32A62.07,62.07,0,0,0,16,94c0,70,103.79,126.66,108.21,129a8,8,0,0,0,7.58,0C136.21,220.66,240,164,240,94A62.07,62.07,0,0,0,178,32Z" />
               </svg>
               {comment.likes > 0 && comment.likes}
             </button>
@@ -370,14 +368,14 @@ const CommunityPage: React.FC = () => {
           </div>
         </div>
       </div>
-      
+
       {/* Nested Replies */}
       {comment.replies?.map(reply => (
-        <CommentItem 
-          key={reply.id} 
-          comment={reply} 
+        <CommentItem
+          key={reply.id}
+          comment={reply}
           onLike={onLike}
-          depth={depth + 1} 
+          depth={depth + 1}
         />
       ))}
     </div>
@@ -395,7 +393,7 @@ const CommunityPage: React.FC = () => {
     <div className="flex flex-col h-screen bg-[#f8fbfc]">
       {/* Header */}
       <Header title="Community" />
-      
+
       {/* Scrollable Content */}
       <div className="flex-1 overflow-y-auto">
         {/* Create Post Input */}
@@ -427,7 +425,7 @@ const CommunityPage: React.FC = () => {
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#498a9c]"></div>
                   ) : (
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 256 256">
-                      <path d="M227.32,28.68a16,16,0,0,0-15.66-4.08l-.15,0L19.57,82.84a16,16,0,0,0-2.42,29.84l85.62,40.55,40.55,85.62A15.86,15.86,0,0,0,157.74,248q.69,0,1.38-.06a15.88,15.88,0,0,0,14-11.51l58.2-191.94c0-.05,0-.1,0-.15A16,16,0,0,0,227.32,28.68Z"/>
+                      <path d="M227.32,28.68a16,16,0,0,0-15.66-4.08l-.15,0L19.57,82.84a16,16,0,0,0-2.42,29.84l85.62,40.55,40.55,85.62A15.86,15.86,0,0,0,157.74,248q.69,0,1.38-.06a15.88,15.88,0,0,0,14-11.51l58.2-191.94c0-.05,0-.1,0-.15A16,16,0,0,0,227.32,28.68Z" />
                     </svg>
                   )}
                 </button>
@@ -448,7 +446,7 @@ const CommunityPage: React.FC = () => {
           {posts.map((post) => (
             <div key={post.id} className="bg-white rounded-xl shadow-sm border border-[#e7f1f4] overflow-hidden">
               {/* Post Content */}
-              <div 
+              <div
                 className="p-4 cursor-pointer hover:bg-[#fafdfe] transition-colors"
                 onClick={() => handlePostClick(post.id)}
               >
@@ -470,7 +468,7 @@ const CommunityPage: React.FC = () => {
                     <p className="text-[#0d191c] text-sm leading-relaxed mb-3">
                       {post.content}
                     </p>
-                    
+
                     {/* Tags */}
                     {post.tags.length > 0 && (
                       <div className="flex flex-wrap gap-2">
@@ -515,9 +513,9 @@ const CommunityPage: React.FC = () => {
 
               {/* Recent Comments Preview */}
               {post.commentsList.slice(0, 2).map((comment) => (
-                <CommentItem 
-                  key={comment.id} 
-                  comment={comment} 
+                <CommentItem
+                  key={comment.id}
+                  comment={comment}
                   onLike={(commentId, e) => handleLikeComment(post.id, commentId, e)}
                 />
               ))}
@@ -525,7 +523,7 @@ const CommunityPage: React.FC = () => {
               {/* View All Comments Link */}
               {post.comments > 2 && (
                 <div className="px-4 py-3 border-t border-[#f0f7fa]">
-                  <button 
+                  <button
                     onClick={() => handlePostClick(post.id)}
                     className="text-[#498a9c] text-sm font-medium hover:text-[#0d191c] transition-colors"
                   >
