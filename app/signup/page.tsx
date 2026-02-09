@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { supabase } from '@/lib/supabase';
 
 export default function SignUp() {
     const router = useRouter();
@@ -9,10 +10,13 @@ export default function SignUp() {
     const [formData, setFormData] = useState({
         email: '',
         password: '',
+        full_name: '',
         institution: '',
         department: '',
         level: ''
     });
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
@@ -22,10 +26,41 @@ export default function SignUp() {
         }));
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        console.log('Signup attempted with:', formData);
-        // Add your signup logic here
+        setLoading(true);
+        setError(null);
+
+        try {
+            const { data, error: signupError } = await supabase.auth.signUp({
+                email: formData.email,
+                password: formData.password,
+                options: {
+                    data: {
+                        full_name: formData.full_name,
+                        university: formData.institution,
+                        major: formData.department,
+                        year: formData.level,
+                    }
+                }
+            });
+
+            if (signupError) throw signupError;
+
+            if (data.user) {
+                // Check if email confirmation is required
+                if (data.session) {
+                    router.push('/home');
+                } else {
+                    alert('Signup successful! Please check your email for a confirmation link.');
+                    router.push('/login');
+                }
+            }
+        } catch (err: any) {
+            setError(err.message || 'An error occurred during signup');
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleBack = () => {
@@ -68,6 +103,25 @@ export default function SignUp() {
 
                     {/* Form */}
                     <form onSubmit={handleSubmit} className="px-8 pb-8 space-y-4">
+                        {error && (
+                            <div className="bg-red-500/10 border border-red-500/50 text-red-500 p-3 rounded-lg text-sm text-center">
+                                {error}
+                            </div>
+                        )}
+                        {/* Full Name */}
+                        <div className="flex flex-col gap-1.5">
+                            <label className="text-white/80 text-sm font-medium">Full Name</label>
+                            <input
+                                name="full_name"
+                                type="text"
+                                value={formData.full_name}
+                                onChange={handleInputChange}
+                                className="w-full rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary/50 border border-border-accent bg-input-bg h-12 placeholder:text-white/30 px-4 text-base font-normal transition-all"
+                                placeholder="Your full name"
+                                required
+                            />
+                        </div>
+
                         {/* Email */}
                         <div className="flex flex-col gap-1.5">
                             <label className="text-white/80 text-sm font-medium">Email Address</label>
@@ -163,13 +217,20 @@ export default function SignUp() {
                             </div>
                         </div>
 
-                        {/* Submit Button */}
                         <div className="pt-4">
                             <button
                                 type="submit"
-                                className="w-full bg-primary hover:bg-primary/90 text-background-dark font-bold text-base h-12 rounded-lg transition-all active:scale-[0.98] shadow-lg shadow-primary/20"
+                                disabled={loading}
+                                className="w-full bg-primary hover:bg-primary/90 text-background-dark font-bold text-base h-12 rounded-lg transition-all active:scale-[0.98] shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                             >
-                                Create Account
+                                {loading ? (
+                                    <>
+                                        <div className="w-4 h-4 border-2 border-background-dark border-t-transparent rounded-full animate-spin"></div>
+                                        Creating Account...
+                                    </>
+                                ) : (
+                                    'Create Account'
+                                )}
                             </button>
                         </div>
 
