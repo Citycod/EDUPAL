@@ -1,174 +1,160 @@
 'use client';
 
-import  { useState } from 'react';
-import Header from '@/components/Header';
-import BottomNav from '@/components/BottomNav'; 
+import { useRouter } from 'next/navigation';
+import BottomNav from '@/components/BottomNav';
 
+export default function Home() {
+  const router = useRouter();
 
-interface DashboardCard {
-  title: string;
-  value: string;
-}
-
-interface SuggestedResource {
-  id: number;
-  image: string;
-  title: string;
-}
-
-const Home: React.FC = () => {
-  const navigate = useRouter();
-  const [searchQuery, setSearchQuery] = useState('');
-
-  const dashboardCards: DashboardCard[] = [
-    { title: "Resources Shared", value: "12" },
-    { title: "Classes Joined", value: "5" },
-    { title: "Peers Connected", value: "23" }
-  ];
-
-  const suggestedResources: SuggestedResource[] = [
+  const quickAccessCards = [
     {
-      id: 1,
-      image: "https://lh3.googleusercontent.com/aida-public/AB6AXuDZN6X2IF0br1R13zdGS8SX4KtSzAx-fAWIs1y5ZOZIIhfPIb17nKjeWbkZKsJPi4HHPwO109vh1ihnNisV7ZGN_gd7bkOimYqpDpZhSI8IRdfEWrKt17BavoIg88jrEJfYuUL44B3_n_U_88Gr3QIkVOHWmx2YrMyYHDPHWLVzOLONNRfZNMNTizNVu2FgLvfB-0ZB5vnVX_3jy8WfNPmG5OeHD0rrJCkwjc3DP58FrJEbyPRY_9_Mnp3nC4Nv4PpUtF1AVHr5XGU",
-      title: "Introduction to Economics"
+      title: 'Past Questions',
+      subtitle: '1,200+ Resources',
+      icon: 'history_edu',
+      image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDFwrP0-LThS-SmerGKwLrGNxJJI5kCSbV8cBWn7bzxDvlSG6qcTLXOBbVVUn5nC3tpMqiyMrK4PHX6yI_3pSe98iG4u2T_Y8c2nvVoB3jEqnoE08jZ0avWBv-BN4cGKL3-IpRuEjujRnWadIYehTn-ZyDUF_fb6NXF_fkMtUUryvoGVyluE4ZxUobCSIIpe_66pPbyfVaa0OSLoam61pZRnJtYGODhaktq5RzhFkFR89rPKFsIY6SbqOzqk_LMwdOXUsCbG8hT06E',
+      path: '/study'
     },
     {
-      id: 2,
-      image: "https://lh3.googleusercontent.com/aida-public/AB6AXuDehAPPgYI7Gg5714wTSgt4OJaq93EX0N8ZnUfKqL7Tc9c_ymorxJGME8QTimW44MZOdzAhkAJk0vS-lcSEF9FZ-hBZs4xklrtmubIsV0TSMWU7XKyaT4QdDl4XQ5IiEA2Jc9F8ORNkFPZC5gy7FDvGhE3pptrgdSvlGwoJjGYMqfZvF7W3-uCHM3FQm3aZBWh6T_8TBi37Z_zgIiHBJ4QcrtlLqnsbiWI32uVkQ0tAtgx7aqVhC4AX666NsRp7BEeFKKTLPDQobtY",
-      title: "Advanced Calculus Notes"
+      title: 'Courses',
+      subtitle: '12 Active Enrolled',
+      icon: 'school',
+      image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDb8TkeFvKiM4k8amEMTGOgkdup8zpVNzMl5cVwiFKQtFr68lIw2YQmmxIIUxhBxABAzobY46RedSm0Qiv--GrF1hPToEHNutEm-8Xd-hRLUccy354sj5Hx5_qSrjjIl9ARygzdRp0nfrXpdS_0zO84rSc3nDgVrl-fZzmD9HXc35G7H040ufJjp7HdeSl_OOJsiLqn6Hs7LXzN07mrjgeFS2b7PEIEMBvJ6xwgSE7qcO2r83MV0Hxe-ySnm5j9YTk51RcA-SFjzMM',
+      path: '/courses'
     },
     {
-      id: 3,
-      image: "https://lh3.googleusercontent.com/aida-public/AB6AXuAak8Bpqd96h55yuYTIn8jikOPBzgn_feZKb6Vre8sEsikh2ByWvHsNNacwfY53iohE5i4D8o_Q_hbld8n2EAba-o8wsvBtUUAssraDT-Hi2_IL4UUsELU-rVTkjaDA0q9vrmKn7JhmLeQSUIGt2c09_zbAjdcCezDFbrc7zt0J_T1ToalKbSrp3JJdvKLA-hcMUC7EyLxjD1xT9GLpHJN1kGyFLS6GY6vzaxRMU1bAB9FJWKtv_0oA03lQ1MidW0WU53EKCkJJIbo",
-      title: "Past Exam Papers - Physics 101"
+      title: 'Discussions',
+      subtitle: '5 New Replies',
+      icon: 'forum',
+      image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAN69hwYd7coO877wAeqUOmkxTuS79jLz6ebqwJ2on85eAgPfMZMrfoW6vOTsZB9LlyQVUT4xwpsRgH8_jQQCvxWgQ68fRjBVCJhU9bg8J2VCWA04YhLZxxMb77QGL4D_I2N9djR6tMNglnBuPbX_DUamCnYFb_f2xRKWJCaZVzQoM6jxMXupy2Lz-UTGTbfL9v0D6cJynvpWn0oXmKZ7F2ojwq8C1EOSt1mlneVjzaWRfPQAX82LwTtbOSEncVhwB3N8ZW9GSBUOc',
+      path: '/community'
     }
   ];
 
-  // Navigation items for BottomNav
-  // In your Home component, change the navItems to:
-const navItems = [
-  { 
-    icon: "House", 
-    label: "Home", 
-    active: true,
-    onClick: () => router.push('/home')
-  },
-  { 
-    icon: "BookOpen", 
-    label: "Study", 
-    active: false,
-    onClick: () => router.push('/study')
-  },
-  { 
-    icon: "UsersThree", 
-    label: "Classes", 
-    active: false,
-    onClick: () => router.push('/classes')
-  },
-  { 
-    icon: "Users", 
-    label: "Community", 
-    active: false,
-    onClick: () => router.push('/community')
-  },
-  { 
-    icon: "User", 
-    label: "Profile", 
-    active: false,
-    onClick: () => router.push('/profile')
-  }
-];
-
-  const handleNotificationClick = () => {
-    // Add notification logic here
-       router.push('/notification');
-  };
-
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-  };
-
-  const profileImage = "https://lh3.googleusercontent.com/aida-public/AB6AXuCHLeeUkw2pqcgJVot4fSJhI3smgE7KIp-16nuop_1Tc78IvxkbYMC8tXNbyMuR7Mh4-gCB9G6oJXvlLCEFR7y8Mc5KGEB-ulr_g7PYuemVYpZSzru20ePUFZM-_qgrikDCQg97HeCElg2-7MAuHyvQiyL1wnQ5NBRQvvKKUJNrG1uY96xfTsJWwQhu_Qq-xYh5hg_RqF5-2plvvgNS0fRlNzMcx0E6pCXOM5QljSw2HGMyjl7aMOUUJHXZZwVD6AYx5MidVNWnIro";
+  const recentlyViewed = [
+    {
+      title: 'Advanced Mathematics 101',
+      subtitle: 'Module 4: Linear Algebra • Last viewed 2 hours ago',
+      image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB2EjoBA1Wno-UM3_C85-L7sXJ2nnLVM1o6RsEqigqHkJaRN4SUuhXtCzAgS967TDx5XIcQo5_SX__2QwW8LyzDngDmUtXscGj-Gqdzb5w_t9qvKCelymhhsXOGwbbIJy2HEbnkHPNk4v4_a8Z_t2zuc9cv40oc65QJkIjBzrLXCBtHxyhaV3Aas_AtWVi__FVOhND46WICaj1hlJQRGdguLNLfNz9pg785gLMGU8BO6zlqGa2tL6sZu2aDSsS5LhE7Y88MPwf6OdU'
+    },
+    {
+      title: 'Introduction to Genetics',
+      subtitle: 'Reading: DNA Replication • Last viewed 5 hours ago',
+      image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBi2TuNZww6BfE6QwK3XQjucwX5wRagv8JdH-YjY6jkAhXT6kmtTF80DvnR6A3SAjm3sOsD3V3z5WoCQRIVywnSkQK38puYYoWRFIX0iMnixJ9RfC5Si_q09QaABNsQX0XSrf5dxAPCRpGStoVQ3MRCJ81v5c-Kc8EiLIsljZRPoniQwBCNQp1GwhglDsejTpY6ee0GTg0wjSWO4Gki080d3_izC6VXqVzfRcWDxEGQra8xeX9iPG0mPLRPMRThYxjqNy2Q8GckLpY'
+    },
+    {
+      title: 'Data Structures & Algorithms',
+      subtitle: 'Video: Binary Search Trees • Last viewed yesterday',
+      image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDxRcvJP3lf3qci8epR7sgnFVHbtV89hOApfEAYNLTOEw4hVO660yAAm3lq6q9QiK1cTMhuP5iC--gv1fteIC-Mf1wRUFmrLU-BUEa7U4efCrNUkoNcz0-8zZHFzsfIgfpeQjs3n_tx13PtawfKY9bbfZsYw4LLlzC_PgwH8eER2E6tETvz34ofoDfFYdpghnV_OlUMZu8qEzgdU87nDlQ-td7JMq5vBp6zrwYmjLpxt739M-feFGGlOAKNoK_n-rjbA9KHUGoUDCk'
+    }
+  ];
 
   return (
-    <div
-      className="relative flex h-auto min-h-screen w-full flex-col bg-[#f8fbfc] justify-between group/design-root overflow-x-hidden"
-      style={{ fontFamily: 'Inter, "Noto Sans", sans-serif' }}
-    >
-      {/* Header Component */}
-      <Header
-        title="EduPal"
-        showProfile={true}
-        showNotifications={true}
-        profileImage={profileImage}
-        onNotificationClick={handleNotificationClick}
-      />
-
-      {/* Search Bar */}
-      <div className="px-4 py-3">
-        <label className="flex flex-col w-full h-12 min-w-40">
-          <div className="flex items-stretch flex-1 w-full h-full rounded-xl">
-            <div className="text-[#458da1] flex border-none bg-[#e6f1f4] items-center justify-center pl-4 rounded-l-xl border-r-0">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
-                <path d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z" />
-              </svg>
-            </div>
-            <input
-              type="text"
-              placeholder="Search for resources, classes, or peers"
-              value={searchQuery}
-              onChange={handleSearch}
-              className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0c191d] focus:outline-0 focus:ring-0 border-none bg-[#e6f1f4] focus:border-none h-full placeholder:text-[#458da1] px-4 rounded-l-none border-l-0 pl-2 text-base font-normal leading-normal focus:bg-[#dde9ec] transition-colors"
+    <div className="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-white min-h-screen">
+      <div className="relative flex h-auto min-h-screen w-full flex-col overflow-x-hidden pb-20">
+        {/* TopAppBar */}
+        <nav className="flex items-center bg-background-light dark:bg-background-dark p-4 pb-2 justify-between sticky top-0 z-50 border-b border-white/5">
+          <div className="flex size-12 shrink-0 items-center">
+            <div
+              className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border-2 border-primary cursor-pointer"
+              style={{ backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuCL9JmvwN64PzbRp2S5RapNk5GOzzY9SydgKvkJdTSLWkrlV0Tw3UcITmMNjUzPFjbEUakDPFUPEsBsaI073wRoSNw9VPQ3wJs0vqeuOnnxV-yq0G9BnriLjFzEncWOfDEK6CNZwn7YRDqNpnKpY-9j-nnRpiVhTiIuuHHoY1YkVmfZyfcFxuV6Zp73EIHUsy_xNeCKpKONkAtxQFRXHd-w8R4zxpox5jrfdgXS-AqM5O8umG8C-Uw4vm5PLjd4YZB5Sj9gqtGLbmQ")' }}
+              onClick={() => router.push('/profile')}
             />
           </div>
-        </label>
-      </div>
-
-      {/* Welcome Message */}
-      <h3 className="text-[#0c191d] tracking-light text-2xl font-bold leading-tight px-4 text-left pb-2 pt-5">
-        Hi, Wisdom 👋🏼 Welcome back to EduPal
-      </h3>
-
-      {/* Stats Cards */}
-      <div className="flex flex-wrap gap-4 p-4">
-        {dashboardCards.map((card, index) => (
-          <div key={index} className="flex min-w-[158px] flex-1 flex-col gap-2 rounded-xl p-6 border border-[#cde3ea] bg-white hover:shadow-md transition-shadow">
-            <p className="text-[#0c191d] text-base font-medium leading-normal">{card.title}</p>
-            <p className="text-[#0c191d] tracking-light text-2xl font-bold leading-tight">{card.value}</p>
+          <div className="flex flex-1 px-4">
+            <h2 className="text-slate-900 dark:text-white text-xl font-bold leading-tight tracking-tight">EduPal</h2>
           </div>
-        ))}
-      </div>
+          <div className="flex items-center gap-2">
+            <button className="flex cursor-pointer items-center justify-center rounded-full h-10 w-10 bg-primary/10 text-primary transition-colors hover:bg-primary/20">
+              <span className="material-symbols-outlined">search</span>
+            </button>
+            <button
+              onClick={() => router.push('/notification')}
+              className="flex cursor-pointer items-center justify-center rounded-full h-10 w-10 bg-primary/10 text-primary transition-colors hover:bg-primary/20"
+            >
+              <span className="material-symbols-outlined">notifications</span>
+            </button>
+          </div>
+        </nav>
 
-      {/* Suggested Resources Section */}
-      <h2 className="text-[#0c191d] text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5">
-        Suggested for you
-      </h2>
+        <main className="max-w-5xl mx-auto w-full px-4">
+          {/* Greeting */}
+          <div className="py-8">
+            <h1 className="text-slate-900 dark:text-white tracking-tight text-4xl font-bold leading-tight">Hello, Alex</h1>
+            <p className="text-slate-500 dark:text-slate-400 mt-2">Ready to continue your learning journey today?</p>
+          </div>
 
-      <div className="flex overflow-y-auto [-ms-scrollbar-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <div className="flex items-stretch gap-3 p-4">
-          {suggestedResources.map((resource) => (
-            <div key={resource.id} className="flex flex-col flex-1 h-full gap-4 transition-transform rounded-lg cursor-pointer min-w-40 hover:scale-105">
+          {/* Quick Access Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">
+            {quickAccessCards.map((card, index) => (
               <div
-                className="flex flex-col w-full bg-center bg-no-repeat bg-cover shadow-md aspect-square rounded-xl"
-                style={{ backgroundImage: `url("${resource.image}")` }}
-              />
-              <p className="text-[#0c191d] text-base font-medium leading-normal">{resource.title}</p>
-            </div>
-          ))}
-        </div>
-      </div>
+                key={index}
+                onClick={() => router.push(card.path)}
+                className="group relative overflow-hidden bg-cover bg-center flex flex-col gap-3 rounded-xl justify-end p-6 aspect-[4/3] cursor-pointer transition-transform hover:scale-[1.02]"
+                style={{
+                  backgroundImage: `linear-gradient(0deg, rgba(16, 34, 23, 0.9) 0%, rgba(16, 34, 23, 0.2) 100%), url("${card.image}")`
+                }}
+              >
+                <div className="absolute top-4 right-4 bg-primary text-background-dark p-2 rounded-lg">
+                  <span className="material-symbols-outlined">{card.icon}</span>
+                </div>
+                <div>
+                  <p className="text-white text-xl font-bold leading-tight">{card.title}</p>
+                  <p className="text-primary text-sm font-medium mt-1">{card.subtitle}</p>
+                </div>
+              </div>
+            ))}
+          </div>
 
-<div
-  className="relative pb-5 w-full flex-col bg-[#f8fbfc] justify-between group/design-root overflow-x-hidden " // Added pb-20 for bottom padding
-  style={{ fontFamily: 'Inter, "Noto Sans", sans-serif' }}
->
-  {/* Your content */}
-  
-  {/* Bottom Navigation */}
-  <BottomNav navItems={navItems} />
-</div>
+          {/* Recently Viewed Section */}
+          <div className="mb-10">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-slate-900 dark:text-white text-2xl font-bold leading-tight tracking-tight">Recently Viewed</h2>
+              <button className="text-primary text-sm font-semibold hover:underline">View All</button>
+            </div>
+            <div className="space-y-3">
+              {recentlyViewed.map((item, index) => (
+                <div
+                  key={index}
+                  className="flex items-center gap-4 bg-white dark:bg-white/5 p-4 rounded-xl border border-slate-200 dark:border-white/10 hover:border-primary/50 transition-colors cursor-pointer group"
+                >
+                  <div
+                    className="bg-center bg-no-repeat aspect-square bg-cover rounded-lg size-16 shrink-0"
+                    style={{ backgroundImage: `url("${item.image}")` }}
+                  />
+                  <div className="flex flex-col flex-1 justify-center min-w-0">
+                    <p className="text-slate-900 dark:text-white text-lg font-semibold leading-normal truncate">{item.title}</p>
+                    <p className="text-slate-500 dark:text-slate-400 text-sm font-normal leading-normal">{item.subtitle}</p>
+                  </div>
+                  <div className="shrink-0">
+                    <div className="text-primary flex size-8 items-center justify-center rounded-full bg-primary/10 group-hover:bg-primary group-hover:text-background-dark transition-all">
+                      <span className="material-symbols-outlined">chevron_right</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Upcoming Tasks / Summary */}
+          <div className="bg-primary/10 rounded-2xl p-6 mb-12 flex flex-col md:flex-row items-center justify-between gap-6 border border-primary/20">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-primary rounded-xl text-background-dark">
+                <span className="material-symbols-outlined text-3xl">event_available</span>
+              </div>
+              <div>
+                <h3 className="text-xl font-bold">Upcoming Exam</h3>
+                <p className="text-slate-400">Physics 201 - Monday, Oct 24th</p>
+              </div>
+            </div>
+            <button className="w-full md:w-auto px-8 py-3 bg-primary text-background-dark font-bold rounded-xl hover:opacity-90 transition-opacity">
+              Set Reminder
+            </button>
+          </div>
+        </main>
+
+        {/* Bottom Navigation */}
+        <BottomNav />
+      </div>
     </div>
   );
-};
-
-export default Home;
+}

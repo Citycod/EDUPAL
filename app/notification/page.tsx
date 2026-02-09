@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 import BottomNav from '@/components/BottomNav';
 import Header from '@/components/Header';
@@ -16,7 +17,7 @@ interface Notification {
 }
 
 const Notifications: React.FC = () => {
-  const navigate = useRouter();
+  const router = useRouter();
   const [notifications, setNotifications] = useState<Notification[]>([
     {
       id: 1,
@@ -170,7 +171,7 @@ const Notifications: React.FC = () => {
         title="Notifications"
         showBackButton={true}
         showAddButton={true}
-        onBackClick={() => router.push(-1)}
+        onBackClick={() => router.back()}
         onAddClick={markAllAsRead}
       />
 
@@ -208,7 +209,7 @@ const Notifications: React.FC = () => {
                 key={notification.id}
                 className={`flex items-center gap-4 px-4 min-h-[72px] py-3 cursor-pointer transition-colors ${notification.read
                   ? 'bg-[#f8fbfc]'
-                  : 'bg-edupal-green-50 border-l-4 border-l-primary'
+                  : 'bg-secondary/10 border-l-4 border-l-primary'
                   } hover:bg-[#e7f1f4] active:bg-[#dde9ec]`}
                 onClick={() => handleNotificationClick(notification)}
               >

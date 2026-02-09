@@ -1,7 +1,7 @@
 'use client';
 
-import BottomNav from "../components/BottomNav";
-import { useRouter } from "react-router-dom";
+import BottomNav from "@/components/BottomNav";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 interface Resource {
@@ -29,7 +29,7 @@ interface UserProfile {
 type TabType = 'resources' | 'classes' | 'settings';
 
 const ProfilePage: React.FC = () => {
-  const navigate = useRouter();
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>('resources');
 
   const userProfile: UserProfile = {
@@ -98,39 +98,6 @@ const ProfilePage: React.FC = () => {
       instructor: "Dr. Emeka Nwosu",
       schedule: "Mon, Fri 1:00 PM",
       progress: 40
-    }
-  ];
-
-  const navItems = [
-    {
-      icon: "House",
-      label: "Home",
-      active: false,
-      onClick: () => router.push("/home")
-    },
-    {
-      icon: "BookOpen",
-      label: "Study",
-      active: false,
-      onClick: () => router.push("/study")
-    },
-    {
-      icon: "Video",
-      label: "Classes",
-      active: false,
-      onClick: () => router.push("/classes")
-    },
-    {
-      icon: "Users",
-      label: "Community",
-      active: false,
-      onClick: () => router.push("/community")
-    },
-    {
-      icon: "User",
-      label: "Profile",
-      active: true,
-      onClick: () => router.push("/profile")
     }
   ];
 
@@ -286,7 +253,7 @@ const ProfilePage: React.FC = () => {
       {/* Header */}
       <div className="flex items-center bg-[#f8fbfc] p-4 pb-2 justify-between">
         <button
-          onClick={() => router.push(-1)}
+          onClick={() => router.push('/')}
           className="text-[#0d191c] flex size-12 shrink-0 items-center hover:bg-[#e7f1f4] rounded-lg transition-colors"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
@@ -384,7 +351,7 @@ const ProfilePage: React.FC = () => {
         </div>
       </div>
 
-      <BottomNav navItems={navItems} />
+      <BottomNav />
     </div>
   );
 };

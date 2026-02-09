@@ -1,10 +1,10 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 import Header from '@/components/Header';
 import BottomNav from '@/components/BottomNav';
-import UploadMaterialModal from '../pages/UploadMaterialModal';
 
 interface StudyResource {
   id: number;
@@ -23,7 +23,7 @@ interface UploadData {
 }
 
 const StudyResources: React.FC = () => {
-  const navigate = useRouter();
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
@@ -229,7 +229,7 @@ const StudyResources: React.FC = () => {
         <div className="flex justify-end px-5 pb-5 overflow-hidden sticky bottom-24">
           <button
             onClick={handleAddResource}
-            className="flex max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-14 px-5 bg-primary text-white text-base font-bold leading-normal tracking-[0.015em] min-w-0 gap-4 pl-4 pr-6 hover:bg-brand-dark transition-colors shadow-lg hover:shadow-xl"
+            className="flex max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-14 px-5 bg-primary text-primary-dark text-base font-bold leading-normal tracking-[0.015em] min-w-0 gap-4 pl-4 pr-6 hover:bg-primary-light transition-colors shadow-lg hover:shadow-xl"
           >
             <div className="text-[#f8fbfc]">
               <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
@@ -244,12 +244,12 @@ const StudyResources: React.FC = () => {
       {/* Fixed Bottom Navigation */}
       <BottomNav navItems={navItems} />
 
-      {/* Upload Material Modal */}
-      <UploadMaterialModal
+      {/* Upload Material Modal - TODO: Create this component */}
+      {/* <UploadMaterialModal
         isOpen={isUploadModalOpen}
         onClose={handleUploadClose}
         onSubmit={handleUploadSubmit}
-      />
+      /> */}
     </div>
   );
 };

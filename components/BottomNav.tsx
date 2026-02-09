@@ -1,81 +1,55 @@
+'use client';
+
+import { useRouter, usePathname } from 'next/navigation';
+
 interface NavItem {
   icon: string;
   label: string;
-  active: boolean;
-  onClick?: () => void;
+  path: string;
+  filled?: boolean;
 }
 
-interface BottomNavProps {
-  navItems: NavItem[];
-}
+export default function BottomNav() {
+  const router = useRouter();
+  const pathname = usePathname();
 
-const BottomNav: React.FC<BottomNavProps> = ({ navItems }) => {
-  const getIconSVG = (icon: string, active: boolean) => {
-    const icons = {
-      House: active ? (
-        <path d="M224,115.55V208a16,16,0,0,1-16,16H168a16,16,0,0,1-16-16V168a8,8,0,0,0-8-8H112a8,8,0,0,0-8,8v40a16,16,0,0,1-16,16H48a16,16,0,0,1-16-16V115.55a16,16,0,0,1,5.17-11.78l80-75.48.11-.11a16,16,0,0,1,21.53,0,1.14,1.14,0,0,0,.11.11l80,75.48A16,16,0,0,1,224,115.55Z" />
-      ) : (
-        <path d="M218.83,103.77l-80-75.48a1.14,1.14,0,0,1-.11-.11,16,16,0,0,0-21.53,0l-.11.11L37.17,103.77A16,16,0,0,0,32,115.55V208a16,16,0,0,0,16,16H96a16,16,0,0,0,16-16V160h32v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V115.55A16,16,0,0,0,218.83,103.77ZM208,208H160V160a16,16,0,0,0-16-16H112a16,16,0,0,0-16,16v48H48V115.55l.11-.1L128,40l79.9,75.43.11.1Z" />
-      ),
-      BookOpen: active ? (
-        <path d="M240,64V192a16,16,0,0,1-16,16H160a24,24,0,0,0-24,24,8,8,0,0,1-16,0,24,24,0,0,0-24-24H32a16,16,0,0,1-16-16V64A16,16,0,0,1,32,48H88a32,32,0,0,1,32,32v88a8,8,0,0,0,16,0V80a32,32,0,0,1,32-32h56A16,16,0,0,1,240,64Z" />
-      ) : (
-        <path d="M224,48H160a40,40,0,0,0-32,16A40,40,0,0,0,96,48H32A16,16,0,0,0,16,64V192a16,16,0,0,0,16,16H96a24,24,0,0,1,24,24,8,8,0,0,0,16,0,24,24,0,0,1,24-24h64a16,16,0,0,0,16-16V64A16,16,0,0,0,224,48ZM96,192H32V64H96a24,24,0,0,1,24,24V200A39.81,39.81,0,0,0,96,192Zm128,0H160a39.81,39.81,0,0,0-24,8V88a24,24,0,0,1,24-24h64Z" />
-      ),
-      UsersThree: (
-        <path d="M244.8,150.4a8,8,0,0,1-11.2-1.6A51.6,51.6,0,0,0,192,128a8,8,0,0,1-7.37-4.89,8,8,0,0,1,0-6.22A8,8,0,0,1,192,112a24,24,0,1,0-23.24-30,8,8,0,1,1-15.5-4A40,40,0,1,1,219,117.51a67.94,67.94,0,0,1,27.43,21.68A8,8,0,0,1,244.8,150.4ZM190.92,212a8,8,0,1,1-13.84,8,57,57,0,0,0-98.16,0,8,8,0,1,1-13.84-8,72.06,72.06,0,0,1,33.74-29.92,48,48,0,1,1,58.36,0A72.06,72.06,0,0,1,190.92,212ZM128,176a32,32,0,1,0-32-32A32,32,0,0,0,128,176ZM72,120a8,8,0,0,0-8-8A24,24,0,1,1,87.24,82a8,8,0,1,0,15.5-4A40,40,0,1,0,37,117.51,67.94,67.94,0,0,0,9.6,139.19a8,8,0,1,0,12.8,9.61A51.6,51.6,0,0,1,64,128,8,8,0,0,0,72,120Z" />
-      ),
-      Users: (
-        <path d="M117.25,157.92a60,60,0,1,0-66.5,0A95.83,95.83,0,0,0,3.53,195.63a8,8,0,1,0,13.4,8.74,80,80,0,0,1,134.14,0,8,8,0,0,0,13.4-8.74A95.83,95.83,0,0,0,117.25,157.92ZM40,108a44,44,0,1,1,44,44A44.05,44.05,0,0,1,40,108Zm210.14,98.7a8,8,0,0,1-11.07-2.33A79.83,79.83,0,0,0,172,168a8,8,0,0,1,0-16,44,44,0,1,0-16.34-84.87,8,8,0,1,1-5.94-14.85,60,60,0,0,1,55.53,105.64,95.83,95.83,0,0,1,47.22,37.71A8,8,0,0,1,250.14,206.7Z" />
-      ),
-      User: (
-        <path d="M230.92,212c-15.23-26.33-38.7-45.21-66.09-54.16a72,72,0,1,0-73.66,0C63.78,166.78,40.31,185.66,25.08,212a8,8,0,1,0,13.85,8c18.84-32.56,52.14-52,89.07-52s70.23,19.44,89.07,52a8,8,0,1,0,13.85-8ZM72,96a56,56,0,1,1,56,56A56.06,56.06,0,0,1,72,96Z" />
-      )
-    };
+  const navItems: NavItem[] = [
+    { icon: 'home', label: 'Home', path: '/home', filled: true },
+    { icon: 'menu_book', label: 'Library', path: '/study' },
+    { icon: 'school', label: 'Courses', path: '/courses' },
+    { icon: 'forum', label: 'Social', path: '/community' },
+    { icon: 'person', label: 'Profile', path: '/profile' },
+  ];
 
-    return icons[icon as keyof typeof icons] || icons.House;
-  };
+  const isActive = (path: string) => pathname === path;
 
   return (
-    <div 
-      className="fixed bottom-0 left-0 right-0 z-50"
-      style={{ fontFamily: 'Lexend, "Noto Sans", sans-serif' }}
-    >
-      <div className="flex gap-2 border-t border-[#e6f1f4] bg-[#f8fbfc] px-4 pb-3 pt-2">
-        {navItems.map((item, index) => (
-          <button
-            key={index}
-            onClick={item.onClick}
-            className={`flex flex-1 flex-col items-center justify-end gap-1 rounded-full transition-colors ${
-              item.active 
-                ? 'text-[#0c191d]' 
-                : 'text-[#458da1] hover:text-[#0c191d]'
+    <div className="fixed bottom-0 left-0 right-0 bg-background-light dark:bg-[#0a120d] border-t border-white/5 px-4 py-3 flex justify-between items-center z-50">
+      {navItems.map((item) => (
+        <button
+          key={item.path}
+          onClick={() => router.push(item.path)}
+          className={`flex flex-col items-center gap-1 flex-1 group ${isActive(item.path) ? '' : 'text-slate-400'
             }`}
+        >
+          <div
+            className={`px-5 py-1 rounded-full transition-colors ${isActive(item.path)
+                ? 'bg-primary/20 text-primary'
+                : 'group-hover:bg-white/5'
+              }`}
           >
-            <div className={`flex h-8 items-center justify-center ${
-              item.active ? 'text-[#0c191d]' : 'text-[#458da1]'
-            }`}>
-              <svg 
-                xmlns="http://www.w3.org/2000/svg" 
-                width="24px" 
-                height="24px" 
-                fill="currentColor" 
-                viewBox="0 0 256 256"
-              >
-                {getIconSVG(item.icon, item.active)}
-              </svg>
-            </div>
-            <p className={`text-xs font-medium leading-normal tracking-[0.015em] ${
-              item.active ? 'text-[#0c191d]' : 'text-[#458da1]'
-            }`}>
-              {item.label}
-            </p>
-          </button>
-        ))}
-      </div>
-      <div className="h-5 bg-[#f8fbfc]"></div>
+            <span className={`material-symbols-outlined ${item.filled && isActive(item.path) ? 'fill-1' : ''}`}>
+              {item.icon}
+            </span>
+          </div>
+          <span
+            className={`text-[11px] font-medium ${isActive(item.path) ? 'text-primary' : ''
+              }`}
+          >
+            {item.label}
+          </span>
+        </button>
+      ))}
     </div>
   );
-};
-
-export default BottomNav;
+}

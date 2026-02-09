@@ -5,13 +5,13 @@ import { useRouter } from 'next/navigation';
 
 export default function SignUp() {
     const router = useRouter();
+    const [showPassword, setShowPassword] = useState(false);
     const [formData, setFormData] = useState({
-        fullName: '',
         email: '',
-        university: '',
-        department: '',
         password: '',
-        confirmPassword: ''
+        institution: '',
+        department: '',
+        level: ''
     });
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -25,154 +25,181 @@ export default function SignUp() {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         console.log('Signup attempted with:', formData);
+        // Add your signup logic here
     };
 
     const handleBack = () => {
         router.back();
     };
 
-    const handleSignIn = () => {
+    const handleLogin = () => {
         router.push('/login');
     };
 
-    const selectButtonSvg = "data:image/svg+xml,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2724px%27 height=%2724px%27 fill=%27rgb(76,154,154)%27 viewBox=%270 0 256 256%27%3e%3cpath d=%27M181.66,170.34a8,8,0,0,1,0,11.32l-48,48a8,8,0,0,1-11.32,0l-48-48a8,8,0,0,1,11.32-11.32L128,212.69l42.34-42.35A8,8,0,0,1,181.66,170.34Zm-96-84.68L128,43.31l42.34,42.35a8,8,0,0,0,11.32-11.32l-48-48a8,8,0,0,0-11.32,0l-48,48A8,8,0,0,0,85.66,85.66Z%27%3e%3c/path%3e%3c/svg%3e";
-
     return (
-        <div
-            className="relative flex h-auto min-h-screen w-full flex-col bg-[#f8fcfc] justify-between group/design-root overflow-x-hidden"
-            style={{
-                fontFamily: 'Inter, "Noto Sans", sans-serif',
-                '--select-button-svg': `url('${selectButtonSvg}')`
-            } as React.CSSProperties}
-        >
-            <div className="flex items-center bg-[#f8fcfc] p-4 pb-2 justify-between">
-                <button
-                    onClick={handleBack}
-                    className="text-[#0d1b1b] flex size-12 shrink-0 items-center hover:bg-[#e7f3f3] rounded-xl transition-colors"
-                >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
-                        <path d="M224,128a8,8,0,0,1-8,8H59.31l58.35,58.34a8,8,0,0,1-11.32,11.32l-72-72a8,8,0,0,1,0-11.32l72-72a8,8,0,0,1,11.32,11.32L59.31,120H216A8,8,0,0,1,224,128Z" />
-                    </svg>
-                </button>
-                <h2 className="text-[#0d1b1b] text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center pr-12">
-                    Sign Up
-                </h2>
-            </div>
-
-            <div className="flex-1">
-                <h1 className="text-[#0d1b1b] text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 text-left pb-3 pt-5">
-                    Create your EduPal account
-                </h1>
-
-                <form onSubmit={handleSubmit} className="flex flex-col">
-                    <div className="flex max-w-[480px] flex-wrap items-end gap-4 px-4 py-3">
-                        <label className="flex flex-col flex-1 min-w-40">
-                            <input
-                                type="text"
-                                name="fullName"
-                                placeholder="Full Name"
-                                value={formData.fullName}
-                                onChange={handleInputChange}
-                                className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d1b1b] focus:outline-0 focus:ring-0 border-none bg-[#e7f3f3] focus:border-none h-14 placeholder:text-[#4c9a9a] p-4 text-base font-normal leading-normal focus:bg-[#dde9e9] transition-colors"
-                                required
-                            />
-                        </label>
+        <div className="bg-background-light dark:bg-background-dark font-display text-white min-h-screen flex flex-col">
+            <div className="flex flex-col min-h-screen w-full items-center justify-center p-4">
+                <div className="w-full max-w-[480px] bg-background-dark border border-border-accent rounded-xl shadow-2xl overflow-hidden">
+                    {/* Header */}
+                    <div className="flex items-center p-4 pb-2 border-b border-border-accent/30">
+                        <button
+                            onClick={handleBack}
+                            className="text-white flex size-10 shrink-0 items-center justify-center cursor-pointer hover:bg-white/10 rounded-full transition-colors"
+                        >
+                            <span className="material-symbols-outlined">arrow_back</span>
+                        </button>
+                        <h2 className="text-white text-lg font-medium leading-tight tracking-[-0.015em] flex-1 text-center pr-10">
+                            Create Account
+                        </h2>
                     </div>
 
-                    <div className="flex max-w-[480px] flex-wrap items-end gap-4 px-4 py-3">
-                        <label className="flex flex-col flex-1 min-w-40">
+                    {/* Logo and Title */}
+                    <div className="px-8 pt-8 pb-4 text-center">
+                        <div className="mb-4 flex justify-center">
+                            <div className="w-16 h-16 bg-primary/20 rounded-2xl flex items-center justify-center border border-primary/30">
+                                <span className="material-symbols-outlined text-primary text-4xl">school</span>
+                            </div>
+                        </div>
+                        <h1 className="text-white tracking-tight text-3xl font-bold leading-tight">Join EduPal</h1>
+                        <p className="text-white/60 text-base font-normal leading-normal mt-2">
+                            Start your academic journey with us
+                        </p>
+                    </div>
+
+                    {/* Form */}
+                    <form onSubmit={handleSubmit} className="px-8 pb-8 space-y-4">
+                        {/* Email */}
+                        <div className="flex flex-col gap-1.5">
+                            <label className="text-white/80 text-sm font-medium">Email Address</label>
                             <input
-                                type="email"
                                 name="email"
-                                placeholder="Email"
+                                type="email"
                                 value={formData.email}
                                 onChange={handleInputChange}
-                                className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d1b1b] focus:outline-0 focus:ring-0 border-none bg-[#e7f3f3] focus:border-none h-14 placeholder:text-[#4c9a9a] p-4 text-base font-normal leading-normal focus:bg-[#dde9e9] transition-colors"
+                                className="w-full rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary/50 border border-border-accent bg-input-bg h-12 placeholder:text-white/30 px-4 text-base font-normal transition-all"
+                                placeholder="e.g. name@institution.edu"
                                 required
                             />
-                        </label>
-                    </div>
+                        </div>
 
-                    <div className="flex max-w-[480px] flex-wrap items-end gap-4 px-4 py-3">
-                        <label className="flex flex-col flex-1 min-w-40">
-                            <select
-                                name="university"
-                                value={formData.university}
-                                onChange={handleInputChange}
-                                className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d1b1b] focus:outline-0 focus:ring-0 border-none bg-[#e7f3f3] focus:border-none h-14 bg-[image:--select-button-svg] bg-no-repeat bg-[center_right_1rem] bg-[length:24px_24px] placeholder:text-[#4c9a9a] p-4 text-base font-normal leading-normal focus:bg-[#dde9e9] transition-colors appearance-none"
-                                required
+                        {/* Password */}
+                        <div className="flex flex-col gap-1.5">
+                            <label className="text-white/80 text-sm font-medium">Password</label>
+                            <div className="relative">
+                                <input
+                                    name="password"
+                                    type={showPassword ? 'text' : 'password'}
+                                    value={formData.password}
+                                    onChange={handleInputChange}
+                                    className="w-full rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary/50 border border-border-accent bg-input-bg h-12 placeholder:text-white/30 px-4 text-base font-normal transition-all"
+                                    placeholder="Min. 8 characters"
+                                    required
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors"
+                                >
+                                    <span className="material-symbols-outlined">
+                                        {showPassword ? 'visibility_off' : 'visibility'}
+                                    </span>
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Institution */}
+                        <div className="flex flex-col gap-1.5 text-left">
+                            <label className="text-white/80 text-sm font-medium">Institution</label>
+                            <div className="relative">
+                                <input
+                                    name="institution"
+                                    type="text"
+                                    value={formData.institution}
+                                    onChange={handleInputChange}
+                                    className="w-full rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary/50 border border-border-accent bg-input-bg h-12 placeholder:text-white/30 px-4 text-base font-normal"
+                                    placeholder="Your University or School"
+                                    required
+                                />
+                                <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-white/30 pointer-events-none">
+                                    account_balance
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Department and Level */}
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="flex flex-col gap-1.5 text-left">
+                                <label className="text-white/80 text-sm font-medium">Department</label>
+                                <select
+                                    name="department"
+                                    value={formData.department}
+                                    onChange={handleInputChange}
+                                    className="w-full rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary/50 border border-border-accent bg-input-bg h-12 px-4 text-base font-normal appearance-none cursor-pointer"
+                                    required
+                                >
+                                    <option value="" disabled>Select Dept</option>
+                                    <option>Engineering</option>
+                                    <option>Science</option>
+                                    <option>Arts</option>
+                                    <option>Medicine</option>
+                                </select>
+                            </div>
+                            <div className="flex flex-col gap-1.5 text-left">
+                                <label className="text-white/80 text-sm font-medium">Level</label>
+                                <select
+                                    name="level"
+                                    value={formData.level}
+                                    onChange={handleInputChange}
+                                    className="w-full rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary/50 border border-border-accent bg-input-bg h-12 px-4 text-base font-normal appearance-none cursor-pointer"
+                                    required
+                                >
+                                    <option value="" disabled>Select Level</option>
+                                    <option>100</option>
+                                    <option>200</option>
+                                    <option>300</option>
+                                    <option>400</option>
+                                    <option>500</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        {/* Submit Button */}
+                        <div className="pt-4">
+                            <button
+                                type="submit"
+                                className="w-full bg-primary hover:bg-primary/90 text-background-dark font-bold text-base h-12 rounded-lg transition-all active:scale-[0.98] shadow-lg shadow-primary/20"
                             >
-                                <option value="">Select University</option>
-                                <option value="university-1">University of Lagos</option>
-                                <option value="university-2">University of Ibadan</option>
-                                <option value="university-3">Covenant University</option>
-                                <option value="university-4">University of Nigeria</option>
-                            </select>
-                        </label>
-                    </div>
+                                Create Account
+                            </button>
+                        </div>
 
-                    <div className="flex max-w-[480px] flex-wrap items-end gap-4 px-4 py-3">
-                        <label className="flex flex-col flex-1 min-w-40">
-                            <input
-                                type="text"
-                                name="department"
-                                placeholder="Department"
-                                value={formData.department}
-                                onChange={handleInputChange}
-                                className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d1b1b] focus:outline-0 focus:ring-0 border-none bg-[#e7f3f3] focus:border-none h-14 placeholder:text-[#4c9a9a] p-4 text-base font-normal leading-normal focus:bg-[#dde9e9] transition-colors"
-                                required
-                            />
-                        </label>
-                    </div>
+                        {/* Login Link */}
+                        <div className="pt-2 text-center">
+                            <p className="text-white/50 text-sm">
+                                Already have an account?{' '}
+                                <button
+                                    type="button"
+                                    onClick={handleLogin}
+                                    className="text-primary hover:underline font-medium"
+                                >
+                                    Log in
+                                </button>
+                            </p>
+                        </div>
+                    </form>
+                </div>
 
-                    <div className="flex max-w-[480px] flex-wrap items-end gap-4 px-4 py-3">
-                        <label className="flex flex-col flex-1 min-w-40">
-                            <input
-                                type="password"
-                                name="password"
-                                placeholder="Password"
-                                value={formData.password}
-                                onChange={handleInputChange}
-                                className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d1b1b] focus:outline-0 focus:ring-0 border-none bg-[#e7f3f3] focus:border-none h-14 placeholder:text-[#4c9a9a] p-4 text-base font-normal leading-normal focus:bg-[#dde9e9] transition-colors"
-                                required
-                            />
-                        </label>
+                {/* Security Badges */}
+                <div className="mt-8 flex gap-6 opacity-40">
+                    <div className="flex items-center gap-2">
+                        <span className="material-symbols-outlined text-sm">verified_user</span>
+                        <span className="text-xs">Secure Encryption</span>
                     </div>
-
-                    <div className="flex max-w-[480px] flex-wrap items-end gap-4 px-4 py-3">
-                        <label className="flex flex-col flex-1 min-w-40">
-                            <input
-                                type="password"
-                                name="confirmPassword"
-                                placeholder="Confirm Password"
-                                value={formData.confirmPassword}
-                                onChange={handleInputChange}
-                                className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d1b1b] focus:outline-0 focus:ring-0 border-none bg-[#e7f3f3] focus:border-none h-14 placeholder:text-[#4c9a9a] p-4 text-base font-normal leading-normal focus:bg-[#dde9e9] transition-colors"
-                                required
-                            />
-                        </label>
+                    <div className="flex items-center gap-2">
+                        <span className="material-symbols-outlined text-sm">privacy_tip</span>
+                        <span className="text-xs">Privacy Guaranteed</span>
                     </div>
-
-                    <div className="flex px-4 py-3">
-                        <button
-                            type="submit"
-                            className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-12 px-5 flex-1 bg-primary text-white text-base font-bold leading-normal tracking-[0.015em] hover:bg-brand-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                            disabled={!formData.fullName || !formData.email || !formData.university || !formData.department || !formData.password || !formData.confirmPassword}
-                        >
-                            <span className="truncate">Join EduPal</span>
-                        </button>
-                    </div>
-                </form>
-            </div>
-
-            <div>
-                <button
-                    onClick={handleSignIn}
-                    className="text-edupal-forest-400 text-sm font-normal leading-normal pb-3 pt-1 px-4 text-center underline hover:text-primary transition-colors w-full"
-                >
-                    Already have an account? Sign In
-                </button>
-                <div className="h-5 bg-[#f8fcfc]"></div>
+                </div>
             </div>
         </div>
     );
