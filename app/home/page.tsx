@@ -1,62 +1,94 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
 import BottomNav from '@/components/BottomNav';
+import { supabase } from '@/lib/supabase';
 
 export default function Home() {
   const router = useRouter();
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [enrolledCount, setEnrolledCount] = useState(0);
+  const [resourcesCount, setResourcesCount] = useState(0);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const { data: { user: authUser } } = await supabase.auth.getUser();
+
+        if (authUser) {
+          // Fetch user profile
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', authUser.id)
+            .single();
+
+          setUser(profile);
+
+          // Fetch enrollment count
+          const { count: enrollments } = await supabase
+            .from('enrollments')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', authUser.id);
+
+          setEnrolledCount(enrollments || 0);
+
+          // Fetch total resources count (mocked for now as we don't have a user-resource relation yet, but fetching total available)
+          const { count: resources } = await supabase
+            .from('resources')
+            .select('*', { count: 'exact', head: true });
+
+          setResourcesCount(resources || 0);
+        }
+      } catch (error) {
+        console.error('Error fetching home data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const quickAccessCards = [
     {
       title: 'Past Questions',
-      subtitle: '1,200+ Resources',
+      subtitle: `${resourcesCount > 0 ? resourcesCount + '+' : 'Browse'} Resources`,
       icon: 'history_edu',
       image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDFwrP0-LThS-SmerGKwLrGNxJJI5kCSbV8cBWn7bzxDvlSG6qcTLXOBbVVUn5nC3tpMqiyMrK4PHX6yI_3pSe98iG4u2T_Y8c2nvVoB3jEqnoE08jZ0avWBv-BN4cGKL3-IpRuEjujRnWadIYehTn-ZyDUF_fb6NXF_fkMtUUryvoGVyluE4ZxUobCSIIpe_66pPbyfVaa0OSLoam61pZRnJtYGODhaktq5RzhFkFR89rPKFsIY6SbqOzqk_LMwdOXUsCbG8hT06E',
-      path: '/study'
+      path: '/library'
     },
     {
       title: 'Courses',
-      subtitle: '12 Active Enrolled',
+      subtitle: `${enrolledCount} Active Enrolled`,
       icon: 'school',
       image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDb8TkeFvKiM4k8amEMTGOgkdup8zpVNzMl5cVwiFKQtFr68lIw2YQmmxIIUxhBxABAzobY46RedSm0Qiv--GrF1hPToEHNutEm-8Xd-hRLUccy354sj5Hx5_qSrjjIl9ARygzdRp0nfrXpdS_0zO84rSc3nDgVrl-fZzmD9HXc35G7H040ufJjp7HdeSl_OOJsiLqn6Hs7LXzN07mrjgeFS2b7PEIEMBvJ6xwgSE7qcO2r83MV0Hxe-ySnm5j9YTk51RcA-SFjzMM',
-      path: '/courses'
+      path: '/classes'
     },
     {
       title: 'Discussions',
-      subtitle: '5 New Replies',
+      subtitle: 'Join conversation',
       icon: 'forum',
       image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAN69hwYd7coO877wAeqUOmkxTuS79jLz6ebqwJ2on85eAgPfMZMrfoW6vOTsZB9LlyQVUT4xwpsRgH8_jQQCvxWgQ68fRjBVCJhU9bg8J2VCWA04YhLZxxMb77QGL4D_I2N9djR6tMNglnBuPbX_DUamCnYFb_f2xRKWJCaZVzQoM6jxMXupy2Lz-UTGTbfL9v0D6cJynvpWn0oXmKZ7F2ojwq8C1EOSt1mlneVjzaWRfPQAX82LwTtbOSEncVhwB3N8ZW9GSBUOc',
       path: '/community'
     }
   ];
 
-  const recentlyViewed = [
-    {
-      title: 'Advanced Mathematics 101',
-      subtitle: 'Module 4: Linear Algebra • Last viewed 2 hours ago',
-      image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB2EjoBA1Wno-UM3_C85-L7sXJ2nnLVM1o6RsEqigqHkJaRN4SUuhXtCzAgS967TDx5XIcQo5_SX__2QwW8LyzDngDmUtXscGj-Gqdzb5w_t9qvKCelymhhsXOGwbbIJy2HEbnkHPNk4v4_a8Z_t2zuc9cv40oc65QJkIjBzrLXCBtHxyhaV3Aas_AtWVi__FVOhND46WICaj1hlJQRGdguLNLfNz9pg785gLMGU8BO6zlqGa2tL6sZu2aDSsS5LhE7Y88MPwf6OdU'
-    },
-    {
-      title: 'Introduction to Genetics',
-      subtitle: 'Reading: DNA Replication • Last viewed 5 hours ago',
-      image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBi2TuNZww6BfE6QwK3XQjucwX5wRagv8JdH-YjY6jkAhXT6kmtTF80DvnR6A3SAjm3sOsD3V3z5WoCQRIVywnSkQK38puYYoWRFIX0iMnixJ9RfC5Si_q09QaABNsQX0XSrf5dxAPCRpGStoVQ3MRCJ81v5c-Kc8EiLIsljZRPoniQwBCNQp1GwhglDsejTpY6ee0GTg0wjSWO4Gki080d3_izC6VXqVzfRcWDxEGQra8xeX9iPG0mPLRPMRThYxjqNy2Q8GckLpY'
-    },
-    {
-      title: 'Data Structures & Algorithms',
-      subtitle: 'Video: Binary Search Trees • Last viewed yesterday',
-      image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDxRcvJP3lf3qci8epR7sgnFVHbtV89hOApfEAYNLTOEw4hVO660yAAm3lq6q9QiK1cTMhuP5iC--gv1fteIC-Mf1wRUFmrLU-BUEa7U4efCrNUkoNcz0-8zZHFzsfIgfpeQjs3n_tx13PtawfKY9bbfZsYw4LLlzC_PgwH8eER2E6tETvz34ofoDfFYdpghnV_OlUMZu8qEzgdU87nDlQ-td7JMq5vBp6zrwYmjLpxt739M-feFGGlOAKNoK_n-rjbA9KHUGoUDCk'
-    }
-  ];
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center bg-background-light dark:bg-background-dark text-slate-500">Loading...</div>;
+  }
 
   return (
-    <div className="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-white min-h-screen">
-      <div className="relative flex h-auto min-h-screen w-full flex-col overflow-x-hidden pb-20">
+    <div className="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-white min-h-[100dvh]">
+      <div className="relative flex h-auto min-h-[100dvh] w-full flex-col overflow-x-hidden pb-20">
         {/* TopAppBar */}
         <nav className="flex items-center bg-background-light dark:bg-background-dark p-4 pb-2 justify-between sticky top-0 z-50 border-b border-white/5">
           <div className="flex size-12 shrink-0 items-center">
             <div
               className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border-2 border-primary cursor-pointer"
-              style={{ backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuCL9JmvwN64PzbRp2S5RapNk5GOzzY9SydgKvkJdTSLWkrlV0Tw3UcITmMNjUzPFjbEUakDPFUPEsBsaI073wRoSNw9VPQ3wJs0vqeuOnnxV-yq0G9BnriLjFzEncWOfDEK6CNZwn7YRDqNpnKpY-9j-nnRpiVhTiIuuHHoY1YkVmfZyfcFxuV6Zp73EIHUsy_xNeCKpKONkAtxQFRXHd-w8R4zxpox5jrfdgXS-AqM5O8umG8C-Uw4vm5PLjd4YZB5Sj9gqtGLbmQ")' }}
+              style={{ backgroundImage: `url("${user?.avatar_url || 'https://lh3.googleusercontent.com/aida-public/default-avatar'}")` }}
               onClick={() => router.push('/profile')}
             />
           </div>
@@ -79,7 +111,9 @@ export default function Home() {
         <main className="max-w-5xl mx-auto w-full px-4">
           {/* Greeting */}
           <div className="py-8">
-            <h1 className="text-slate-900 dark:text-white tracking-tight text-4xl font-bold leading-tight">Hello, Alex</h1>
+            <h1 className="text-slate-900 dark:text-white tracking-tight text-4xl font-bold leading-tight">
+              Hello, {user?.full_name?.split(' ')[0] || 'Student'}
+            </h1>
             <p className="text-slate-500 dark:text-slate-400 mt-2">Ready to continue your learning journey today?</p>
           </div>
 
@@ -105,49 +139,36 @@ export default function Home() {
             ))}
           </div>
 
-          {/* Recently Viewed Section */}
+          {/* Recently Viewed - Placeholder for now until we have a viewing history table */}
+          {/* 
           <div className="mb-10">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-slate-900 dark:text-white text-2xl font-bold leading-tight tracking-tight">Recently Viewed</h2>
               <button className="text-primary text-sm font-semibold hover:underline">View All</button>
             </div>
-            <div className="space-y-3">
-              {recentlyViewed.map((item, index) => (
-                <div
-                  key={index}
-                  className="flex items-center gap-4 bg-white dark:bg-white/5 p-4 rounded-xl border border-slate-200 dark:border-white/10 hover:border-primary/50 transition-colors cursor-pointer group"
-                >
-                  <div
-                    className="bg-center bg-no-repeat aspect-square bg-cover rounded-lg size-16 shrink-0"
-                    style={{ backgroundImage: `url("${item.image}")` }}
-                  />
-                  <div className="flex flex-col flex-1 justify-center min-w-0">
-                    <p className="text-slate-900 dark:text-white text-lg font-semibold leading-normal truncate">{item.title}</p>
-                    <p className="text-slate-500 dark:text-slate-400 text-sm font-normal leading-normal">{item.subtitle}</p>
-                  </div>
-                  <div className="shrink-0">
-                    <div className="text-primary flex size-8 items-center justify-center rounded-full bg-primary/10 group-hover:bg-primary group-hover:text-background-dark transition-all">
-                      <span className="material-symbols-outlined">chevron_right</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+             <div className="text-center py-8 text-slate-500">
+                <p>No recently viewed items yet. Start exploring!</p>
+             </div>
+          </div> 
+          */}
 
           {/* Upcoming Tasks / Summary */}
+          {/* Placeholder or fetch from enrollments/assignments later */}
           <div className="bg-primary/10 rounded-2xl p-6 mb-12 flex flex-col md:flex-row items-center justify-between gap-6 border border-primary/20">
             <div className="flex items-center gap-4">
               <div className="p-3 bg-primary rounded-xl text-background-dark">
                 <span className="material-symbols-outlined text-3xl">event_available</span>
               </div>
               <div>
-                <h3 className="text-xl font-bold">Upcoming Exam</h3>
-                <p className="text-slate-400">Physics 201 - Monday, Oct 24th</p>
+                <h3 className="text-xl font-bold">Stay Tracked</h3>
+                <p className="text-slate-400">Check your classes for upcoming assignments.</p>
               </div>
             </div>
-            <button className="w-full md:w-auto px-8 py-3 bg-primary text-background-dark font-bold rounded-xl hover:opacity-90 transition-opacity">
-              Set Reminder
+            <button
+              onClick={() => router.push('/classes')}
+              className="w-full md:w-auto px-8 py-3 bg-primary text-background-dark font-bold rounded-xl hover:opacity-90 transition-opacity"
+            >
+              Go to Classes
             </button>
           </div>
         </main>

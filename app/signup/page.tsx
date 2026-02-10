@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
+import Image from 'next/image';
+import EduPalLogo from '@/assets/images/edupal.png';
 
 export default function SignUp() {
     const router = useRouter();
@@ -32,30 +33,31 @@ export default function SignUp() {
         setError(null);
 
         try {
-            const { data, error: signupError } = await supabase.auth.signUp({
-                email: formData.email,
-                password: formData.password,
-                options: {
-                    data: {
-                        full_name: formData.full_name,
-                        university: formData.institution,
-                        major: formData.department,
-                        year: formData.level,
+            const response = await fetch('/api/auth/signup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email: formData.email,
+                    password: formData.password,
+                    options: {
+                        data: {
+                            full_name: formData.full_name,
+                            university: formData.institution,
+                            major: formData.department,
+                            year: formData.level,
+                        }
                     }
-                }
+                })
             });
 
-            if (signupError) throw signupError;
+            const result = await response.json();
 
-            if (data.user) {
-                // Check if email confirmation is required
-                if (data.session) {
-                    router.push('/home');
-                } else {
-                    alert('Signup successful! Please check your email for a confirmation link.');
-                    router.push('/login');
-                }
+            if (!response.ok) {
+                throw new Error(result.error || 'Signup failed');
             }
+
+            alert('Signup successful! A verification email has been sent to your inbox. Please check and verify your email.');
+            router.push('/login');
         } catch (err: any) {
             setError(err.message || 'An error occurred during signup');
         } finally {
@@ -72,8 +74,8 @@ export default function SignUp() {
     };
 
     return (
-        <div className="bg-background-light dark:bg-background-dark font-display text-white min-h-screen flex flex-col">
-            <div className="flex flex-col min-h-screen w-full items-center justify-center p-4">
+        <div className="bg-background-light dark:bg-background-dark font-display text-white min-h-[100dvh] flex flex-col">
+            <div className="flex flex-col min-h-[100dvh] w-full items-center justify-center p-4">
                 <div className="w-full max-w-[480px] bg-background-dark border border-border-accent rounded-xl shadow-2xl overflow-hidden">
                     {/* Header */}
                     <div className="flex items-center p-4 pb-2 border-b border-border-accent/30">
@@ -83,20 +85,24 @@ export default function SignUp() {
                         >
                             <span className="material-symbols-outlined">arrow_back</span>
                         </button>
-                        <h2 className="text-white text-lg font-medium leading-tight tracking-[-0.015em] flex-1 text-center pr-10">
-                            Create Account
-                        </h2>
+                        <div className="flex-1 flex items-center justify-center pr-10 gap-3">
+                            <div className="w-8 h-8 bg-[#0d191c] rounded-lg flex items-center justify-center border border-primary/20 p-1 shadow-lg">
+                                <Image src={EduPalLogo} alt="EduPal Logo" width={24} height={24} className="w-full h-full object-contain" />
+                            </div>
+                            <h2 className="text-white text-lg font-medium leading-tight tracking-[-0.015em]">
+                                Create Account
+                            </h2>
+                        </div>
                     </div>
 
-                    {/* Logo and Title */}
                     <div className="px-8 pt-8 pb-4 text-center">
-                        <div className="mb-4 flex justify-center">
-                            <div className="w-16 h-16 bg-primary/20 rounded-2xl flex items-center justify-center border border-primary/30">
-                                <span className="material-symbols-outlined text-primary text-4xl">school</span>
+                        <div className="mb-6 flex justify-center">
+                            <div className="w-24 h-24 bg-[#0d191c] rounded-[1.75rem] flex items-center justify-center border border-primary/30 overflow-hidden shadow-xl shadow-black/30">
+                                <Image src={EduPalLogo} alt="EduPal Logo" width={72} height={72} className="w-16 h-16 object-contain drop-shadow-[0_0_8px_rgba(76,175,80,0.3)]" />
                             </div>
                         </div>
                         <h1 className="text-white tracking-tight text-3xl font-bold leading-tight">Join EduPal</h1>
-                        <p className="text-white/60 text-base font-normal leading-normal mt-2">
+                        <p className="text-white/60 text-base font-normal leading-normal mt-2 px-10">
                             Start your academic journey with us
                         </p>
                     </div>
@@ -192,10 +198,16 @@ export default function SignUp() {
                                     required
                                 >
                                     <option value="" disabled>Select Dept</option>
-                                    <option>Engineering</option>
-                                    <option>Science</option>
-                                    <option>Arts</option>
-                                    <option>Medicine</option>
+                                    <option>Computer Science</option>
+                                    <option>Biology</option>
+                                    <option>Chemistry</option>
+                                    <option>Physics</option>
+                                    <option>Mathematics</option>
+                                    <option>English</option>
+                                    <option>Geography</option>
+                                    <option>Social Studies</option>
+                                    <option>Business Education</option>
+                                    <option>Economic</option>
                                 </select>
                             </div>
                             <div className="flex flex-col gap-1.5 text-left">

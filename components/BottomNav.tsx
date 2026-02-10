@@ -19,8 +19,8 @@ export default function BottomNav({ navItems: customNavItems }: BottomNavProps) 
 
   const defaultNavItems: NavItem[] = [
     { icon: 'home', label: 'Home', path: '/home', filled: true },
-    { icon: 'menu_book', label: 'Library', path: '/study' },
-    { icon: 'school', label: 'Courses', path: '/courses' },
+    { icon: 'menu_book', label: 'Library', path: '/library' },
+    { icon: 'school', label: 'Courses', path: '/classes' },
     { icon: 'forum', label: 'Social', path: '/community' },
     { icon: 'person', label: 'Profile', path: '/profile' },
   ];

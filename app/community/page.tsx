@@ -1,545 +1,312 @@
 'use client';
 
-import Header from "@/components/Header";
-import BottomNav from "@/components/BottomNav";
-import { useRouter } from "next/navigation";
-import { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
+import { supabase } from '@/lib/supabase';
 
-interface User {
-  id: string;
-  name: string;
-  avatar: string;
-  year?: string;
-  major?: string;
-}
+// Helper to format time relative (e.g. "2m ago")
+const formatTimeAgo = (dateString: string) => {
+  const date = new Date(dateString);
+  const now = new Date();
+  const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
-interface Comment {
+  if (seconds < 60) return `${seconds}s ago`;
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
+};
+
+interface Thread {
   id: string;
-  author: User;
+  title: string; // We might need to derive this from content if not in DB
   content: string;
+  author: {
+    name: string;
+    avatar: string;
+  };
   timestamp: string;
-  likes: number;
-  isLiked: boolean;
-  isReply?: boolean;
-  parentId?: string;
-  replies?: Comment[];
-}
-
-interface Post {
-  id: string;
-  author: User;
-  content: string;
-  timestamp: string;
-  likes: number;
-  comments: number;
-  shares: number;
-  isLiked: boolean;
-  tags: string[];
-  commentsList: Comment[];
+  repliesCount: number;
+  views: number; // Mock if not in DB
+  category: 'General' | 'Homework' | 'Exam' | 'Project'; // Derive or mock
+  isResolved?: boolean;
 }
 
 const CommunityPage: React.FC = () => {
   const router = useRouter();
-  const [newPostContent, setNewPostContent] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const postInputRef = useRef<HTMLInputElement>(null);
+  const [threads, setThreads] = useState<Thread[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [activeFilter, setActiveFilter] = useState('All Threads');
+  const [userAvatar, setUserAvatar] = useState('https://lh3.googleusercontent.com/aida-public/default-avatar');
+  const [newPostContent, setNewPostContent] = useState('');
+  const [isPosting, setIsPosting] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Mock current user - in production, this would come from auth context
-  const currentUser: User = {
-    id: "current-user",
-    name: "Current User",
-    avatar: "https://lh3.googleusercontent.com/aida-public/default-avatar",
-    year: "2nd year",
-    major: "Computer Science"
-  };
-
-  const [posts, setPosts] = useState<Post[]>([
-    {
-      id: "1",
-      author: {
-        id: "user1",
-        name: "Aisha Adebayo",
-        avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuCUjEd-I5lAHENfFAsmlx3aywUQgNcxzanj3wP8cStib1O7VXUzKuopw3qf5rFiGTGM2C1773ZXXfGKdReU0wF3Tc1bdZ_oi-1NyiNNFx9iXBaQG9PMOXhwVeSgV7eATyP9K4nVTFM_YL-b-LYYmacpkiN75OGRrQvkvirMdDCnl1JjOuNEmsKamUQptlvzJgzzdyhG8u8vUL43V8SAR8CkcxLa9YvEuuO5P_8AxgEeLA01h7REq3wROExpyZt9ckL-RPNZI45lp3E",
-        year: "2nd year",
-        major: "Economics"
-      },
-      content: "Does anyone have past questions for the Introduction to Economics course? I'm really struggling with the concepts and could use some help.",
-      timestamp: "2d ago",
-      likes: 23,
-      comments: 12,
-      shares: 5,
-      isLiked: false,
-      tags: ["Economics", "Study Help", "Past Questions"],
-      commentsList: [
-        {
-          id: "1-1",
-          author: {
-            id: "user2",
-            name: "Chukwudi Okoro",
-            avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuD0S5E8N6HCdmi72_gRdcZkvey8lskXChm57S3BAZwNEc7b4WLLCm56-mL0ZtRhZVU2YiafGCX2fVvNc4CTJ2x_YQheqzEye2GFuZxYNvO_SoqrwQshYhlBLIGQoAlAUs576QgN-KvGPBJV8xpoQmdERPVdQK1vgAcCzujRBzb6EXDoZsN1Vih9djTu1dffK2a4Itw-N7Uqpw48K1hVl0b4v9Afx8oopDivwk46atOpIGW-hlGqp6kisRjbafPTagS9eFRuBEotbgI",
-            year: "3rd year",
-            major: "Economics"
-          },
-          content: "I have some past questions from last year. I can share them with you if you'd like. They really helped me understand the key concepts.",
-          timestamp: "1d ago",
-          likes: 5,
-          isLiked: false,
-          replies: [
-            {
-              id: "1-1-1",
-              author: currentUser,
-              content: "That would be amazing! Could you please share them? I've been struggling with the supply and demand curves.",
-              timestamp: "12h ago",
-              likes: 2,
-              isLiked: false,
-              isReply: true,
-              parentId: "1-1"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      id: "2",
-      author: {
-        id: "user3",
-        name: "Fatima Hassan",
-        avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuCoiIMVywLqqXnA53u-Ie-O1Svapj37p-QY-ZXJJPTarNLpd7l0ILekEkaPFHN-S-KV-zCs5Fzgck3KqyjhlDf31QfIZryE8uzLD3kSDDgd0oleljE8XQ0YsB0Nn5IundQLIGsCQ7ermkdDsdkZKAevW7ftjahE-aiDqafLYDr7ikp7spa_-jiGxGE2iQWHT4XemEVQ4K3YABKDtD5TViqpJGwAUAcO6RVw2pWDPuLrMuVOvqkU0S6qs41XdCD4W1_GMFUykZenk1A",
-        year: "2nd year",
-        major: "Mathematics"
-      },
-      content: "Has anyone found a good study group for the Calculus II course? I'm looking for a group that meets regularly and is focused on problem-solving.",
-      timestamp: "3d ago",
-      likes: 18,
-      comments: 8,
-      shares: 3,
-      isLiked: false,
-      tags: ["Calculus", "Study Group", "Mathematics"],
-      commentsList: [
-        {
-          id: "2-1",
-          author: {
-            id: "user4",
-            name: "Obinna Eze",
-            avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuAP5ov_vVGeCiX8mt_NpNvBbCpqYCY0V6OikSTo4AbWgBV76E4Q2UpFA34jA32ZHnBrATeI6p3n9vLKk6YcMIXZavNneGDpKYKePQ2I4vaTHkg7l5ZwD5KfklUt87zCeA6yLQhhRWlDY7HsV5p-JElb7NazPn6lPn2JyDWH9GYsWlT7whjOkM5eIZF70QA1BHL-lWmXdKcDNBASeR_imlGmTo16jHBOrgM3XvJejXypqJNwkCMmgxjDGEPxby0i-WZ2q-avDyQs128",
-            year: "2nd year",
-            major: "Engineering"
-          },
-          content: "I'm also looking for a study group for Calculus II. Maybe we can start one together? I'm free on Tuesday and Thursday evenings.",
-          timestamp: "2d ago",
-          likes: 3,
-          isLiked: false
-        }
-      ]
-    }
-  ]);
-
-  const navItems = [
-    {
-      icon: "House",
-      label: "Home",
-      active: false,
-      onClick: () => router.push("/home")
-    },
-    {
-      icon: "BookOpen",
-      label: "Study",
-      active: false,
-      onClick: () => router.push("/study")
-    },
-    {
-      icon: "Video",
-      label: "Classes",
-      active: false,
-      onClick: () => router.push("/classes")
-    },
-    {
-      icon: "Users",
-      label: "Community",
-      active: true,
-      onClick: () => router.push("/community")
-    },
-    {
-      icon: "User",
-      label: "Profile",
-      active: false,
-      onClick: () => router.push("/profile")
-    }
-  ];
-
-  // Simulate API call delay
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1000);
-    return () => clearTimeout(timer);
+    const fetchData = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: profile } = await supabase.from('profiles').select('avatar_url').eq('id', user.id).single();
+          if (profile?.avatar_url) setUserAvatar(profile.avatar_url);
+        }
+
+        // Fetch Posts (Threads)
+        const { data: posts, error } = await supabase
+          .from('posts')
+          .select(`
+            *,
+            profiles:author_id (full_name, avatar_url),
+            comments (count),
+            post_likes (count)
+          `)
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          console.error("Supabase Error Full:", JSON.stringify(error, null, 2));
+          throw error;
+        }
+
+        const formattedThreads = posts.map((post: any, index: number) => {
+          // Derive a title from the first few words of content
+          const title = post.content.split(' ').slice(0, 8).join(' ') + (post.content.split(' ').length > 8 ? '...' : '?');
+
+          // Mock categories for visual variety
+          const categories: ('General' | 'Homework' | 'Exam' | 'Project')[] = ['General', 'Homework', 'Exam', 'Project'];
+          const category = categories[index % categories.length];
+
+          return {
+            id: post.id,
+            title: title,
+            content: post.content,
+            author: {
+              name: post.profiles?.full_name || 'Anonymous',
+              avatar: post.profiles?.avatar_url || 'https://lh3.googleusercontent.com/aida-public/default-avatar'
+            },
+            timestamp: post.created_at,
+            repliesCount: post.comments?.[0]?.count || 0,
+            views: (post.post_likes?.[0]?.count || 0) * 15 + 42, // Mock views based on likes
+            category: category,
+            isResolved: index % 5 === 0 // Mock resolved status
+          };
+        });
+
+        setThreads(formattedThreads);
+      } catch (error) {
+        console.error("Error fetching threads:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
   }, []);
 
-  const handlePostClick = (postId: string) => {
-    router.push(`/community/${postId}`);
-  };
-
-  const handleCreatePost = async () => {
+  const handlePostSubmit = async () => {
     if (!newPostContent.trim()) return;
-
-    setIsLoading(true);
-
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    const newPost: Post = {
-      id: Date.now().toString(),
-      author: currentUser,
-      content: newPostContent,
-      timestamp: "Just now",
-      likes: 0,
-      comments: 0,
-      shares: 0,
-      isLiked: false,
-      tags: extractTags(newPostContent),
-      commentsList: []
-    };
-
-    setPosts(prev => [newPost, ...prev]);
-    setNewPostContent("");
-    setIsLoading(false);
-    postInputRef.current?.focus();
-  };
-
-  const extractTags = (content: string): string[] => {
-    const tags: string[] = [];
-    const commonSubjects = ["Economics", "Calculus", "Physics", "Chemistry", "Biology", "History", "Programming"];
-
-    commonSubjects.forEach(subject => {
-      if (content.toLowerCase().includes(subject.toLowerCase())) {
-        tags.push(subject);
+    setIsPosting(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        alert("Please log in to post.");
+        return;
       }
-    });
 
-    if (content.toLowerCase().includes("study group") || content.toLowerCase().includes("study together")) {
-      tags.push("Study Group");
-    }
-    if (content.toLowerCase().includes("help") || content.toLowerCase().includes("struggling")) {
-      tags.push("Study Help");
-    }
+      const { error } = await supabase.from('posts').insert({
+        content: newPostContent,
+        author_id: user.id
+      });
 
-    return tags.slice(0, 3); // Limit to 3 tags
-  };
+      if (error) throw error;
 
-  const handleLikePost = (postId: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setPosts(prev => prev.map(post =>
-      post.id === postId
-        ? {
-          ...post,
-          likes: post.isLiked ? post.likes - 1 : post.likes + 1,
-          isLiked: !post.isLiked
-        }
-        : post
-    ));
-  };
+      setNewPostContent('');
+      // Optimistic update or refetch could go here. For simplicity, we reload.
+      window.location.reload();
 
-  const handleLikeComment = (postId: string, commentId: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setPosts(prev => prev.map(post =>
-      post.id === postId
-        ? {
-          ...post,
-          commentsList: post.commentsList.map(comment =>
-            updateCommentLikes(comment, commentId)
-          )
-        }
-        : post
-    ));
-  };
-
-  const updateCommentLikes = (comment: Comment, targetId: string): Comment => {
-    if (comment.id === targetId) {
-      return {
-        ...comment,
-        likes: comment.isLiked ? comment.likes - 1 : comment.likes + 1,
-        isLiked: !comment.isLiked
-      };
-    }
-
-    if (comment.replies) {
-      return {
-        ...comment,
-        replies: comment.replies.map(reply => updateCommentLikes(reply, targetId))
-      };
-    }
-
-    return comment;
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey && !isLoading) {
-      e.preventDefault();
-      handleCreatePost();
+    } catch (error) {
+      console.error("Error creating post:", error);
+      alert("Failed to post. Please try again.");
+    } finally {
+      setIsPosting(false);
     }
   };
 
-  const ReactionButton: React.FC<{
-    count: number;
-    isActive: boolean;
-    onClick: (e: React.MouseEvent) => void;
-    type: 'like' | 'comment' | 'share';
-  }> = ({ count, isActive, onClick, type }) => {
-    const icons = {
-      like: (
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 256 256">
-          {isActive ? (
-            <path d="M240,94c0,70-103.79,126.66-108.21,129a8,8,0,0,1-7.58,0C119.79,220.66,16,164,16,94A62.07,62.07,0,0,1,78,32c20.65,0,38.73,8.88,50,23.89C139.27,40.88,157.35,32,178,32A62.07,62.07,0,0,1,240,94Z" />
-          ) : (
-            <path d="M178,32c-20.65,0-38.73,8.88-50,23.89C116.73,40.88,98.65,32,78,32A62.07,62.07,0,0,0,16,94c0,70,103.79,126.66,108.21,129a8,8,0,0,0,7.58,0C136.21,220.66,240,164,240,94A62.07,62.07,0,0,0,178,32ZM128,206.8C109.74,196.16,32,147.69,32,94A46.06,46.06,0,0,1,78,48c19.45,0,35.78,10.36,42.6,27a8,8,0,0,0,14.8,0c6.82-16.67,23.15-27,42.6-27a46.06,46.06,0,0,1,46,46C224,147.61,146.24,196.15,128,206.8Z" />
-          )}
-        </svg>
-      ),
-      comment: (
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 256 256">
-          <path d="M140,128a12,12,0,1,1-12-12A12,12,0,0,1,140,128ZM84,116a12,12,0,1,0,12,12A12,12,0,0,0,84,116Zm88,0a12,12,0,1,0,12,12A12,12,0,0,0,172,116Zm60,12A104,104,0,0,1,79.12,219.82L45.07,231.17a16,16,0,0,1-20.24-20.24l11.35-34.05A104,104,0,1,1,232,128Zm-16,0A88,88,0,1,0,51.81,172.06a8,8,0,0,1,.66,6.54L40,216,77.4,203.53a7.85,7.85,0,0,1,2.53-.42,8,8,0,0,1,4,1.08A88,88,0,0,0,216,128Z" />
-        </svg>
-      ),
-      share: (
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 256 256">
-          <path d="M227.32,28.68a16,16,0,0,0-15.66-4.08l-.15,0L19.57,82.84a16,16,0,0,0-2.42,29.84l85.62,40.55,40.55,85.62A15.86,15.86,0,0,0,157.74,248q.69,0,1.38-.06a15.88,15.88,0,0,0,14-11.51l58.2-191.94c0-.05,0-.1,0-.15A16,16,0,0,0,227.32,28.68ZM157.83,231.85l-.05.14L118.42,148.9l47.24-47.25a8,8,0,0,0-11.31-11.31L107.1,137.58,24,98.22l.14,0L216,40Z" />
-        </svg>
-      )
-    };
-
-    return (
-      <button
-        onClick={onClick}
-        className={`flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg transition-all duration-200 ${isActive
-          ? 'text-[#0d191c] bg-[#e7f1f4]'
-          : 'text-[#498a9c] hover:bg-[#f0f7fa] hover:text-[#0d191c]'
-          }`}
-      >
-        <div className={`${isActive && type === 'like' ? 'text-red-500' : ''}`}>
-          {icons[type]}
-        </div>
-        <span className="text-[13px] font-bold leading-normal tracking-[0.015em] min-w-[20px] text-center">
-          {count}
-        </span>
-      </button>
-    );
+  const getCategoryIcon = (category: string, isResolved?: boolean) => {
+    if (isResolved) return { icon: 'check_circle', color: 'text-slate-400', bg: 'bg-slate-500/10 border-slate-500/20' };
+    switch (category) {
+      case 'Homework': return { icon: 'event_note', color: 'text-blue-400', bg: 'bg-blue-500/10 border-blue-500/20' };
+      case 'Exam': return { icon: 'help', color: 'text-amber-400', bg: 'bg-amber-500/10 border-amber-500/20' };
+      case 'Project': return { icon: 'rocket_launch', color: 'text-purple-400', bg: 'bg-purple-500/10 border-purple-500/20' };
+      default: return { icon: 'terminal', color: 'text-primary', bg: 'bg-primary/10 border-primary/20' };
+    }
   };
 
-  const CommentItem: React.FC<{
-    comment: Comment;
-    onLike: (commentId: string, e: React.MouseEvent) => void;
-    depth?: number;
-  }> = ({ comment, onLike, depth = 0 }) => (
-    <div className={`${depth > 0 ? 'ml-12 border-l-2 border-[#e7f1f4] pl-4' : ''}`}>
-      <div className="flex gap-3 p-3 hover:bg-[#fafdfe] transition-colors rounded-lg">
-        <img
-          src={comment.author.avatar}
-          alt={comment.author.name}
-          className="w-8 h-8 rounded-full flex-shrink-0"
-        />
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="font-semibold text-sm text-[#0d191c]">
-              {comment.author.name}
-            </span>
-            <span className="text-xs text-[#498a9c]">
-              {comment.timestamp}
-            </span>
-          </div>
-          <p className="text-sm text-[#0d191c] mb-2 leading-relaxed">
-            {comment.content}
-          </p>
-          <div className="flex items-center gap-4">
-            <button
-              onClick={(e) => onLike(comment.id, e)}
-              className={`flex items-center gap-1 text-xs font-medium transition-colors ${comment.isLiked ? 'text-[#0d191c]' : 'text-[#498a9c] hover:text-[#0d191c]'
-                }`}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 256 256">
-                <path d="M178,32c-20.65,0-38.73,8.88-50,23.89C116.73,40.88,98.65,32,78,32A62.07,62.07,0,0,0,16,94c0,70,103.79,126.66,108.21,129a8,8,0,0,0,7.58,0C136.21,220.66,240,164,240,94A62.07,62.07,0,0,0,178,32Z" />
-              </svg>
-              {comment.likes > 0 && comment.likes}
-            </button>
-            {!comment.isReply && (
-              <button className="text-xs text-[#498a9c] hover:text-[#0d191c] font-medium transition-colors">
-                Reply
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Nested Replies */}
-      {comment.replies?.map(reply => (
-        <CommentItem
-          key={reply.id}
-          comment={reply}
-          onLike={onLike}
-          depth={depth + 1}
-        />
-      ))}
-    </div>
-  );
-
-  if (isLoading && posts.length === 0) {
-    return (
-      <div className="min-h-screen bg-[#f8fbfc] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#498a9c]"></div>
-      </div>
-    );
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center bg-background-light dark:bg-background-dark text-slate-500">Loading Discussions...</div>;
   }
 
   return (
-    <div className="flex flex-col h-screen bg-[#f8fbfc]">
-      {/* Header */}
-      <Header title="Community" />
+    <div className="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen transition-colors duration-300">
+      <div className="max-w-3xl mx-auto flex flex-col min-h-screen border-x border-slate-200 dark:border-slate-800 bg-background-light dark:bg-background-dark">
 
-      {/* Scrollable Content */}
-      <div className="flex-1 overflow-y-auto">
-        {/* Create Post Input */}
-        <div className="bg-white p-4 border-b border-[#e7f1f4]">
-          <div className="flex gap-3 items-center">
-            <img
-              src={currentUser.avatar}
-              alt="Your avatar"
-              className="w-12 h-12 rounded-full flex-shrink-0"
-            />
-            <div className="flex-1 relative">
-              <input
-                ref={postInputRef}
-                type="text"
-                placeholder="Share a question or note..."
+        {/* TopAppBar */}
+        <header className="sticky top-0 z-10 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
+          <div className="flex items-center p-4 pb-2 justify-between">
+            <div
+              onClick={() => router.push('/home')} // Or back
+              className="text-slate-900 dark:text-white flex size-10 shrink-0 items-center justify-center cursor-pointer hover:bg-slate-200 dark:hover:bg-surface-dark rounded-full transition-colors"
+            >
+              <span className="material-symbols-outlined">arrow_back</span>
+            </div>
+            <div className="flex flex-col flex-1 px-4 text-center">
+              <h2 className="text-slate-900 dark:text-white text-lg font-bold leading-tight tracking-tight">Community Discussions</h2>
+              <p className="text-xs text-primary font-medium">Active: 42 Students online</p>
+            </div>
+            <div className="flex w-12 items-center justify-end">
+              <button className="flex size-10 items-center justify-center rounded-full hover:bg-slate-200 dark:hover:bg-surface-dark transition-colors">
+                <span className="material-symbols-outlined text-slate-900 dark:text-white">search</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Filter Tabs */}
+          <div className="flex gap-2 px-4 py-3 overflow-x-auto no-scrollbar scrollbar-hide">
+            {['All Threads', 'Unread', 'Assignments', 'General'].map(filter => (
+              <button
+                key={filter}
+                onClick={() => setActiveFilter(filter)}
+                className={`flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-lg px-4 font-semibold text-sm transition-colors ${activeFilter === filter
+                  ? 'bg-primary text-background-dark'
+                  : 'bg-slate-200 dark:bg-surface-dark text-slate-700 dark:text-white hover:bg-primary/20'
+                  }`}
+              >
+                <span>{filter}</span>
+                {filter !== 'All Threads' && <span className="material-symbols-outlined text-base">keyboard_arrow_down</span>}
+              </button>
+            ))}
+          </div>
+        </header>
+
+        {/* Thread List */}
+        <main className="flex-1 overflow-y-auto pb-20">
+          {threads.map((thread) => {
+            const style = getCategoryIcon(thread.category, thread.isResolved);
+            return (
+              <div key={thread.id} className={`flex gap-4 px-4 py-5 border-b border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-surface-dark/40 cursor-pointer transition-colors group ${thread.isResolved ? 'opacity-75' : ''}`}>
+                <div className="shrink-0 pt-1">
+                  <div className={`${style.bg} flex items-center justify-center rounded-lg h-12 w-12 ${style.color}`}>
+                    <span className="material-symbols-outlined">{style.icon}</span>
+                  </div>
+                </div>
+                <div className="flex flex-1 flex-col gap-1">
+                  <div className="flex justify-between items-start">
+                    <p className={`text-slate-900 dark:text-white text-base font-semibold leading-snug group-hover:text-primary transition-colors ${thread.isResolved ? 'italic' : ''}`}>
+                      {thread.isResolved && 'Resolved: '}{thread.title}
+                    </p>
+                    <span className="text-slate-500 dark:text-slate-400 text-xs shrink-0 ml-4">{formatTimeAgo(thread.timestamp)}</span>
+                  </div>
+                  <p className="text-slate-600 dark:text-slate-400 text-sm font-normal line-clamp-2">
+                    {thread.content}
+                  </p>
+                  <div className="flex items-center gap-4 mt-2">
+                    <div className={`flex items-center gap-1 text-xs font-medium ${thread.repliesCount > 0 ? 'text-primary' : 'text-slate-500 dark:text-slate-400'}`}>
+                      <span className="material-symbols-outlined text-sm">chat_bubble</span>
+                      <span>{thread.repliesCount} replies</span>
+                    </div>
+                    <div className="flex items-center gap-1 text-slate-500 dark:text-slate-400 text-xs">
+                      <span className="material-symbols-outlined text-sm">visibility</span>
+                      <span>{thread.views} views</span>
+                    </div>
+                    <div className="text-xs text-slate-400 ml-auto">
+                      Posted by {thread.author.name.split(' ')[0]}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+          {threads.length === 0 && (
+            <div className="text-center py-12 text-slate-500">
+              <p>No threads yet. Start a discussion!</p>
+            </div>
+          )}
+        </main>
+
+        {/* Reply / Post Input Area */}
+        <div className="fixed bottom-[52px] md:bottom-0 left-0 right-0 z-20 p-4 bg-background-light dark:bg-background-dark border-t border-slate-200 dark:border-slate-800 max-w-3xl mx-auto">
+          <div className="flex items-end gap-3 bg-slate-100 dark:bg-surface-dark rounded-xl p-3 focus-within:ring-2 focus-within:ring-primary/50 transition-all shadow-sm">
+            <div className="shrink-0 pb-1">
+              <div className="h-8 w-8 rounded-full overflow-hidden border-2 border-primary">
+                <img className="h-full w-full object-cover" src={userAvatar} alt="My Avatar" />
+              </div>
+            </div>
+            <div className="flex-1">
+              <textarea
+                ref={textareaRef}
                 value={newPostContent}
                 onChange={(e) => setNewPostContent(e.target.value)}
-                onKeyPress={handleKeyPress}
-                disabled={isLoading}
-                className="w-full bg-[#e7f1f4] rounded-xl px-4 py-3 text-[#0d191c] placeholder-[#498a9c] border-none outline-none text-sm disabled:opacity-50"
-              />
-              {newPostContent && (
-                <button
-                  onClick={handleCreatePost}
-                  disabled={isLoading}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#498a9c] hover:text-[#0d191c] transition-colors disabled:opacity-50"
-                >
-                  {isLoading ? (
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#498a9c]"></div>
-                  ) : (
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 256 256">
-                      <path d="M227.32,28.68a16,16,0,0,0-15.66-4.08l-.15,0L19.57,82.84a16,16,0,0,0-2.42,29.84l85.62,40.55,40.55,85.62A15.86,15.86,0,0,0,157.74,248q.69,0,1.38-.06a15.88,15.88,0,0,0,14-11.51l58.2-191.94c0-.05,0-.1,0-.15A16,16,0,0,0,227.32,28.68Z" />
-                    </svg>
-                  )}
-                </button>
-              )}
+                className="w-full bg-transparent border-none focus:ring-0 text-slate-900 dark:text-white text-sm placeholder-slate-500 resize-none py-1 max-h-32"
+                placeholder="Start a new discussion..."
+                rows={1}
+                style={{ minHeight: '24px' }}
+              ></textarea>
+            </div>
+            <div className="flex gap-2">
+              <button className="flex items-center justify-center h-8 w-8 text-slate-500 dark:text-slate-400 hover:text-primary transition-colors">
+                <span className="material-symbols-outlined">attach_file</span>
+              </button>
+              <button
+                onClick={handlePostSubmit}
+                disabled={!newPostContent.trim() || isPosting}
+                className="flex items-center justify-center h-8 w-8 bg-primary text-background-dark rounded-lg hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <span className="material-symbols-outlined text-sm font-bold">send</span>
+              </button>
             </div>
           </div>
         </div>
 
-        {/* Trending Section */}
-        <div className="bg-white px-4 py-3 border-b border-[#e7f1f4]">
-          <h3 className="text-[#0d191c] text-lg font-bold leading-tight tracking-[-0.015em]">
-            Trending Discussions
-          </h3>
-        </div>
-
-        {/* Posts List */}
-        <div className="space-y-4 p-4">
-          {posts.map((post) => (
-            <div key={post.id} className="bg-white rounded-xl shadow-sm border border-[#e7f1f4] overflow-hidden">
-              {/* Post Content */}
-              <div
-                className="p-4 cursor-pointer hover:bg-[#fafdfe] transition-colors"
-                onClick={() => handlePostClick(post.id)}
-              >
-                <div className="flex gap-3">
-                  <img
-                    src={post.author.avatar}
-                    alt={post.author.name}
-                    className="w-12 h-12 rounded-full flex-shrink-0"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-2">
-                      <h4 className="font-bold text-[#0d191c] text-sm">
-                        {post.author.name}
-                      </h4>
-                      <span className="text-xs text-[#498a9c]">
-                        {post.timestamp}
-                      </span>
-                    </div>
-                    <p className="text-[#0d191c] text-sm leading-relaxed mb-3">
-                      {post.content}
-                    </p>
-
-                    {/* Tags */}
-                    {post.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-2">
-                        {post.tags.map(tag => (
-                          <span
-                            key={tag}
-                            className="px-2 py-1 bg-[#e7f1f4] text-[#498a9c] text-xs font-medium rounded-full"
-                          >
-                            #{tag}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Post Reactions */}
-              <div className="flex gap-2 px-4 py-3 border-t border-[#e7f1f4]">
-                <ReactionButton
-                  count={post.likes}
-                  isActive={post.isLiked}
-                  onClick={(e) => handleLikePost(post.id, e)}
-                  type="like"
-                />
-                <ReactionButton
-                  count={post.comments}
-                  isActive={false}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handlePostClick(post.id);
-                  }}
-                  type="comment"
-                />
-                <ReactionButton
-                  count={post.shares}
-                  isActive={false}
-                  onClick={(e) => e.stopPropagation()}
-                  type="share"
-                />
-              </div>
-
-              {/* Recent Comments Preview */}
-              {post.commentsList.slice(0, 2).map((comment) => (
-                <CommentItem
-                  key={comment.id}
-                  comment={comment}
-                  onLike={(commentId, e) => handleLikeComment(post.id, commentId, e)}
-                />
-              ))}
-
-              {/* View All Comments Link */}
-              {post.comments > 2 && (
-                <div className="px-4 py-3 border-t border-[#f0f7fa]">
-                  <button
-                    onClick={() => handlePostClick(post.id)}
-                    className="text-[#498a9c] text-sm font-medium hover:text-[#0d191c] transition-colors"
-                  >
-                    View all {post.comments} comments
-                  </button>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
+        {/* Sticky Mobile Nav (Synced with Global BottomNav visually, but using this for layout match) */}
+        {/* Note: In Next.js app directory layout, the global BottomNav might overlap. 
+            We should check if we want to suppress the global one or use this one. 
+            For now, I'll rely on the global BottomNav and add padding to main.
+            The user prompt had a custom nav, but consistent app nav is better. 
+            I will use the global BottomNav component at the bottom of the page structure 
+            to ensure consistency with other pages. 
+        */}
       </div>
 
-      <BottomNav navItems={navItems} />
+      {/* Global Bottom Nav - Placed outside the max-w-3xl container to span full width */}
+      <div className="fixed bottom-0 w-full z-30">
+        <nav className="flex justify-around items-center p-2 pb-3 border-t border-slate-200 dark:border-slate-800 bg-background-light dark:bg-background-dark md:hidden">
+          {[
+            { icon: 'home', label: 'Home', path: '/home' },
+            { icon: 'menu_book', label: 'Library', path: '/library' },
+            { icon: 'school', label: 'Courses', path: '/classes' },
+            { icon: 'chat_bubble', label: 'Social', path: '/community', active: true },
+            { icon: 'person', label: 'Profile', path: '/profile' }
+          ].map((item) => (
+            <button
+              key={item.label}
+              onClick={() => router.push(item.path)}
+              className={`flex flex-col items-center gap-1 ${item.active ? 'text-primary' : 'text-slate-500 dark:text-slate-400'}`}
+            >
+              {item.active ? (
+                <div className="bg-primary/20 text-primary px-5 py-1 rounded-full flex flex-col items-center">
+                  <span className="material-symbols-outlined fill-1">{item.icon}</span>
+                </div>
+              ) : (
+                <span className="material-symbols-outlined">{item.icon}</span>
+              )}
+              <span className={`text-[10px] ${item.active ? 'font-bold' : 'font-medium'}`}>{item.label}</span>
+            </button>
+          ))}
+        </nav>
+      </div>
     </div>
   );
 };
 
 export default CommunityPage;
-

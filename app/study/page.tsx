@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 import Header from '@/components/Header';
 import BottomNav from '@/components/BottomNav';
+import { supabase } from '@/lib/supabase';
 
 interface StudyResource {
   id: number;
@@ -26,30 +27,38 @@ const StudyResources: React.FC = () => {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [resources, setResources] = useState<StudyResource[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const studyResources: StudyResource[] = [
-    {
-      id: 1,
-      title: "Past Exam Questions",
-      type: "PDF",
-      uploadedBy: "Alex",
-      image: "https://lh3.googleusercontent.com/aida-public/AB6AXuDwGK051C7lPu2XgK_r8y1G-BEki81m6jIJCB6ITOhnhtRAjKtMo2YwwNA5zw1sJzdX0PBPuK58q3i7RaFe1xXbxms3y6M1dYynnP9Y9_bm0-lsvPFQvwM0Pv7lzxt3DGNDIBHKGyqd744WHBAfU2_aDGbJ2-Hcld5wUHqspAYqEDbs220YotzMAlwg_VryoSDuTQ0sVQRW68HMiORxD5VRnlryhERQWtSjYoShAbD8NGSchKaXwcukhGk8S3nmHrKV9LJVE40oRJY"
-    },
-    {
-      id: 2,
-      title: "Advanced Calculus Notes",
-      type: "PDF",
-      uploadedBy: "Sarah",
-      image: "https://lh3.googleusercontent.com/aida-public/AB6AXuDwGK051C7lPu2XgK_r8y1G-BEki81m6jIJCB6ITOhnhtRAjKtMo2YwwNA5zw1sJzdX0PBPuK58q3i7RaFe1xXbxms3y6M1dYynnP9Y9_bm0-lsvPFQvwM0Pv7lzxt3DGNDIBHKGyqd744WHBAfU2_aDGbJ2-Hcld5wUHqspAYqEDbs220YotzMAlwg_VryoSDuTQ0sVQRW68HMiORxD5VRnlryhERQWtSjYoShAbD8NGSchKaXwcukhGk8S3nmHrKV9LJVE40oRJY"
-    },
-    {
-      id: 3,
-      title: "Computer Science Lab Manual",
-      type: "DOC",
-      uploadedBy: "Mike",
-      image: "https://lh3.googleusercontent.com/aida-public/AB6AXuDwGK051C7lPu2XgK_r8y1G-BEki81m6jIJCB6ITOhnhtRAjKtMo2YwwNA5zw1sJzdX0PBPuK58q3i7RaFe1xXbxms3y6M1dYynnP9Y9_bm0-lsvPFQvwM0Pv7lzxt3DGNDIBHKGyqd744WHBAfU2_aDGbJ2-Hcld5wUHqspAYqEDbs220YotzMAlwg_VryoSDuTQ0sVQRW68HMiORxD5VRnlryhERQWtSjYoShAbD8NGSchKaXwcukhGk8S3nmHrKV9LJVE40oRJY"
-    }
-  ];
+  useEffect(() => {
+    const fetchResources = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('resources')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        // Map Supabase data to local interface
+        const formattedResources: StudyResource[] = data.map((res: any) => ({
+          id: res.id,
+          title: res.title,
+          type: res.type || 'PDF', // Default if not in DB
+          uploadedBy: 'EduPal User', // Need to join with profiles for real name
+          image: res.image_url || 'https://lh3.googleusercontent.com/aida-public/AB6AXuDwGK051C7lPu2XgK_r8y1G-BEki81m6jIJCB6ITOhnhtRAjKtMo2YwwNA5zw1sJzdX0PBPuK58q3i7RaFe1xXbxms3y6M1dYynnP9Y9_bm0-lsvPFQvwM0Pv7lzxt3DGNDIBHKGyqd744WHBAfU2_aDGbJ2-Hcld5wUHqspAYqEDbs220YotzMAlwg_VryoSDuTQ0sVQRW68HMiORxD5VRnlryhERQWtSjYoShAbD8NGSchKaXwcukhGk8S3nmHrKV9LJVE40oRJY'
+        }));
+
+        setResources(formattedResources);
+      } catch (error) {
+        console.error("Error fetching resources:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchResources();
+  }, []);
 
   const navItems = [
     {
@@ -111,15 +120,19 @@ const StudyResources: React.FC = () => {
   };
 
   // Filter resources based on search query
-  const filteredResources = studyResources.filter(resource =>
+  const filteredResources = resources.filter(resource =>
     resource.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     resource.uploadedBy.toLowerCase().includes(searchQuery.toLowerCase()) ||
     resource.type.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center bg-[#f8fbfc] text-slate-500">Loading Resources...</div>;
+  }
+
   return (
     <div
-      className="min-h-screen bg-[#f8fbfc]"
+      className="min-h-[100dvh] bg-[#f8fbfc]"
       style={{ fontFamily: 'Inter, "Noto Sans", sans-serif' }}
     >
       {/* Fixed Header */}
@@ -255,3 +268,4 @@ const StudyResources: React.FC = () => {
 };
 
 export default StudyResources;
+

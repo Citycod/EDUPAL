@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import Image from 'next/image';
+import EduPalLogo from '@/assets/images/edupal.png';
 
 export default function Login() {
     const router = useRouter();
@@ -56,7 +58,7 @@ export default function Login() {
     };
 
     return (
-        <div className="bg-background-light dark:bg-background-dark min-h-screen flex flex-col items-center justify-center p-4">
+        <div className="bg-background-light dark:bg-background-dark min-h-[100dvh] flex flex-col items-center justify-center p-4">
             {/* Login Container */}
             <div className="w-full max-w-[480px] flex flex-col items-center">
                 {/* Header Section */}
@@ -67,15 +69,31 @@ export default function Login() {
                     >
                         <span className="material-symbols-outlined block">arrow_back</span>
                     </button>
-                    <h2 className="text-white text-xl font-bold tracking-tight">EduPal</h2>
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-[#0d191c] rounded-xl flex items-center justify-center border border-primary/20 p-1.5 shadow-lg shadow-black/20">
+                            <Image src={EduPalLogo} alt="EduPal Logo" width={32} height={32} className="w-full h-full object-contain" />
+                        </div>
+                        <h2 className="text-white text-xl font-bold tracking-tight">EduPal</h2>
+                    </div>
                     <div className="w-10"></div> {/* Spacer for centering title */}
                 </div>
 
                 {/* Main Login Card */}
                 <div className="w-full bg-white/5 dark:bg-white/5 backdrop-blur-md p-8 rounded-xl border border-white/10 shadow-2xl">
                     <div className="text-center mb-8">
+                        <div className="mb-6 flex justify-center">
+                            <div className="w-28 h-28 bg-[#0d191c] rounded-[2rem] flex items-center justify-center border border-primary/40 overflow-hidden shadow-2xl shadow-black/40">
+                                <Image
+                                    src={EduPalLogo}
+                                    alt="EduPal Logo"
+                                    width={80}
+                                    height={80}
+                                    className="w-20 h-20 object-contain drop-shadow-[0_0_10px_rgba(76,175,80,0.4)]"
+                                />
+                            </div>
+                        </div>
                         <h1 className="text-white text-3xl font-bold mb-2">Welcome Back</h1>
-                        <p className="text-gray-400 text-sm">Login to your EduPal account to continue learning</p>
+                        <p className="text-gray-400 text-sm px-4 leading-relaxed">Login to your EduPal account to continue learning</p>
                     </div>
 
                     <form onSubmit={handleSubmit} className="space-y-5">
@@ -158,7 +176,7 @@ export default function Login() {
                     </form>
 
                     {/* Social Login Divider */}
-                    <div className="relative flex items-center py-8">
+                    {/* <div className="relative flex items-center py-8">
                         <div className="flex-grow border-t border-white/10"></div>
                         <span className="flex-shrink mx-4 text-gray-500 text-xs font-medium uppercase tracking-widest">
                             Or continue with
@@ -167,7 +185,7 @@ export default function Login() {
                     </div>
 
                     {/* Social Buttons */}
-                    <div className="grid grid-cols-2 gap-4">
+                    {/* <div className="grid grid-cols-2 gap-4">
                         <button className="flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 text-white py-3 rounded-lg transition-colors">
                             <svg className="w-5 h-5" viewBox="0 0 24 24">
                                 <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -181,7 +199,7 @@ export default function Login() {
                             <span className="material-symbols-outlined text-[20px]">apple</span>
                             <span className="text-sm font-medium">Apple</span>
                         </button>
-                    </div>
+                    </div> */}
                 </div>
 
                 {/* Footer Link */}

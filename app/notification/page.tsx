@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-
-import BottomNav from '@/components/BottomNav';
 import Header from '@/components/Header';
+import BottomNav from '@/components/BottomNav';
+import { supabase } from '@/lib/supabase';
 
 interface Notification {
   id: number;
@@ -18,52 +18,44 @@ interface Notification {
 
 const Notifications: React.FC = () => {
   const router = useRouter();
-  const [notifications, setNotifications] = useState<Notification[]>([
-    {
-      id: 1,
-      type: 'course',
-      title: 'Course Materials',
-      message: 'New resources available for your course',
-      timestamp: new Date(Date.now() - 1000 * 60 * 30), // 30 minutes ago
-      read: false,
-      actionUrl: '/study'
-    },
-    {
-      id: 2,
-      type: 'class',
-      title: 'Virtual Class',
-      message: 'Reminder: Class starts in 15 minutes',
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
-      read: false,
-      actionUrl: '/classes'
-    },
-    {
-      id: 3,
-      type: 'community',
-      title: 'Community Post',
-      message: 'New reply to your post in the community',
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 5), // 5 hours ago
-      read: true,
-      actionUrl: '/community'
-    },
-    {
-      id: 4,
-      type: 'course',
-      title: 'Assignment Due',
-      message: 'Your assignment is due tomorrow',
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 day ago
-      read: true,
-      actionUrl: '/study'
-    },
-    {
-      id: 5,
-      type: 'system',
-      title: 'System Update',
-      message: 'New features available in the latest update',
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2), // 2 days ago
-      read: true
-    }
-  ]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+
+        if (user) {
+          const { data, error } = await supabase
+            .from('notifications')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false });
+
+          if (error) throw error;
+
+          const formattedNotifications: Notification[] = data.map((n: any) => ({
+            id: n.id,
+            type: n.type || 'system',
+            title: n.title,
+            message: n.message,
+            timestamp: new Date(n.created_at),
+            read: n.is_read || false,
+            actionUrl: n.action_url || '#'
+          }));
+
+          setNotifications(formattedNotifications);
+        }
+      } catch (error) {
+        console.error("Error fetching notifications:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchNotifications();
+  }, []);
 
   const navItems = [
     {
@@ -138,18 +130,41 @@ const Notifications: React.FC = () => {
     return timestamp.toLocaleDateString();
   };
 
-  const markAsRead = (id: number) => {
+  const markAsRead = async (id: number) => {
+    // Optimistic Update
     setNotifications(prev =>
       prev.map(notification =>
         notification.id === id ? { ...notification, read: true } : notification
       )
     );
+
+    try {
+      await supabase
+        .from('notifications')
+        .update({ is_read: true })
+        .eq('id', id);
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+    }
   };
 
-  const markAllAsRead = () => {
+  const markAllAsRead = async () => {
+    // Optimistic Update
     setNotifications(prev =>
       prev.map(notification => ({ ...notification, read: true }))
     );
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase
+          .from('notifications')
+          .update({ is_read: true })
+          .eq('user_id', user.id);
+      }
+    } catch (error) {
+      console.error("Error marking all notifications as read:", error);
+    }
   };
 
   const handleNotificationClick = (notification: Notification) => {
@@ -160,6 +175,10 @@ const Notifications: React.FC = () => {
   };
 
   const unreadCount = notifications.filter(n => !n.read).length;
+
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center bg-[#f8fbfc] text-slate-500">Loading Notifications...</div>;
+  }
 
   return (
     <div

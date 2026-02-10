@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import EduPalLogo from '@/assets/edupallogo.jpg';
+import EduPalLogo from '@/assets/images/edupal.png';
 
 interface OnboardingSlide {
     id: number;
@@ -41,13 +41,22 @@ export default function Onboarding() {
         }
     ];
 
-    const nextSlide = () => {
+    const nextSlide = useCallback(() => {
         if (currentSlide < slides.length - 1) {
             setCurrentSlide(currentSlide + 1);
         } else {
             router.push('/login');
         }
-    };
+    }, [currentSlide, slides.length, router]);
+
+    // Auto-slide logic
+    useEffect(() => {
+        const timer = setInterval(() => {
+            nextSlide();
+        }, 3000);
+
+        return () => clearInterval(timer);
+    }, [nextSlide]);
 
     const skipOnboarding = () => {
         router.push('/login');
@@ -130,8 +139,8 @@ export default function Onboarding() {
 
                         {/* Illustration Container */}
                         <div className={`relative w-full h-80 rounded-3xl border border-white/10 flex items-center justify-center overflow-hidden ${slides[currentSlide].illustration === 'search'
-                                ? 'bg-primary/10'
-                                : 'bg-gradient-to-br from-primary/20 to-transparent'
+                            ? 'bg-primary/10'
+                            : 'bg-gradient-to-br from-primary/20 to-transparent'
                             }`}>
                             {slides[currentSlide].illustration === 'search' && (
                                 <>
@@ -160,8 +169,8 @@ export default function Onboarding() {
                         <div
                             key={index}
                             className={`h-2 rounded-full transition-all duration-300 ${index === currentSlide
-                                    ? 'w-6 bg-primary'
-                                    : 'w-2 bg-white/20'
+                                ? 'w-6 bg-primary'
+                                : 'w-2 bg-white/20'
                                 }`}
                         />
                     ))}

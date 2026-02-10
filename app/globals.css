@@ -18,19 +18,30 @@
 .mobile-app-container {
   max-width: 100%;
   margin: 0 auto;
-  background: white;
-  min-height: 100vh;
+  background-color: var(--background-light);
+  min-height: 100dvh;
 }
 
 .mobile-viewport {
-  max-width: 428px;
-  /* Mobile viewport width */
+  width: 100%;
   margin: 0 auto;
   position: relative;
-  background: white;
-  min-height: 100vh;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-  /* Optional: gives app-like feel */
+  background-color: var(--background-light);
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (min-width: 640px) {
+  .mobile-viewport {
+    max-width: 428px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+  }
+}
+
+.dark .mobile-app-container,
+.dark .mobile-viewport {
+  background-color: #0d191c;
 }
 
 /* Mobile-safe areas */

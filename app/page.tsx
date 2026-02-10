@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import EduPalLogo from '@/assets/edupallogo.jpg';
+import EduPalLogo from '@/assets/images/edupal.png';
 
 export default function SplashScreen() {
     const router = useRouter();
@@ -21,13 +21,14 @@ export default function SplashScreen() {
             {/* Main Content - Centered */}
             <div className="flex-1 flex flex-col items-center justify-center w-full px-6">
                 {/* Logo Container */}
-                <div className="mb-8 flex items-center justify-center w-32 h-32 rounded-3xl bg-primary/10 border border-primary/20 shadow-2xl shadow-primary/5">
+                <div className="mb-8 flex items-center justify-center w-full max-w-[240px] aspect-square rounded-[2.5rem] bg-[#0d191c] border border-primary/30 shadow-[0_0_40px_rgba(76,175,80,0.15)] overflow-hidden p-6">
                     <Image
                         src={EduPalLogo}
                         alt="EduPal Logo"
-                        width={96}
-                        height={96}
-                        className="object-contain rounded-2xl"
+                        width={240}
+                        height={240}
+                        className="w-full h-full object-contain drop-shadow-[0_0_15px_rgba(76,175,80,0.3)]"
+                        priority
                     />
                 </div>
 

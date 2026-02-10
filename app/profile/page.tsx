@@ -1,8 +1,9 @@
 'use client';
 
-import BottomNav from "@/components/BottomNav";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import BottomNav from "@/components/BottomNav";
+import { supabase } from '@/lib/supabase';
 
 interface Resource {
   id: string;
@@ -32,74 +33,88 @@ const ProfilePage: React.FC = () => {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>('resources');
 
-  const userProfile: UserProfile = {
-    id: "user-1",
-    name: "Ayo Adebayo",
-    avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuC_mXZg5UcxVRCSaJ8FAyIBo47xY2bNH_agbO55sKAXFwddAG-9Fk6TwLMJpEa0E3eDkNTIOIJrBlBNCFx9CIHh4N2DYszlcwS746fLB0HO8oAxzPFT5iT2GsDPbwU1nHZGeqI49ezMBIfndGYKs79dDSmq_hHwyn_AvGGNCfe3ZqK3_DN3yO0JMID8iA7hA3QKp2CoIUxsppbtcESNcxnNi3u-9jN6mcI5ULiFtIuUbQTmqG7HFwVoQ3AygRJO9qJZkOlQAO2G_lk",
-    university: "University of Lagos",
-    major: "Computer Science",
-    year: "2nd Year",
-    email: "ayo.adebayo@student.unilag.edu.ng",
-    joinDate: "September 2022",
-    bio: "Passionate about software engineering and machine learning. Always looking to collaborate on interesting projects!"
-  };
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [resources, setResources] = useState<Resource[]>([]);
+  const [enrolledClasses, setEnrolledClasses] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const resources: Resource[] = [
-    {
-      id: "1",
-      title: "CSC 101",
-      subtitle: "2023/2024 • Introduction to Computer Science",
-      image: "https://lh3.googleusercontent.com/aida-public/AB6AXuCEfDr6DXYNNRgePw7Wp-A6vcDLVI20CbEItil9JAHjqWzEp90_SzmvXjZW34RKJasAbCwdtaTXWdOJ_dGUI0ItLlviatSIrPpRy9oRGMhRTe92Qj2mU0DXXfbUIuW1o5cy_yud1J0-O314Z1BUJ04_EJMXdm6-Hy50G4cF1COH98Lj2t-QqcaQXZv6MSS8VAnI8ddBjqBj-VR0c1TSm2VVf5TH8FhVQyFxkQr2aNT5Flqny7apahXOaABR_O37CbOZ4MLxL8QPD0k",
-      type: 'course',
-      lastAccessed: "2 days ago",
-      progress: 85
-    },
-    {
-      id: "2",
-      title: "CSC 102",
-      subtitle: "2023/2024 • Data Structures and Algorithms",
-      image: "https://lh3.googleusercontent.com/aida-public/AB6AXuAeGks0b-3HXYcobNEyWIY6PEwEHpVkcbCBI0lYVKMkuOPhTSvo-bjQjsd8bbpijfncavUbMcS5dV3nKllO5WRL6iciM9o62odKxfHSShnZhCyhiFNAc1Fb953BYqhAEtPnxrETAKVFr2RcocOILFBklzYODx4Diw9QrTKHr5X9X4LK6X06KQrLrHOywPvaZIh7QqVo_OU6CA-8m1dxSx3R6VHxGmXOVGI4q9QXnBE-FV7lBf7iMzHFaC0oa6y89c4usRYefe4w3ao",
-      type: 'course',
-      lastAccessed: "1 week ago",
-      progress: 60
-    },
-    {
-      id: "3",
-      title: "CSC 103",
-      subtitle: "2023/2024 • Object-Oriented Programming",
-      image: "https://lh3.googleusercontent.com/aida-public/AB6AXuDc9Fu0pR-0TGjHjX1b1UgAOmy4A8eWx_iNriIyKqxhFvAiMUViq4RQASV6io66Yq7B04vsseRyvobuoYSqe01VnPTvhmteQbMwa5AZTqQNideE5Ucz8FQ7jowX1nKcnYaxF16maYKUZ3bNM4BRZMu1Bn-4motf3FUdZ79n-WhVIkRoiqIpBAtdXsEnYKHWfYHc5JNGKFo3p9hm4X3SmkZBY6L9ELFIBZHpzo2yEmmUIwz--yxQ6ttXgA32FnEezJlYxo_bS9_H10E",
-      type: 'course',
-      lastAccessed: "3 days ago",
-      progress: 45
-    }
-  ];
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
 
-  const enrolledClasses = [
-    {
-      id: "1",
-      title: "Advanced Calculus",
-      code: "MTH 201",
-      instructor: "Dr. Chinedu Okoro",
-      schedule: "Mon, Wed 10:00 AM",
-      progress: 75
-    },
-    {
-      id: "2",
-      title: "Database Systems",
-      code: "CSC 301",
-      instructor: "Prof. Fatima Bello",
-      schedule: "Tue, Thu 2:00 PM",
-      progress: 60
-    },
-    {
-      id: "3",
-      title: "Software Engineering",
-      code: "CSC 305",
-      instructor: "Dr. Emeka Nwosu",
-      schedule: "Mon, Fri 1:00 PM",
-      progress: 40
-    }
-  ];
+        if (user) {
+          // Fetch Profile
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id)
+            .single();
+
+          if (profile) {
+            setUserProfile({
+              id: profile.id,
+              name: profile.full_name || user.email?.split('@')[0] || 'Student',
+              avatar: profile.avatar_url || 'https://lh3.googleusercontent.com/aida-public/default-avatar',
+              university: profile.university || 'University of Lagos', // Default for now if missing
+              major: 'Computer Science', // TODO: Fetch from department table based on department_id
+              year: profile.level || '1st Year',
+              email: user.email,
+              joinDate: new Date(profile.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+              bio: "Student at EduPal" // Placeholder as bio might not be in schema yet
+            });
+          }
+
+          // Fetch Enrolled Classes
+          const { data: enrollments } = await supabase
+            .from('enrollments')
+            .select(`
+                *,
+                courses (id, title, course_code, instructor_name)
+            `)
+            .eq('user_id', user.id);
+
+          if (enrollments) {
+            const formattedClasses = enrollments.map((e: any) => ({
+              id: e.courses.id,
+              title: e.courses.title,
+              code: e.courses.course_code,
+              instructor: e.courses.instructor_name || 'TBA',
+              schedule: 'Weekly', // Placeholder
+              progress: 0 // Placeholder
+            }));
+            setEnrolledClasses(formattedClasses);
+          }
+
+          // Fetch Resources (My Uploads)
+          const { data: fetchedResources } = await supabase
+            .from('resources')
+            .select('*')
+            .eq('uploader_id', user.id)
+            .order('created_at', { ascending: false });
+
+          if (fetchedResources) {
+            const formattedResources = fetchedResources.map((r: any) => ({
+              id: r.id,
+              title: r.title,
+              subtitle: r.course_code || r.category || 'Resource',
+              image: r.image_url || 'https://lh3.googleusercontent.com/aida-public/AB6AXuCEfDr6DXYNNRgePw7Wp-A6vcDLVI20CbEItil9JAHjqWzEp90_SzmvXjZW34RKJasAbCwdtaTXWdOJ_dGUI0ItLlviatSIrPpRy9oRGMhRTe92Qj2mU0DXXfbUIuW1o5cy_yud1J0-O314Z1BUJ04_EJMXdm6-Hy50G4cF1COH98Lj2t-QqcaQXZv6MSS8VAnI8ddBjqBj-VR0c1TSm2VVf5TH8FhVQyFxkQr2aNT5Flqny7apahXOaABR_O37CbOZ4MLxL8QPD0k',
+              type: r.type || 'material',
+              lastAccessed: new Date(r.created_at).toLocaleDateString(),
+              progress: 0
+            }));
+            setResources(formattedResources);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching profile data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const handleEditProfile = () => {
     // Navigate to edit profile page or open modal
@@ -203,15 +218,15 @@ const ProfilePage: React.FC = () => {
         <div className="space-y-3">
           <div>
             <label className="text-xs text-[#498a9c] font-medium">Email</label>
-            <p className="text-[#0d191c] text-sm">{userProfile.email}</p>
+            <p className="text-[#0d191c] text-sm">{userProfile?.email}</p>
           </div>
           <div>
             <label className="text-xs text-[#498a9c] font-medium">University</label>
-            <p className="text-[#0d191c] text-sm">{userProfile.university}</p>
+            <p className="text-[#0d191c] text-sm">{userProfile?.university}</p>
           </div>
           <div>
             <label className="text-xs text-[#498a9c] font-medium">Member Since</label>
-            <p className="text-[#0d191c] text-sm">{userProfile.joinDate}</p>
+            <p className="text-[#0d191c] text-sm">{userProfile?.joinDate}</p>
           </div>
         </div>
       </div>
@@ -248,8 +263,12 @@ const ProfilePage: React.FC = () => {
     </div>
   );
 
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center bg-[#f8fbfc] text-slate-500">Loading Profile...</div>;
+  }
+
   return (
-    <div className="flex flex-col h-screen bg-[#f8fbfc]">
+    <div className="flex flex-col h-[100dvh] bg-[#f8fbfc]">
       {/* Header */}
       <div className="flex items-center bg-[#f8fbfc] p-4 pb-2 justify-between">
         <button
@@ -272,21 +291,21 @@ const ProfilePage: React.FC = () => {
           <div className="flex flex-col gap-4 items-center">
             <div className="flex gap-4 flex-col items-center">
               <img
-                src={userProfile.avatar}
-                alt={userProfile.name}
+                src={userProfile?.avatar || "https://lh3.googleusercontent.com/aida-public/default-avatar"}
+                alt={userProfile?.name}
                 className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-sm"
               />
               <div className="flex flex-col items-center justify-center text-center">
                 <h1 className="text-[#0d191c] text-[22px] font-bold leading-tight tracking-[-0.015em]">
-                  {userProfile.name}
+                  {userProfile?.name}
                 </h1>
                 <p className="text-[#498a9c] text-base font-normal leading-normal">
-                  {userProfile.university}
+                  {userProfile?.university}
                 </p>
                 <p className="text-[#498a9c] text-base font-normal leading-normal">
-                  {userProfile.major} • {userProfile.year}
+                  {userProfile?.major} • {userProfile?.year}
                 </p>
-                {userProfile.bio && (
+                {userProfile?.bio && (
                   <p className="text-[#498a9c] text-sm mt-2 max-w-md leading-relaxed">
                     {userProfile.bio}
                   </p>
