@@ -83,7 +83,7 @@ const CommunityPage: React.FC = () => {
             content: post.content,
             author: {
               name: post.profiles?.full_name || 'Anonymous',
-              avatar: post.profiles?.avatar_url || 'https://lh3.googleusercontent.com/aida-public/default-avatar'
+              avatar: post.profiles?.avatar_url || 'https://ui-avatars.com/api/?name=Student&background=random',
             },
             timestamp: post.created_at,
             repliesCount: post.comments?.[0]?.count || 0,

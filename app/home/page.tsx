@@ -88,7 +88,7 @@ export default function Home() {
           <div className="flex size-12 shrink-0 items-center">
             <div
               className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border-2 border-primary cursor-pointer"
-              style={{ backgroundImage: `url("${user?.avatar_url || 'https://lh3.googleusercontent.com/aida-public/default-avatar'}")` }}
+              style={{ backgroundImage: `url("${user?.user_metadata?.avatar_url || 'https://ui-avatars.com/api/?name=Student&background=random'}")` }}
               onClick={() => router.push('/profile')}
             />
           </div>

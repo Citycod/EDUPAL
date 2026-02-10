@@ -57,7 +57,7 @@ export default function SignUp() {
             }
 
             alert('Signup successful! A verification email has been sent to your inbox. Please check and verify your email.');
-            router.push('/login');
+            router.push('/verification'); // Redirect to our custom verification page instead of login
         } catch (err: any) {
             setError(err.message || 'An error occurred during signup');
         } finally {

@@ -48,7 +48,7 @@ const CommunityPostDetail: React.FC = () => {
     id: "1",
     author: {
       name: "Aisha Adebayo",
-      avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuB4uzTKyAm5wbmebOCIqI-1VbPa1yeYZRZ81bKKXQYoZXJYP-IfPs6A0rr-5KrF93bfMa4kXASuMBFrEFVrjPmGgxSqaiwi2BTfWQUsu8Ph0SDN7BcrS8wHUZPVG63w7GjYko3r29lBKYCb-hHfT56UiJpDZb7MO1lGrc7AWfhFbNC8J07t0zGLNygw6Iyd7qUFV-TqZI41uPyk9y0LYAE8XNz-rbfgYSDQB96WxjQdhLaADN5i83HapJEWNdo7R_9bIm3Z85Y6dzM",
+      avatar: "https://ui-avatars.com/api/?name=Aisha+Adebayo&background=random",
       year: "2nd year",
       major: "Computer Science"
     },
@@ -198,8 +198,8 @@ const CommunityPostDetail: React.FC = () => {
     <button
       onClick={onClick}
       className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200 ${isActive
-          ? 'text-[#4c669a] bg-[#e7ebf3]'
-          : 'text-[#4c669a] hover:bg-[#f0f3f9] hover:text-[#0d121b]'
+        ? 'text-[#4c669a] bg-[#e7ebf3]'
+        : 'text-[#4c669a] hover:bg-[#f0f3f9] hover:text-[#0d121b]'
         }`}
     >
       {type === 'like' ? (
@@ -396,8 +396,8 @@ const CommunityPostDetail: React.FC = () => {
               onClick={handleSubmitComment}
               disabled={!newComment.trim()}
               className={`ml-2 p-2 rounded-lg transition-colors ${newComment.trim()
-                  ? 'text-[#4c669a] hover:text-[#0d121b] hover:bg-[#e7ebf3]'
-                  : 'text-[#c7d1e3] cursor-not-allowed'
+                ? 'text-[#4c669a] hover:text-[#0d121b] hover:bg-[#e7ebf3]'
+                : 'text-[#c7d1e3] cursor-not-allowed'
                 }`}
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 256 256">

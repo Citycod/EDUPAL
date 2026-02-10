@@ -23,7 +23,7 @@ const LibraryPage = () => {
     const [resources, setResources] = useState<LibraryResource[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
-    const [userAvatar, setUserAvatar] = useState('https://lh3.googleusercontent.com/aida-public/default-avatar');
+    const [userAvatar, setUserAvatar] = useState('https://ui-avatars.com/api/?name=Student&background=random');
 
     useEffect(() => {
         const fetchData = async () => {

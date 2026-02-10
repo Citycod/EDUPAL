@@ -1,48 +1,103 @@
 'use client';
 
+import { useState } from 'react';
+import { supabase } from '@/lib/supabase';
+import Image from 'next/image';
+import EduPalLogo from '@/assets/images/edupal.png';
+
 export default function Verification() {
-    const handleResendEmail = () => {
-        console.log('Resend email clicked');
+    const [loading, setLoading] = useState(false);
+    const [message, setMessage] = useState('');
+
+    const handleResendEmail = async () => {
+        setLoading(true);
+        setMessage('');
+        try {
+            // We need the user's email to resend. Since we don't have it in context here 
+            // (unless passed via query param or store), we might need to ask for it 
+            // or rely on the user being partially authenticated but not verified.
+            // For now, let's assume the user just signed up and we might have the email in local storage or session.
+            // If not, we should probably prompt for it.
+            // HOWEVER, Supabase resend needs email.
+            // Let's check if we have a user session.
+            const { data: { user } } = await supabase.auth.getUser();
+
+            if (user?.email) {
+                const { error } = await supabase.auth.resend({
+                    type: 'signup',
+                    email: user.email,
+                    options: {
+                        emailRedirectTo: `${window.location.origin}/login`
+                    }
+                });
+                if (error) throw error;
+                setMessage('Verification email resent! Check your inbox.');
+            } else {
+                setMessage('Please try logging in to trigger a new verification email.');
+            }
+        } catch (error: any) {
+            console.error('Error resending email:', error);
+            setMessage(error.message || 'Failed to resend email.');
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
-        <div className="relative flex min-h-screen w-full flex-col bg-white justify-between overflow-x-hidden font-['Manrope','Noto_Sans',sans-serif]">
-            {/* Header - Simple back button would go here if needed */}
+        <div className="relative flex min-h-screen w-full flex-col bg-background-light dark:bg-background-dark justify-center items-center overflow-x-hidden font-display p-4">
+            <div className="w-full max-w-md bg-white dark:bg-[#102217] border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl overflow-hidden">
+                {/* Header / Logo Area */}
+                <div className="flex flex-col items-center justify-center p-8 pb-0">
+                    <div className="w-20 h-20 bg-[#0d191c] rounded-2xl flex items-center justify-center border border-primary/30 shadow-lg shadow-primary/10 mb-6">
+                        <Image
+                            src={EduPalLogo}
+                            alt="EduPal Logo"
+                            width={48}
+                            height={48}
+                            className="w-12 h-12 object-contain"
+                            priority
+                        />
+                    </div>
+                    <h2 className="text-[#0d191c] dark:text-white tracking-tight text-2xl font-bold leading-tight text-center">
+                        Verify your email
+                    </h2>
+                </div>
 
-            {/* Main Content */}
-            <div className="flex-1 pb-24">
-                {/* Illustration */}
-                <div className="flex justify-center p-4 bg-white">
-                    <div className="w-full max-w-sm overflow-hidden bg-white rounded-lg">
-                        <div
-                            className="w-full h-64 bg-center bg-no-repeat bg-cover rounded-lg"
-                            style={{
-                                backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuATmWttvrIaNl64NKXlpA32hIppjGDEkMLnUZSewP1ParHY0OifPX1gEBnkQnzXdePHttWxzLPvOacYP8RNWHGRquq9m9Q-0V9BWllqaBx5cMuXVORdPeJzDVq9tFyreyROJO_qveFr-bG6Ur--dzQTmmF-YSWULFKIBZG3X6VwPIeWO9watO3A7nBH-_vtbLmhxBsMpa76qDZ8aUydyybXBdmCV-NXdbY8zBgjXC0ipfI0J9CWZHdxTTWgYGdMCBx_uwUM_wKgOJxK")'
-                            }}
-                        ></div>
+                {/* Illustration/Image */}
+                <div className="px-8 py-6 flex justify-center">
+                    <div className="w-full max-w-[200px] aspect-square relative bg-primary/5 rounded-full flex items-center justify-center">
+                        <span className="material-symbols-outlined text-[80px] text-primary">mark_email_unread</span>
                     </div>
                 </div>
 
                 {/* Text Content */}
-                <div className="px-4 py-3">
-                    <h2 className="text-[#111418] tracking-tight text-[28px] font-bold leading-tight text-center pb-3">
-                        Verify your student email
-                    </h2>
-                    <p className="text-[#111418] text-base font-normal leading-normal text-center">
-                        We've sent a verification link to your student email. Please check your inbox and click the link to continue.
+                <div className="px-8 pb-4">
+                    <p className="text-[#498a9c] text-base font-normal leading-relaxed text-center">
+                        We've sent a verification link to your email address. Please check your inbox (and spam folder) to verify your account.
                     </p>
                 </div>
 
-                {/* Resend Email Button */}
-                <div className="flex justify-center px-4 py-3">
+                {/* Action Buttons */}
+                <div className="px-8 pb-8 flex flex-col items-center gap-4">
+                    {message && <p className="text-sm font-medium text-primary text-center">{message}</p>}
                     <button
                         onClick={handleResendEmail}
-                        className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-[#f0f2f4] text-[#111418] text-sm font-bold leading-normal tracking-[0.015em] hover:bg-gray-200 transition-colors duration-200"
+                        disabled={loading}
+                        className="w-full h-12 bg-[#e7f1f4] dark:bg-slate-800 text-[#0d191c] dark:text-white text-sm font-bold rounded-xl hover:bg-[#dbe7eb] dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-2"
                     >
-                        <span className="truncate">Resend Email</span>
+                        {loading ? 'Sending...' : 'Resend Verification Email'}
                     </button>
+
+                    <a href="/login" className="text-primary text-sm font-bold hover:underline">
+                        Back to Login
+                    </a>
                 </div>
             </div>
+
+            {/* Footer Text */}
+            <p className="mt-8 text-center text-[#498a9c] text-xs">
+                &copy; {new Date().getFullYear()} EduPal. All rights reserved.
+            </p>
         </div>
     );
 }
