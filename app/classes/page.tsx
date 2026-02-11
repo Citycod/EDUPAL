@@ -34,92 +34,118 @@ const CoursesPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [activeLevel, setActiveLevel] = useState('All Levels');
   const [searchQuery, setSearchQuery] = useState('');
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [newCourse, setNewCourse] = useState({ title: '', course_code: '' });
+  const [addingCourse, setAddingCourse] = useState(false);
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const { data: { user } } = await supabase.auth.getUser();
+
+      // 1. Fetch Courses
+      const { data: coursesData } = await supabase
+        .from('courses')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (coursesData) {
+        // Check enrollments for current user to mark "ENROLLED"
+        const { data: enrollments } = user ? await supabase
+          .from('enrollments')
+          .select('course_id')
+          .eq('user_id', user.id) : { data: [] };
+
+        const enrolledIds = new Set(enrollments?.map(e => e.course_id));
+
+        const formattedCourses = coursesData.map((c: any, index: number) => {
+          // Infer level from code (e.g., CSC 101 -> 1)
+          const codeMatch = c.course_code.match(/\d+/);
+          const levelNum = codeMatch ? Math.floor(parseInt(codeMatch[0]) / 100) : 1;
+
+          return {
+            id: c.id,
+            title: c.title,
+            code: c.course_code,
+            instructor: c.instructor_name || 'EduPal Instructor',
+            level: `Level ${levelNum}`,
+            lessonsCount: 12 + (index % 5), // Mock
+            resourcesCount: 4 + (index % 3), // Mock
+            image: `https://images.unsplash.com/photo-1546410531-bb4caa6b424d?q=80&w=2071&auto=format&fit=crop`,
+            isEnrolled: enrolledIds.has(c.id)
+          };
+        });
+        setCourses(formattedCourses);
+      }
+
+      // 2. Fetch Resources (Learning Materials)
+      const { data: resourcesData } = await supabase
+        .from('resources')
+        .select('*')
+        .limit(5)
+        .order('created_at', { ascending: false });
+
+      if (resourcesData) {
+        const formattedMaterials = resourcesData.map((r: any) => {
+          let icon = 'article';
+          let colorClass = 'text-blue-500 bg-blue-500/20';
+
+          if (r.type?.includes('PDF')) {
+            icon = 'picture_as_pdf';
+            colorClass = 'text-red-500 bg-red-500/20';
+          } else if (r.type?.includes('Video')) {
+            icon = 'play_circle';
+            colorClass = 'text-primary bg-primary/20';
+          } else if (r.type?.includes('Zip')) {
+            icon = 'folder_zip';
+            colorClass = 'text-yellow-500 bg-yellow-500/20';
+          }
+
+          return {
+            id: r.id,
+            title: r.title,
+            type: r.type || 'Document',
+            size: r.file_size || '1.2 MB',
+            updated: new Date(r.created_at).toLocaleDateString(),
+            icon,
+            colorClass
+          };
+        });
+        setMaterials(formattedMaterials);
+      }
+
+    } catch (error) {
+      console.error("Error fetching courses data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-
-        // 1. Fetch Courses
-        const { data: coursesData } = await supabase
-          .from('courses')
-          .select('*')
-          .order('created_at', { ascending: false });
-
-        if (coursesData) {
-          // Check enrollments for current user to mark "ENROLLED"
-          const { data: enrollments } = user ? await supabase
-            .from('enrollments')
-            .select('course_id')
-            .eq('user_id', user.id) : { data: [] };
-
-          const enrolledIds = new Set(enrollments?.map(e => e.course_id));
-
-          const formattedCourses = coursesData.map((c: any, index: number) => {
-            // Infer level from code (e.g., CSC 101 -> 1)
-            const codeMatch = c.course_code.match(/\d+/);
-            const levelNum = codeMatch ? Math.floor(parseInt(codeMatch[0]) / 100) : 1;
-
-            return {
-              id: c.id,
-              title: c.title,
-              code: c.course_code,
-              instructor: c.instructor_name || 'EduPal Instructor',
-              level: `Level ${levelNum}`,
-              lessonsCount: 12 + (index % 5), // Mock
-              resourcesCount: 4 + (index % 3), // Mock
-              image: `https://images.unsplash.com/photo-1546410531-bb4caa6b424d?q=80&w=2071&auto=format&fit=crop`,
-              isEnrolled: enrolledIds.has(c.id)
-            };
-          });
-          setCourses(formattedCourses);
-        }
-
-        // 2. Fetch Resources (Learning Materials)
-        const { data: resourcesData } = await supabase
-          .from('resources')
-          .select('*')
-          .limit(5)
-          .order('created_at', { ascending: false });
-
-        if (resourcesData) {
-          const formattedMaterials = resourcesData.map((r: any) => {
-            let icon = 'article';
-            let colorClass = 'text-blue-500 bg-blue-500/20';
-
-            if (r.type?.includes('PDF')) {
-              icon = 'picture_as_pdf';
-              colorClass = 'text-red-500 bg-red-500/20';
-            } else if (r.type?.includes('Video')) {
-              icon = 'play_circle';
-              colorClass = 'text-primary bg-primary/20';
-            } else if (r.type?.includes('Zip')) {
-              icon = 'folder_zip';
-              colorClass = 'text-yellow-500 bg-yellow-500/20';
-            }
-
-            return {
-              id: r.id,
-              title: r.title,
-              type: r.type || 'Document',
-              size: r.file_size || '1.2 MB',
-              updated: new Date(r.created_at).toLocaleDateString(),
-              icon,
-              colorClass
-            };
-          });
-          setMaterials(formattedMaterials);
-        }
-
-      } catch (error) {
-        console.error("Error fetching courses data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchData();
   }, []);
+
+  const handleAddCourse = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAddingCourse(true);
+    try {
+      const { error } = await supabase.from('courses').insert({
+        title: newCourse.title,
+        course_code: newCourse.course_code.toUpperCase(),
+        instructor_name: 'EduPal Instructor'
+      });
+
+      if (error) throw error;
+
+      setIsAddModalOpen(false);
+      setNewCourse({ title: '', course_code: '' });
+      fetchData();
+    } catch (error: any) {
+      alert(`Error adding course: ${error.message}`);
+    } finally {
+      setAddingCourse(false);
+    }
+  };
 
   const filteredCourses = courses.filter(course => {
     const matchesSearch = course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -158,8 +184,11 @@ const CoursesPage: React.FC = () => {
           </div>
           <h2 className="text-slate-900 dark:text-white text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center">EduPal Learning</h2>
           <div className="flex w-12 items-center justify-end">
-            <button className="flex cursor-pointer items-center justify-center rounded-lg h-12 bg-transparent text-slate-900 dark:text-white p-0">
-              <span className="material-symbols-outlined text-2xl">more_vert</span>
+            <button
+              onClick={() => setIsAddModalOpen(true)}
+              className="flex cursor-pointer items-center justify-center rounded-lg h-12 bg-transparent text-primary p-0"
+            >
+              <span className="material-symbols-outlined text-2xl">add_circle</span>
             </button>
           </div>
         </div>
@@ -203,7 +232,12 @@ const CoursesPage: React.FC = () => {
           <h2 className="text-slate-900 dark:text-white text-[22px] font-bold leading-tight tracking-[-0.015em]">
             {activeLevel === 'All Levels' ? 'All Courses' : `${activeLevel} Courses`}
           </h2>
-          <button className="text-primary text-sm font-semibold hover:underline">View All</button>
+          <button
+            onClick={() => setIsAddModalOpen(true)}
+            className="text-primary text-sm font-semibold hover:underline flex items-center gap-1"
+          >
+            <span className="material-symbols-outlined text-sm">add</span> Add Course
+          </button>
         </div>
 
         <div className="grid grid-cols-1 gap-4 px-4">
@@ -268,6 +302,57 @@ const CoursesPage: React.FC = () => {
         </div>
 
       </div>
+
+      {/* Add Course Modal */}
+      {isAddModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-[#0d191c] w-full max-w-sm rounded-[2rem] p-8 border border-white/10 shadow-2xl overflow-hidden relative">
+            <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">New Course</h3>
+            <p className="text-slate-500 dark:text-gray-400 text-sm mb-6">Add a new course to the catalog.</p>
+
+            <form onSubmit={handleAddCourse} className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-primary uppercase tracking-wider ml-1">Course Title</label>
+                <input
+                  required
+                  value={newCourse.title}
+                  onChange={(e) => setNewCourse(prev => ({ ...prev, title: e.target.value }))}
+                  className="w-full bg-[#f0f2f5] dark:bg-[#1c2720] border border-transparent dark:border-[#3b5445] text-slate-900 dark:text-white rounded-xl py-4 px-4 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all placeholder:text-slate-500 dark:placeholder:text-gray-600"
+                  placeholder="e.g. Introduction to Law"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-primary uppercase tracking-wider ml-1">Course Code</label>
+                <input
+                  required
+                  value={newCourse.course_code}
+                  onChange={(e) => setNewCourse(prev => ({ ...prev, course_code: e.target.value }))}
+                  className="w-full bg-[#f0f2f5] dark:bg-[#1c2720] border border-transparent dark:border-[#3b5445] text-slate-900 dark:text-white rounded-xl py-4 px-4 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all placeholder:text-slate-500 dark:placeholder:text-gray-600"
+                  placeholder="e.g. LAW 101"
+                />
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setIsAddModalOpen(false)}
+                  className="flex-1 py-4 text-slate-500 dark:text-gray-400 font-bold rounded-xl hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={addingCourse || !newCourse.title || !newCourse.course_code}
+                  className="flex-1 bg-primary hover:bg-primary/90 text-background-dark font-bold py-4 rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-[0.98] disabled:opacity-50"
+                >
+                  {addingCourse ? 'Adding...' : 'Add Course'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       <BottomNav navItems={navItems} />
     </div>

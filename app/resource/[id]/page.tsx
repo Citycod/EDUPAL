@@ -3,6 +3,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { supabase } from '@/lib/supabase';
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
 
@@ -42,84 +43,55 @@ const ResourceDetail: React.FC = () => {
   const router = useRouter();
   const [userRating, setUserRating] = useState(0);
   const [reviewText, setReviewText] = useState('');
-  const [resource, setResource] = useState<ResourceData | null>(null);
+  const [resource, setResource] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  // Mock data - in a real app, you'd fetch this based on the ID
-  const mockResources: ResourceData[] = [
-    {
-      id: '1',
-      courseCode: 'CSC 401',
-      title: 'Final Year Project',
-      type: 'past-questions',
-      author: 'John D.',
-      timeAgo: '2 days ago',
-      rating: 4.2,
-      downloads: 142,
-      thumbnail: 'https://images.unsplash.com/photo-1546410531-bb4caa6b424d?q=80&w=2071&auto=format&fit=crop',
-      description: 'Complete final year project documentation and research paper for CSC 401 course.',
-      fileSize: '2.4 MB',
-      pages: 12
-    },
-    {
-      id: '2',
-      courseCode: 'MTH 201',
-      title: 'Calculus II Notes',
-      type: 'lecture-notes',
-      author: 'Sarah M.',
-      timeAgo: '3 days ago',
-      rating: 4.5,
-      downloads: 210,
-      thumbnail: 'https://images.unsplash.com/photo-1546410531-bb4caa6b424d?q=80&w=2071&auto=format&fit=crop',
-      description: 'Comprehensive lecture notes covering all topics in Calculus II.',
-      fileSize: '1.8 MB',
-      pages: 45
-    },
-    {
-      id: '3',
-      courseCode: 'PHY 101',
-      title: 'Physics I Past Questions',
-      type: 'past-questions',
-      author: 'Alex R.',
-      timeAgo: '5 days ago',
-      rating: 4.0,
-      downloads: 185,
-      thumbnail: 'https://images.unsplash.com/photo-1546410531-bb4caa6b424d?q=80&w=2071&auto=format&fit=crop',
-      description: 'Past examination questions and solutions for Physics I.',
-      fileSize: '3.1 MB',
-      pages: 28
-    },
-    {
-      id: '4',
-      courseCode: 'CHM 102',
-      title: 'Chemistry II Summaries',
-      type: 'summaries',
-      author: 'Emily L.',
-      timeAgo: '7 days ago',
-      rating: 4.8,
-      downloads: 250,
-      thumbnail: 'https://images.unsplash.com/photo-1546410531-bb4caa6b424d?q=80&w=2071&auto=format&fit=crop',
-      description: 'Condensed summaries of key Chemistry II concepts and formulas.',
-      fileSize: '1.2 MB',
-      pages: 15
-    }
-  ];
-
   useEffect(() => {
-    // Simulate API call to fetch resource data
-    const fetchResource = () => {
-      setLoading(true);
-      setTimeout(() => {
-        const foundResource = mockResources.find(res => res.id === id);
-        setResource(foundResource || null);
+    const fetchResource = async () => {
+      try {
+        setLoading(true);
+        const { data, error } = await supabase
+          .from('resources')
+          .select(`
+            *,
+            uploader:profiles(full_name),
+            course:courses(course_code)
+          `)
+          .eq('id', id)
+          .single();
+
+        if (error) throw error;
+
+        if (data) {
+          setResource({
+            id: data.id,
+            courseCode: data.course?.course_code || 'N/A',
+            title: data.title,
+            type: data.type,
+            category: data.category,
+            author: data.uploader?.full_name || 'EduPal User',
+            timeAgo: new Date(data.created_at).toLocaleDateString(),
+            rating: data.rating || 4.5, // Default if no ratings
+            downloads: data.downloads_count || 0,
+            thumbnail: data.thumbnail_url || 'https://images.unsplash.com/photo-1546410531-bb4caa6b424d?q=80&w=2071&auto=format&fit=crop',
+            description: data.description || 'No description provided for this resource.',
+            fileSize: data.file_size || '0.0 MB',
+            pages: data.pages || 0,
+            fileUrl: data.file_url
+          });
+        }
+      } catch (err) {
+        console.error('Error fetching resource:', err);
+      } finally {
         setLoading(false);
-      }, 500);
+      }
     };
 
-    fetchResource();
+    if (id) fetchResource();
   }, [id]);
 
   const reviews: Review[] = [
+    // ... keep existing reviews mock for now
     {
       id: 1,
       userName: "Sophia L.",
@@ -139,6 +111,7 @@ const ResourceDetail: React.FC = () => {
   ];
 
   const relatedResources: RelatedResource[] = [
+    // ... keep existing related resources mock for now
     {
       id: 1,
       title: "CSC 401 - Past Exam",
@@ -169,9 +142,42 @@ const ResourceDetail: React.FC = () => {
     setUserRating(0);
   };
 
-  const handleDownload = () => {
-    console.log('Downloading resource:', resource?.title);
-    // Add actual download logic here
+  const handleDownload = async () => {
+    if (!resource?.fileUrl) {
+      alert('Download URL not found');
+      return;
+    }
+
+    try {
+      // If it's a full URL, open it. If it's a path, get public URL or download
+      let downloadUrl = resource.fileUrl;
+
+      if (!downloadUrl.startsWith('http')) {
+        const { data } = supabase.storage
+          .from('resources')
+          .getPublicUrl(downloadUrl);
+        downloadUrl = data.publicUrl;
+      }
+
+      // Create a temporary link and click it to trigger download
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.setAttribute('download', `${resource.title}.pdf`); // Fallback extension
+      link.setAttribute('target', '_blank');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      // Increment download count in DB
+      await supabase
+        .from('resources')
+        .update({ downloads_count: (resource.downloads || 0) + 1 })
+        .eq('id', resource.id);
+
+    } catch (error) {
+      console.error('Download failed:', error);
+      alert('Failed to download the file.');
+    }
   };
 
   const handleBackClick = () => {
@@ -179,7 +185,7 @@ const ResourceDetail: React.FC = () => {
   };
 
   const handleNotificationClick = () => {
-    router.push('/notifications');
+    router.push('/notification');
   };
 
   const handleRelatedResourceClick = (resourceId: number) => {
@@ -187,6 +193,7 @@ const ResourceDetail: React.FC = () => {
   };
 
   const renderStars = (rating: number, size: number = 20) => {
+    // ... existing renderStars
     return Array.from({ length: 5 }, (_, index) => {
       const isFilled = index < rating;
       return (
@@ -204,8 +211,8 @@ const ResourceDetail: React.FC = () => {
     });
   };
 
-  // Navigation items for BottomNav
   const navItems = [
+    // ... existing navItems
     {
       icon: "House",
       label: "Home",
@@ -239,6 +246,7 @@ const ResourceDetail: React.FC = () => {
   ];
 
   if (loading) {
+    // ... existing loading view
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-lg">Loading resource...</div>
@@ -247,6 +255,7 @@ const ResourceDetail: React.FC = () => {
   }
 
   if (!resource) {
+    // ... existing empty view
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-lg">Resource not found</div>
@@ -278,7 +287,7 @@ const ResourceDetail: React.FC = () => {
         </div>
 
         <p className="text-[#616f89] text-sm font-normal leading-normal pb-3 pt-1 px-4">
-          PDF • {resource.fileSize} • {resource.pages} pages
+          {resource.type} • {resource.fileSize} • {resource.pages} pages
         </p>
 
         <h3 className="text-[#111318] text-lg font-bold leading-tight tracking-[-0.015em] px-4 pb-2 pt-4">
@@ -325,6 +334,7 @@ const ResourceDetail: React.FC = () => {
         </div>
 
         {/* Rating Section */}
+// ... existing UI for ratings and reviews
         <h3 className="text-[#111318] text-lg font-bold leading-tight tracking-[-0.015em] px-4 pb-2 pt-4">
           Rate this resource
         </h3>
@@ -350,7 +360,6 @@ const ResourceDetail: React.FC = () => {
           ))}
         </div>
 
-        {/* Review Input */}
         <h3 className="text-[#111318] text-lg font-bold leading-tight tracking-[-0.015em] px-4 pb-2 pt-4">
           Reviews
         </h3>
@@ -372,7 +381,6 @@ const ResourceDetail: React.FC = () => {
           </button>
         </div>
 
-        {/* Existing Reviews */}
         <div className="flex flex-col gap-8 p-4 overflow-x-hidden bg-white">
           {reviews.map((review) => (
             <div key={review.id} className="flex flex-col gap-3 bg-white">
@@ -394,7 +402,6 @@ const ResourceDetail: React.FC = () => {
           ))}
         </div>
 
-        {/* Related Resources */}
         <h3 className="text-[#111318] text-lg font-bold leading-tight tracking-[-0.015em] px-4 pb-2 pt-4">
           You might also like
         </h3>
@@ -420,7 +427,6 @@ const ResourceDetail: React.FC = () => {
         </div>
       </div>
 
-      {/* Fixed Bottom Navigation */}
       <BottomNav navItems={navItems} />
     </div>
   );
