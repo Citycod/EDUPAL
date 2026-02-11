@@ -247,7 +247,7 @@ const CommunityPage: React.FC = () => {
                 ref={textareaRef}
                 value={newPostContent}
                 onChange={(e) => setNewPostContent(e.target.value)}
-                className="w-full bg-transparent border-none focus:ring-0 text-slate-900 dark:text-white text-sm placeholder-slate-500 resize-none py-1 max-h-32"
+                className="w-full bg-transparent border-none focus:ring-0 text-dark  text-sm placeholder-slate-500 resize-none py-1 max-h-32"
                 placeholder="Start a new discussion..."
                 rows={1}
                 style={{ minHeight: '24px' }}
