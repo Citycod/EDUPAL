@@ -13,7 +13,7 @@ const UploadPage = () => {
     courseCode: '',
     department: '',
     level: '100L',
-    yearSemester: '2023/2024 - 1st',
+    yearSemester: '2025/2026 - 1st',
     file: null as File | null
   });
 
@@ -91,6 +91,8 @@ const UploadPage = () => {
           course_id: courseId,
           uploader_id: user.id,
           file_url: publicUrl,
+          department: formData.department,
+          level: formData.level,
           file_size: (formData.file.size / 1024 / 1024).toFixed(2) + ' MB'
         });
 
@@ -185,29 +187,24 @@ const UploadPage = () => {
               <div className="space-y-4">
                 <label className="flex flex-col w-full">
                   <p className="text-slate-700 dark:text-white/80 text-sm font-medium pb-2 ml-1">Department</p>
-                  <select
+                  <input
                     name="department"
                     value={formData.department}
                     onChange={handleInputChange}
-                    className="form-select flex w-full rounded-xl text-black dark:text-white focus:outline-0 focus:ring-1 focus:ring-primary border border-slate-300 dark:border-white/10 bg-white dark:bg-[#1c2720] focus:border-primary h-14 p-4 text-base font-normal appearance-none"
+                    className="form-input flex w-full rounded-xl text-black dark:text-white focus:outline-0 focus:ring-1 focus:ring-primary border border-slate-300 dark:border-white/10 bg-white dark:bg-[#1c2720] focus:border-primary h-14 placeholder:text-slate-400 dark:placeholder:text-white/30 p-4 text-base font-normal"
+                    placeholder="e.g. Computer Science"
+                    type="text"
                     required
-                  >
-                    <option disabled value="">Select Department</option>
-                    <option value="Social Sciences">Social Sciences</option>
-                    <option value="Engineering">Engineering</option>
-                    <option value="Medicine">Medicine</option>
-                    <option value="Arts & Humanities">Arts & Humanities</option>
-                    <option value="Science">Science</option>
-                  </select>
+                  />
                 </label>
                 <div className="grid grid-cols-2 gap-4">
                   <label className="flex flex-col">
-                    <p className="text-slate-700 dark:text-white/80 text-sm font-medium pb-2 ml-1">Level</p>
+                    <p className="text-black text-sm font-medium pb-2 ml-1">Level</p>
                     <select
                       name="level"
                       value={formData.level}
                       onChange={handleInputChange}
-                      className="form-select flex w-full rounded-xl text-slate-900 dark:text-white focus:outline-0 focus:ring-1 focus:ring-primary border border-slate-300 dark:border-border-dark bg-white dark:bg-surface-dark focus:border-primary h-14 p-4 text-base font-normal"
+                      className="form-select flex w-full rounded-xl text-black focus:outline-0 focus:ring-1 focus:ring-primary border border-slate-300 dark:border-border-dark bg-white dark:bg-surface-dark focus:border-primary h-14 p-4 text-black font-normal"
                     >
                       <option>100L</option>
                       <option>200L</option>
@@ -217,17 +214,19 @@ const UploadPage = () => {
                     </select>
                   </label>
                   <label className="flex flex-col">
-                    <p className="text-slate-700 dark:text-white/80 text-sm font-medium pb-2 ml-1">Year/Semester</p>
+                    <p className="text-black text-sm font-medium pb-2 ml-1">Year/Semester</p>
                     <select
                       name="yearSemester"
                       value={formData.yearSemester}
                       onChange={handleInputChange}
-                      className="form-select flex w-full rounded-xl text-slate-900 dark:text-white focus:outline-0 focus:ring-1 focus:ring-primary border border-slate-300 dark:border-border-dark bg-white dark:bg-surface-dark focus:border-primary h-14 p-4 text-base font-normal"
+                      className="form-select flex w-full rounded-xl text-black focus:outline-0 focus:ring-1 focus:ring-primary border border-slate-300 dark:border-border-dark  focus:border-primary h-14 p-4 text-black font-normal"
                     >
+                      <option>2025/2026 - 1st</option>
+                      <option>2025/2026 - 2nd</option>
+                      <option>2024/2025 - 1st</option>
+                      <option>2024/2025 - 2nd</option>
                       <option>2023/2024 - 1st</option>
                       <option>2023/2024 - 2nd</option>
-                      <option>2022/2023 - 1st</option>
-                      <option>2022/2023 - 2nd</option>
                     </select>
                   </label>
                 </div>
