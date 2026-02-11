@@ -149,7 +149,7 @@ const UploadPage = () => {
                     name="courseTitle"
                     value={formData.courseTitle}
                     onChange={handleInputChange}
-                    className="form-input flex w-full rounded-xl text-slate-900 dark:text-white focus:outline-0 focus:ring-1 focus:ring-primary border border-slate-300 dark:border-border-dark bg-white dark:bg-surface-dark focus:border-primary h-14 placeholder:text-slate-400 dark:placeholder:text-white/30 p-4 text-base font-normal"
+                    className="form-input flex w-full rounded-xl text-black dark:text-white focus:outline-0 focus:ring-1 focus:ring-primary border border-slate-300 dark:border-white/10 bg-white dark:bg-[#1c2720] focus:border-primary h-14 placeholder:text-slate-400 dark:placeholder:text-white/30 p-4 text-base font-normal"
                     placeholder="e.g. Introduction to Psychology"
                     type="text"
                     required
@@ -161,7 +161,7 @@ const UploadPage = () => {
                     name="courseCode"
                     value={formData.courseCode}
                     onChange={handleInputChange}
-                    className="form-input flex w-full rounded-xl text-slate-900 dark:text-white focus:outline-0 focus:ring-1 focus:ring-primary border border-slate-300 dark:border-border-dark bg-white dark:bg-surface-dark focus:border-primary h-14 placeholder:text-slate-400 dark:placeholder:text-white/30 p-4 text-base font-normal"
+                    className="form-input flex w-full rounded-xl text-black dark:text-white focus:outline-0 focus:ring-1 focus:ring-primary border border-slate-300 dark:border-white/10 bg-white dark:bg-[#1c2720] focus:border-primary h-14 placeholder:text-slate-400 dark:placeholder:text-white/30 p-4 text-base font-normal"
                     placeholder="e.g. PSY 101"
                     type="text"
                     required
@@ -183,7 +183,7 @@ const UploadPage = () => {
                     name="department"
                     value={formData.department}
                     onChange={handleInputChange}
-                    className="form-select flex w-full rounded-xl text-slate-900 dark:text-white focus:outline-0 focus:ring-1 focus:ring-primary border border-slate-300 dark:border-border-dark bg-white dark:bg-surface-dark focus:border-primary h-14 p-4 text-base font-normal"
+                    className="form-select flex w-full rounded-xl text-black dark:text-white focus:outline-0 focus:ring-1 focus:ring-primary border border-slate-300 dark:border-white/10 bg-white dark:bg-[#1c2720] focus:border-primary h-14 p-4 text-base font-normal appearance-none"
                     required
                   >
                     <option disabled value="">Select Department</option>

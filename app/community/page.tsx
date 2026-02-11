@@ -39,7 +39,7 @@ const CommunityPage: React.FC = () => {
   const [threads, setThreads] = useState<Thread[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState('All Threads');
-  const [userAvatar, setUserAvatar] = useState('https://lh3.googleusercontent.com/aida-public/default-avatar');
+  const [userAvatar, setUserAvatar] = useState('https://ui-avatars.com/api/?name=User&background=random');
   const [newPostContent, setNewPostContent] = useState('');
   const [isPosting, setIsPosting] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);

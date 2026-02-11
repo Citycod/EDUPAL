@@ -46,7 +46,7 @@ const StudyResources: React.FC = () => {
           title: res.title,
           type: res.type || 'PDF', // Default if not in DB
           uploadedBy: 'EduPal User', // Need to join with profiles for real name
-          image: res.image_url || 'https://lh3.googleusercontent.com/aida-public/AB6AXuDwGK051C7lPu2XgK_r8y1G-BEki81m6jIJCB6ITOhnhtRAjKtMo2YwwNA5zw1sJzdX0PBPuK58q3i7RaFe1xXbxms3y6M1dYynnP9Y9_bm0-lsvPFQvwM0Pv7lzxt3DGNDIBHKGyqd744WHBAfU2_aDGbJ2-Hcld5wUHqspAYqEDbs220YotzMAlwg_VryoSDuTQ0sVQRW68HMiORxD5VRnlryhERQWtSjYoShAbD8NGSchKaXwcukhGk8S3nmHrKV9LJVE40oRJY'
+          image: res.image_url || 'https://images.unsplash.com/photo-1546410531-bb4caa6b424d?q=80&w=2071&auto=format&fit=crop'
         }));
 
         setResources(formattedResources);

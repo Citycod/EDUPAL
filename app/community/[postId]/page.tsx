@@ -65,7 +65,7 @@ const CommunityPostDetail: React.FC = () => {
       id: "1",
       author: {
         name: "Aisha Bello",
-        avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuBG5tgypbakWnRnGvY7Z3vLXrxaqxrO2quw6KyWQ1zqVAl_BBSBq1HJJiW82wk_3lV7jT_DtbBdQnpaUBAEqnbe8N5Q3AmOAyLPi9YJvRUlWy6th8sIHZo9OvclVmeXEPlUwjbmwnAcvaEXPKfTahb6g59ecstUnrbRjcqDfi05HvoyAy3FqriCRfczWkd8_CRjK-m8UpUxHsoY6asrOWGIi_GkHfNoTTHuKTIu23rWAB9JC4Cv8fb3h9IEXSDJT1ZJ3QCtG8nZfjI",
+        avatar: "https://ui-avatars.com/api/?name=Alex+Johnson&background=random",
         id: "user2"
       },
       content: "I'm in that class! We can study together. I'm also struggling with linked lists, especially the pointer manipulation part.",
@@ -77,7 +77,7 @@ const CommunityPostDetail: React.FC = () => {
           id: "1-1",
           author: {
             name: "Chukwudi Okoro",
-            avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuBjxc1_ZT8P11yVziKizCzDyHVFPV-NdpkLRCECKwVgI8xkoPUIywtlcYr2-YbV5RQUkQWs83Oltuq31MSto6AgthaiW2-tAl-u1Z5LKywKXcKbwdabun4kkwvPh-HnFU-39XvrpLH8TXwbluGummBGCtubcMbp6IRXgYYK2LvOf30FQQd68_jljTzHAzqu_xXT7-3N0YdLiJw3GXWFmtYJAJkN7oVCdz3LWKvhr-DooBs-NjD9ySUR76rH_Kva9kybenJ_RjrO7_E",
+            avatar: "https://ui-avatars.com/api/?name=Sarah+Chen&background=random",
             id: "user3"
           },
           content: "I can help too! I've got a good grasp on linked lists. Let's create a study group on Discord?",
@@ -93,7 +93,7 @@ const CommunityPostDetail: React.FC = () => {
       id: "2",
       author: {
         name: "Ngozi Eze",
-        avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuBAZZUauW_8ogtmULdPSLNoGOO7lRT8ojSo0Ni5ESOVkaM07qfZgukVSZTIrtXzgKcjbKVFDjZrHNJ9jtvKpWlaqL6B8221z7s97142GRIcD0oqzahV-vVO3R8xKnFRmfLPbbsipKNYEux7s8HMTh4359cK3o9XD3Vn6RvZDsnQQH-bWE44pbHJuytyVutp8ygmMw6Ztgp6R8CfbH1YE01UTVIxAvps7B-FaE2hyBBTrWSEn08XLfTVOe0JkfegTBNZGNNcuJT01Ps",
+        avatar: "https://ui-avatars.com/api/?name=Marcus+Lee&background=random",
         id: "user4"
       },
       content: "I'm in the same boat. Maybe we can form a study group? I found some good practice problems online that we can work through together.",
@@ -133,7 +133,7 @@ const CommunityPostDetail: React.FC = () => {
       id: Date.now().toString(),
       author: {
         name: "Current User", // Would come from auth context
-        avatar: "https://lh3.googleusercontent.com/aida-public/default-avatar",
+        avatar: `https://ui-avatars.com/api/?name=User&background=random`,
         id: "current-user"
       },
       content: newComment,
@@ -378,7 +378,7 @@ const CommunityPostDetail: React.FC = () => {
 
         <div className="flex gap-3 items-center">
           <img
-            src="https://lh3.googleusercontent.com/aida-public/default-avatar"
+            src={`https://ui-avatars.com/api/?name=User&background=random`}
             alt="Your avatar"
             className="w-10 h-10 rounded-full flex-shrink-0"
           />

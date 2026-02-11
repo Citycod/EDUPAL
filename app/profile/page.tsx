@@ -26,6 +26,15 @@ const ProfilePage: React.FC = () => {
   const [stats, setStats] = useState<ProfileStats>({ uploads: 0, downloads: 0, rating: 'N/A' });
   const [myUploads, setMyUploads] = useState<UploadedResource[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editForm, setEditForm] = useState({
+    full_name: '',
+    university: '',
+    major: '',
+    year: '',
+    avatar_file: null as File | null
+  });
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -43,7 +52,7 @@ const ProfilePage: React.FC = () => {
           if (profile) {
             setUserProfile({
               name: profile.full_name || user.email?.split('@')[0] || 'Student',
-              avatar: profile.avatar_url || 'https://ui-avatars.com/api/?name=Student&background=random',
+              avatar: profile.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.full_name || 'Student')}&background=random`,
               university: profile.university || 'University',
               major: profile.major || 'General',
               year: profile.year || 'Student',
@@ -67,7 +76,7 @@ const ProfilePage: React.FC = () => {
             const formattedUploads = resources.map((res: any) => ({
               id: res.id,
               title: res.title,
-              type: res.type || 'PDF', // Fallback if type is missing
+              type: res.type || 'PDF',
               size: res.file_size || 'Unknown',
               date: new Date(res.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
               downloads: res.downloads_count || 0
@@ -75,8 +84,7 @@ const ProfilePage: React.FC = () => {
 
             setMyUploads(formattedUploads);
 
-            // 3. Fetch Ratings (Average from reviews on user's resources)
-            // We need the IDs of resources uploaded by this user to filter reviews
+            // 3. Fetch Ratings
             const resourceIds = resources.map(r => r.id);
             let averageRating: number | string = 'N/A';
 
@@ -109,6 +117,85 @@ const ProfilePage: React.FC = () => {
     fetchData();
   }, []);
 
+  useEffect(() => {
+    if (userProfile) {
+      setEditForm({
+        full_name: userProfile.name,
+        university: userProfile.university,
+        major: userProfile.major,
+        year: userProfile.year,
+        avatar_file: null
+      });
+    }
+  }, [userProfile]);
+
+  const handleEditChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    setEditForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setEditForm(prev => ({ ...prev, avatar_file: e.target.files![0] }));
+    }
+  };
+
+  const saveProfile = async () => {
+    try {
+      setUploading(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      let avatarUrl = userProfile.avatar;
+
+      if (editForm.avatar_file) {
+        const fileExt = editForm.avatar_file.name.split('.').pop();
+        const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+        const filePath = `${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('avatars')
+          .upload(filePath, editForm.avatar_file, { upsert: true });
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('avatars')
+          .getPublicUrl(filePath);
+
+        avatarUrl = publicUrl;
+      }
+
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({
+          full_name: editForm.full_name,
+          university: editForm.university,
+          major: editForm.major,
+          year: editForm.year,
+          avatar_url: avatarUrl
+        })
+        .eq('id', user.id);
+
+      if (updateError) throw updateError;
+
+      setUserProfile((prev: any) => ({
+        ...prev,
+        name: editForm.full_name,
+        university: editForm.university,
+        major: editForm.major,
+        year: editForm.year,
+        avatar: avatarUrl
+      }));
+
+      setIsEditing(false);
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      alert("Failed to update profile.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const getFileIcon = (title: string, type: string) => {
     const lowerTitle = title.toLowerCase();
     const lowerType = type.toLowerCase();
@@ -140,8 +227,11 @@ const ProfilePage: React.FC = () => {
           </div>
           <h2 className="text-slate-900 dark:text-white text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center">Profile</h2>
           <div className="flex w-12 items-center justify-end">
-            <button className="flex cursor-pointer items-center justify-center rounded-lg h-12 bg-transparent text-slate-700 dark:text-white transition-colors hover:bg-slate-200 dark:hover:bg-white/10">
-              <span className="material-symbols-outlined">settings</span>
+            <button
+              onClick={() => setIsEditing(true)}
+              className="flex cursor-pointer items-center justify-center rounded-lg h-12 bg-transparent text-slate-700 dark:text-white transition-colors hover:bg-slate-200 dark:hover:bg-white/10"
+            >
+              <span className="material-symbols-outlined">edit</span>
             </button>
           </div>
         </div>
@@ -171,7 +261,10 @@ const ProfilePage: React.FC = () => {
             </div>
           </div>
           <div className="flex gap-3 w-full max-w-[480px]">
-            <button className="flex-1 flex cursor-pointer items-center justify-center overflow-hidden rounded-xl h-11 px-4 bg-primary text-background-dark text-sm font-bold leading-normal tracking-wide transition-opacity hover:opacity-90">
+            <button
+              onClick={() => setIsEditing(true)}
+              className="flex-1 flex cursor-pointer items-center justify-center overflow-hidden rounded-xl h-11 px-4 bg-primary text-background-dark text-sm font-bold leading-normal tracking-wide transition-opacity hover:opacity-90"
+            >
               <span className="material-symbols-outlined mr-2 text-[18px]">edit</span>
               <span className="truncate">Edit Profile</span>
             </button>
@@ -210,7 +303,7 @@ const ProfilePage: React.FC = () => {
               <p>No uploads yet.</p>
             </div>
           ) : (
-            myUploads.slice(0, 5).map((upload) => {
+            myUploads.slice(0, 5).map((upload: UploadedResource) => {
               const style = getFileIcon(upload.title, upload.type);
               return (
                 <div key={upload.id} className="flex items-center gap-4 bg-transparent hover:bg-slate-100 dark:hover:bg-white/5 transition-colors px-3 rounded-xl min-h-[72px] py-2 justify-between cursor-pointer group">
@@ -245,6 +338,97 @@ const ProfilePage: React.FC = () => {
             <span className="material-symbols-outlined text-[30px] font-bold">add</span>
           </button>
         </div>
+
+        {/* Edit Profile Modal */}
+        {isEditing && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
+            <div className="bg-white dark:bg-[#0a120d] w-full max-w-md rounded-2xl shadow-2xl p-6 border border-slate-200 dark:border-white/10 max-h-[90vh] overflow-y-auto">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white">Edit Profile</h3>
+                <button
+                  onClick={() => setIsEditing(false)}
+                  className="p-1 rounded-full hover:bg-slate-100 dark:hover:bg-white/10 text-slate-500 dark:text-slate-400"
+                >
+                  <span className="material-symbols-outlined">close</span>
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                {/* Avatar Upload */}
+                <div className="flex flex-col items-center mb-6">
+                  <div
+                    className="w-24 h-24 rounded-full bg-cover bg-center border-4 border-slate-100 dark:border-white/5 mb-3 relative"
+                    style={{
+                      backgroundImage: editForm.avatar_file
+                        ? `url(${URL.createObjectURL(editForm.avatar_file)})`
+                        : `url("${userProfile.avatar}")`
+                    }}
+                  >
+                    <label className="absolute bottom-0 right-0 bg-primary text-background-dark p-2 rounded-full cursor-pointer shadow-lg hover:brightness-110 transition-all">
+                      <span className="material-symbols-outlined text-sm">photo_camera</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleAvatarChange}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Tap icon to change photo</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Full Name</label>
+                  <input
+                    name="full_name"
+                    value={editForm.full_name}
+                    onChange={handleEditChange}
+                    className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">University</label>
+                  <input
+                    name="university"
+                    value={editForm.university}
+                    onChange={handleEditChange}
+                    className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Major</label>
+                    <input
+                      name="major"
+                      value={editForm.major}
+                      onChange={handleEditChange}
+                      className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Year</label>
+                    <input
+                      name="year"
+                      value={editForm.year}
+                      onChange={handleEditChange}
+                      className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  onClick={saveProfile}
+                  disabled={uploading}
+                  className="w-full bg-primary text-background-dark font-bold py-4 rounded-xl mt-4 shadow-lg shadow-primary/20 hover:opacity-90 transition-opacity disabled:opacity-70 flex items-center justify-center gap-2"
+                >
+                  {uploading ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Global Bottom Nav */}

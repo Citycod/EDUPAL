@@ -68,7 +68,7 @@ const CoursesPage: React.FC = () => {
               level: `Level ${levelNum}`,
               lessonsCount: 12 + (index % 5), // Mock
               resourcesCount: 4 + (index % 3), // Mock
-              image: `https://lh3.googleusercontent.com/aida-public/AB6AXu${index % 2 === 0 ? 'CONV-oegkw9H9v0JgACS-4EergFl4NZnCBuaxzz6Uc-a8TYg0OFCQaC_xZWeEXPX2oHKNza01uYJ4i_sr_p-1MXlcQr99rd0QOQLVLmwxlJaADDZGUV2t2wHPEdXD1OitC3_KqtV8A9HMSt7bacHhPwc_qsZ9ohhNdI55qHAQ7Z3pVBnrdDNPQm6clxIDvy9mO-kxWAcnI5SxNVnFg_xEhbL1lpZr_J_snVOrT4SG3Sh5su0FhVKPFOAmzDDfFVitIAPaXfwIXs_Q' : 'Cz0FARemm9vo1UxSqDhQFsb4g-cckAqIjKljZvNJcShzFNHavweTn9mL_wcwCExb1EUFTrghWZowxVwoc_3O3ShmadO6YkVQqa8Psa1CWr9MjOXLzSTCJo2e4KpMerY4Ji5-g5yJCKp2SqtrLkh0k5rq3HUxfpwxG74ImOMuuDkJ08AgPgJIWE4eL7cZ4QLzzahyZ8VGjU6dM08-b1VZXiJyiJcEpL7umCZZL5DMArx7xg-L6_aAGFHVG3gGmCh9FOPGWjebZDS8k'}`,
+              image: `https://images.unsplash.com/photo-1546410531-bb4caa6b424d?q=80&w=2071&auto=format&fit=crop`,
               isEnrolled: enrolledIds.has(c.id)
             };
           });
@@ -188,8 +188,8 @@ const CoursesPage: React.FC = () => {
               key={level}
               onClick={() => setActiveLevel(level)}
               className={`flex h-10 shrink-0 items-center justify-center gap-x-2 rounded-full px-4 transition-colors ${activeLevel === level
-                  ? 'bg-primary text-background-dark'
-                  : 'bg-[#28392f]/20 dark:bg-[#28392f] text-slate-900 dark:text-white'
+                ? 'bg-primary text-background-dark'
+                : 'bg-[#28392f]/20 dark:bg-[#28392f] text-slate-900 dark:text-white'
                 }`}
             >
               <p className={`text-sm ${activeLevel === level ? 'font-bold' : 'font-medium'} leading-normal`}>{level}</p>
@@ -209,7 +209,11 @@ const CoursesPage: React.FC = () => {
         <div className="grid grid-cols-1 gap-4 px-4">
           {filteredCourses.length > 0 ? (
             filteredCourses.map((course) => (
-              <div key={course.id} className="flex items-stretch justify-between gap-4 rounded-xl bg-white dark:bg-[#1c2720] p-4 shadow-sm border border-slate-200 dark:border-white/5">
+              <div
+                key={course.id}
+                onClick={() => router.push(`/classes/${course.id}`)}
+                className="flex items-stretch justify-between gap-4 rounded-xl bg-white dark:bg-[#1c2720] p-4 shadow-sm border border-slate-200 dark:border-white/5 cursor-pointer hover:border-primary/50 transition-colors"
+              >
                 <div className="flex flex-col gap-1 flex-[2_2_0px]">
                   <span className="text-primary text-[10px] uppercase font-bold tracking-wider">{course.level}</span>
                   <p className="text-slate-900 dark:text-white text-base font-bold leading-tight">{course.title}</p>

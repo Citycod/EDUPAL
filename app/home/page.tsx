@@ -57,21 +57,21 @@ export default function Home() {
       title: 'Past Questions',
       subtitle: `${resourcesCount > 0 ? resourcesCount + '+' : 'Browse'} Resources`,
       icon: 'history_edu',
-      image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDFwrP0-LThS-SmerGKwLrGNxJJI5kCSbV8cBWn7bzxDvlSG6qcTLXOBbVVUn5nC3tpMqiyMrK4PHX6yI_3pSe98iG4u2T_Y8c2nvVoB3jEqnoE08jZ0avWBv-BN4cGKL3-IpRuEjujRnWadIYehTn-ZyDUF_fb6NXF_fkMtUUryvoGVyluE4ZxUobCSIIpe_66pPbyfVaa0OSLoam61pZRnJtYGODhaktq5RzhFkFR89rPKFsIY6SbqOzqk_LMwdOXUsCbG8hT06E',
+      image: 'https://images.unsplash.com/photo-1546410531-bb4caa6b424d?q=80&w=2071&auto=format&fit=crop',
       path: '/library'
     },
     {
       title: 'Courses',
       subtitle: `${enrolledCount} Active Enrolled`,
       icon: 'school',
-      image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDb8TkeFvKiM4k8amEMTGOgkdup8zpVNzMl5cVwiFKQtFr68lIw2YQmmxIIUxhBxABAzobY46RedSm0Qiv--GrF1hPToEHNutEm-8Xd-hRLUccy354sj5Hx5_qSrjjIl9ARygzdRp0nfrXpdS_0zO84rSc3nDgVrl-fZzmD9HXc35G7H040ufJjp7HdeSl_OOJsiLqn6Hs7LXzN07mrjgeFS2b7PEIEMBvJ6xwgSE7qcO2r83MV0Hxe-ySnm5j9YTk51RcA-SFjzMM',
+      image: 'https://images.unsplash.com/photo-1546410531-bb4caa6b424d?q=80&w=2071&auto=format&fit=crop',
       path: '/classes'
     },
     {
       title: 'Discussions',
       subtitle: 'Join conversation',
       icon: 'forum',
-      image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAN69hwYd7coO877wAeqUOmkxTuS79jLz6ebqwJ2on85eAgPfMZMrfoW6vOTsZB9LlyQVUT4xwpsRgH8_jQQCvxWgQ68fRjBVCJhU9bg8J2VCWA04YhLZxxMb77QGL4D_I2N9djR6tMNglnBuPbX_DUamCnYFb_f2xRKWJCaZVzQoM6jxMXupy2Lz-UTGTbfL9v0D6cJynvpWn0oXmKZ7F2ojwq8C1EOSt1mlneVjzaWRfPQAX82LwTtbOSEncVhwB3N8ZW9GSBUOc',
+      image: 'https://images.unsplash.com/photo-1546410531-bb4caa6b424d?q=80&w=2071&auto=format&fit=crop',
       path: '/community'
     }
   ];

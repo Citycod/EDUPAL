@@ -56,7 +56,7 @@ const ResourceDetail: React.FC = () => {
       timeAgo: '2 days ago',
       rating: 4.2,
       downloads: 142,
-      thumbnail: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAZu0RCNgSV5BydXkjI5mmOkMSnEGLdKqalB7w8B-Y19EbTO0zLBvYJQi2woE7uPDoOrw84OFRHx8F8-kxKCsmOBUqE8eeVY-1MOATuDPvATd26UHrM4AaCIDtQGtsoZ4-Z-AHL4fCrkrmxQKCqtGA-wvTDxPI3OKGVK5qdonQyy1F0uoDd7Bt4At-fmevG4jaRT83FVU5VEupGmrbprqNfpQIr5aL41OsxbgLYz1Wqq0a53usfD3pJj3wjm60OrICDuRn0kRHrpDEY',
+      thumbnail: 'https://images.unsplash.com/photo-1546410531-bb4caa6b424d?q=80&w=2071&auto=format&fit=crop',
       description: 'Complete final year project documentation and research paper for CSC 401 course.',
       fileSize: '2.4 MB',
       pages: 12
@@ -70,7 +70,7 @@ const ResourceDetail: React.FC = () => {
       timeAgo: '3 days ago',
       rating: 4.5,
       downloads: 210,
-      thumbnail: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB61QZVa9NzDvEzjdXB8WidlrIS_YdegsyustTm3cgeXJbt7dMkrJ_Hh4LmcdAEQwjiHaZU74DPzYwCmYrBGxUEXtq97qq2ve_cD8pu7X3no1IVj5-mPENKcxW2SfL5bwbnEVrdVak0Ds_AYfNuWkmYVU_dzyrDkdBxKXu2oUeItQAbGJKcwmY70mfYO1jhKir6t7YlU-BK-DhpQteleQRI6_RJCp1LVRU_tpiWGMFFsepLBJCwIu9OccslHmZiIQsGwAfEaCey1q2H',
+      thumbnail: 'https://images.unsplash.com/photo-1546410531-bb4caa6b424d?q=80&w=2071&auto=format&fit=crop',
       description: 'Comprehensive lecture notes covering all topics in Calculus II.',
       fileSize: '1.8 MB',
       pages: 45
@@ -84,7 +84,7 @@ const ResourceDetail: React.FC = () => {
       timeAgo: '5 days ago',
       rating: 4.0,
       downloads: 185,
-      thumbnail: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDMdBVTzoLtGulGz2msGl6hl07W7gpDpNwyQtAMFfRijxDRbH8bnnyWNB-cSS0r9T7Cnd4zOiE302VD_FCPP3FWWUKuHZnm4pYKQBDNoIsLmsJtTMmtUJ1Uh8a8aDNBjfdq_NbrKaXj6AGDmNA7m5knGZR6gG5Mrf_YzlPEPtGsNl1-EJRHFI-nXx7NnaA_G9BBldFvSdL7p21E1RHZCYHeqz_M4Ot_SOa3WIho__u0-xJAF7t85SPwXAHBXgxIRzEqaiHkrt98tKUH',
+      thumbnail: 'https://images.unsplash.com/photo-1546410531-bb4caa6b424d?q=80&w=2071&auto=format&fit=crop',
       description: 'Past examination questions and solutions for Physics I.',
       fileSize: '3.1 MB',
       pages: 28
@@ -98,7 +98,7 @@ const ResourceDetail: React.FC = () => {
       timeAgo: '7 days ago',
       rating: 4.8,
       downloads: 250,
-      thumbnail: 'https://lh3.googleusercontent.com/aida-public/AB6AXuC6HEsaay8qpHJRZGmNOUvU4oKQTX_gLe_zH6cxAUSr9ADA-0XEHdLIly5PZyD1i7-arqlyNUR0ShRXkH8bvjC2ciWcf1lOFjI9jmOKvScuwIfTGYLpiS-7ypn9RxK_T0OD-QCAvqhyaD20AD1pT7mjAxzzTa9BfgFOM4EfKb9wquKCOW8rZlu3WM_X-xaICCagCdxgb9tYB0sc52fh2htibY5q3Oec1ztlliewGwN3QskjiJlXnmIA7xmKv2SSWrhC8Xpkmi343xU3',
+      thumbnail: 'https://images.unsplash.com/photo-1546410531-bb4caa6b424d?q=80&w=2071&auto=format&fit=crop',
       description: 'Condensed summaries of key Chemistry II concepts and formulas.',
       fileSize: '1.2 MB',
       pages: 15
@@ -123,7 +123,7 @@ const ResourceDetail: React.FC = () => {
     {
       id: 1,
       userName: "Sophia L.",
-      userAvatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuDvX8RVoJ-V_u2QA5lQL410LhRaG2rtuK173d4ZF4MfPvMEIidzL7HQCxteBi4xBgvHe9fzKpn6j1DgSqeu_qJsUsPCFhBZWQ5cWB_ueyQbOXZ8PmQvQzcAYNri3kmhSZva2VdRsFg5KPKwEaTJw0e76HdKQN3HTGEaBa4OaEtc6sZtR8JVxtG73DRUWAXiIUIRu7EC8W--nSatKTH8ZXnaaddoxoOJf0nwGl773cRJAfj9rRePljLGJW3BR9fAMY-_xWa81B7rl0hC",
+      userAvatar: "https://ui-avatars.com/api/?name=User&background=random",
       timeAgo: "1 week ago",
       rating: 5,
       comment: "Very helpful for midterms!"
@@ -131,7 +131,7 @@ const ResourceDetail: React.FC = () => {
     {
       id: 2,
       userName: "Ethan M.",
-      userAvatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuDczySBv7de0tzOQ0sakLJaE5HJY1tZsd0A_YltnzlOk2sJwDPBAFI8MmWX06suMHZtC2w1uMzhzqYbxUMElmh6u0wHbum5y38L2W6Rg5qrrYFD5PiFu8PIHoAa-EpWFZuLgv98pAkxgAxZfp8XnPnzqjkzlnPCx2Mr6kfr1CQ5SkueVxODvpkqlqySjZk0CIVbXgAZsdP9uR2k38miAbFHZ_NRp5k7A5k5XN5lGP5CvZf6Y696pOqV47tFEGbNFq2VgI7JsjGAy9pt",
+      userAvatar: "https://ui-avatars.com/api/?name=User&background=random",
       timeAgo: "2 weeks ago",
       rating: 4,
       comment: "Clear and well-organized"
@@ -142,19 +142,19 @@ const ResourceDetail: React.FC = () => {
     {
       id: 1,
       title: "CSC 401 - Past Exam",
-      image: "https://lh3.googleusercontent.com/aida-public/AB6AXuBwEoD6Cl9mQJY0RgV50IaCXWvY5HL5ey2PZ1oG1NmwW5ZCEMZbeeae3kfbvliS1rGodw3rOfFCkWc_IaNpHhfW21YTxhTc6-CEm8dMcO_-w-E-NBCX5XeYTITbzi6Hq9g8oN2hYOC0JApGZahoRbec7OCNXHOHFCaSbzuXIRChBt5otwd-OMUasemRBUROhm_-JA5COJi8GIP5ULrvl4nsQL56QDhYo24nk1RH5j8nBTw85JsomQHqSaUOLx3WG-GOd8iM_CGPFowc",
+      image: "https://images.unsplash.com/photo-1546410531-bb4caa6b424d?q=80&w=2071&auto=format&fit=crop",
       uploader: "Sarah C."
     },
     {
       id: 2,
       title: "CSC 401 - Study Notes",
-      image: "https://lh3.googleusercontent.com/aida-public/AB6AXuBqER7PVCwSl8-d9OZiOtmsSa8P514ejVA_ivKc79Ck3_ae2UeI0MaSJbCUsnCEXzETwHkZepqLfYFAUtcL5XGFku6-mz1PnON1duRT-V3dj2Fyxxt5-yimBg2J6b0WHuvQXriSnYatjaa-tRftPH-ITQYaVIwvhczVx2oNbrU9S4eS0lYvFbSyUXAaTptsD-hnzK3GsWc3pCJ-hEeflEo0TNFakS4FwM0gRgFtr2z1eIRTADi6_iZEGEs91My4ze2X8Hm_Snfh1Ex_",
+      image: "https://images.unsplash.com/photo-1546410531-bb4caa6b424d?q=80&w=2071&auto=format&fit=crop",
       uploader: "David R."
     },
     {
       id: 3,
       title: "CSC 401 - Assignment",
-      image: "https://lh3.googleusercontent.com/aida-public/AB6AXuBOeSTjdKnQ4sp23vRpQDlU_cCcRNMEkQzFw-NoUsHoBSw1VF-WZJ30kXc8imhmXFQIzCV3PMJYyGP9QnjZ-Xfde5LLOcK3MK_WMM0KTElMMhWsAF1f1SQH21ayMjwjtaILlm6L80aKPv5xm5FVO5PjdnwXwgOnhT3lDG_uFOApYVI7LeBgDa9dKqIHlbi5NViQsgGaP2B_LVhZCEeJIG3NyjWMMOYDiUNXHxjSvbzAucr27AnQkbfSTkAcrjZMjOWnLtfkY0cye2ge",
+      image: "https://images.unsplash.com/photo-1546410531-bb4caa6b424d?q=80&w=2071&auto=format&fit=crop",
       uploader: "Olivia B."
     }
   ];
