@@ -250,7 +250,7 @@ const CommunityPage: React.FC = () => {
                 className="w-full bg-transparent border-none focus:ring-0 text-dark  text-sm placeholder-slate-500 resize-none py-1 max-h-32"
                 placeholder="Start a new discussion..."
                 rows={1}
-                style={{ minHeight: '24px' }}
+                style={{ minHeight: '24px ', textDecoration: 'none', color: 'black' }}
               ></textarea>
             </div>
             <div className="flex gap-2">
