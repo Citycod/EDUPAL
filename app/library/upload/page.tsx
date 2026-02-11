@@ -102,8 +102,14 @@ const UploadPage = () => {
       }, 2000);
 
     } catch (error: any) {
-      console.error('Upload failed:', error);
-      alert(`Upload failed: ${error.message}`);
+      console.error('Upload failed details:', error);
+      let errorMsg = error.message || 'An unknown error occurred';
+
+      if (errorMsg === 'Failed to fetch') {
+        errorMsg = 'Network error: Could not reach Supabase. Please check your internet connection or ad-blocker.';
+      }
+
+      alert(`Upload failed: ${errorMsg}`);
     } finally {
       setLoading(false);
     }
