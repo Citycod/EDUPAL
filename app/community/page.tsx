@@ -36,7 +36,9 @@ interface Thread {
   isResolved?: boolean;
 }
 
-const CommunityPage: React.FC = () => {
+import { Suspense } from 'react';
+
+const CommunityContent: React.FC = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const boardId = searchParams.get('board');
@@ -319,6 +321,14 @@ const CommunityPage: React.FC = () => {
       {/* Global Bottom Nav - Placed outside the max-w-3xl container to span full width */}
       <BottomNav />
     </div>
+  );
+};
+
+const CommunityPage = () => {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading Community...</div>}>
+      <CommunityContent />
+    </Suspense>
   );
 };
 
