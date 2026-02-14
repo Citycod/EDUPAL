@@ -20,55 +20,65 @@ interface LibraryResource {
 
 const LibraryPage = () => {
     const router = useRouter();
-    const [resources, setResources] = useState<LibraryResource[]>([]);
+    const [resources, setResources] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
-    const [userAvatar, setUserAvatar] = useState('https://ui-avatars.com/api/?name=Student&background=random');
+    const [userProfile, setUserProfile] = useState<any>(null);
+
+    // Filter State
+    const [institutions, setInstitutions] = useState<any[]>([]);
+    const [departments, setDepartments] = useState<any[]>([]);
+    const [sessions, setSessions] = useState<any[]>([]);
+
+    const [selectedInst, setSelectedInst] = useState('');
+    const [selectedDept, setSelectedDept] = useState('');
+    const [selectedLevel, setSelectedLevel] = useState('');
 
     useEffect(() => {
-        const fetchData = async () => {
+        const fetchInitialData = async () => {
             try {
-                // Fetch User Avatar
+                // 1. Fetch User Profile
                 const { data: { user } } = await supabase.auth.getUser();
+                let profileData = null;
                 if (user) {
-                    const { data: profile } = await supabase.from('profiles').select('avatar_url').eq('id', user.id).single();
-                    if (profile?.avatar_url) setUserAvatar(profile.avatar_url);
+                    const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+                    profileData = profile;
+                    setUserProfile(profile);
                 }
 
-                // Fetch Resources with Course and Uploader info
-                const { data, error } = await supabase
-                    .from('resources')
-                    .select(`
-            *,
-            courses (id, title, course_code),
-            profiles:uploader_id (full_name)
-          `)
-                    .order('created_at', { ascending: false });
+                // 2. Fetch Institutions & Sessions via Bridge
+                const { data: inst } = await supabase.from('hub_institutions').select('*').order('name');
+                const { data: sess } = await supabase.from('hub_sessions').select('*').order('name', { ascending: false });
+                if (inst) setInstitutions(inst);
+                if (sess) setSessions(sess);
 
-                if (error) throw error;
+                // 3. Handle External Search Params (e.g. from Courses page)
+                const params = new URLSearchParams(window.location.search);
+                const courseIdParam = params.get('course');
 
-                const formattedResources = data.map((res: any) => {
-                    const courseCode = res.courses?.course_code || 'GEN 101';
-                    const year = new Date(res.created_at).getFullYear().toString();
+                if (courseIdParam) {
+                    // Fetch course details via Bridge
+                    const { data: courseRef } = await supabase
+                        .from('hub_courses')
+                        .select('*, hub_departments (*)')
+                        .eq('id', courseIdParam)
+                        .single();
 
-                    // Generate initials for uploader (Mocking multiple uploaders for UI consistency with design)
-                    const uploaderName = res.profiles?.full_name || 'Edu Pal';
-                    const initials = uploaderName.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase();
+                    if (courseRef) {
+                        setSelectedInst(courseRef.hub_departments.institution_id);
+                        setSelectedDept(courseRef.department_id);
+                        setSelectedLevel(courseRef.level);
+                        fetchResources(courseRef.hub_departments.institution_id, courseRef.department_id, courseRef.level);
+                        return; // Initial fetch done by context setting
+                    }
+                }
 
-                    return {
-                        id: res.id,
-                        title: res.title,
-                        courseCode: courseCode,
-                        year: year,
-                        type: res.type || 'PDF',
-                        category: res.category || 'General',
-                        downloads: res.downloads_count || 0,
-                        uploaderAbbr: [initials], // In a real app, maybe fetch multiple contributors
-                        colorCheck: res.id // Use ID for deterministic random color
-                    };
-                });
-
-                setResources(formattedResources);
+                // Default context logic if no param
+                if (profileData?.institution_id) {
+                    setSelectedInst(profileData.institution_id);
+                } else {
+                    fetchResources();
+                }
 
             } catch (error) {
                 console.error("Error fetching library data:", error);
@@ -77,22 +87,48 @@ const LibraryPage = () => {
             }
         };
 
-        fetchData();
+        fetchInitialData();
     }, []);
 
-    // Filter resources based on search
-    const filteredResources = resources.filter(res =>
-        res.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        res.courseCode.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const fetchResources = async (instId?: string, deptId?: string, level?: string) => {
+        let query = supabase
+            .from('hub_resources')
+            .select('*')
+            .order('created_at', { ascending: false });
 
-    const navItems = [
-        { icon: "home", label: "Home", active: false, onClick: () => router.push('/home') },
-        { icon: "menu_book", label: "Library", active: true, onClick: () => router.push('/library') },
-        { icon: "school", label: "Courses", active: false, onClick: () => router.push('/classes') },
-        { icon: "forum", label: "Community", active: false, onClick: () => router.push('/community') },
-        { icon: "person", label: "Profile", active: false, onClick: () => router.push('/profile') }
-    ];
+        // Filtering via simplified joins or flattened fields
+        if (instId) query = query.eq('institution_id', instId);
+        if (deptId) query = query.eq('department_id', deptId);
+        if (level) query = query.eq('level', level);
+
+        const { data, error } = await query;
+        if (error) {
+            console.error("Fetch resources error:", error);
+            return;
+        }
+        setResources(data || []);
+    };
+
+    // Update departments when institution changes
+    useEffect(() => {
+        if (!selectedInst) return;
+        const fetchDepts = async () => {
+            const { data } = await supabase.from('hub_departments').select('*').eq('institution_id', selectedInst).order('name');
+            setDepartments(data || []);
+            fetchResources(selectedInst);
+        };
+        fetchDepts();
+    }, [selectedInst]);
+
+    // Filter resources based on search and filters
+    const filteredResources = resources.filter(res => {
+        const matchesSearch = !searchQuery ||
+            res.course_code?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            res.course_title?.toLowerCase().includes(searchQuery.toLowerCase());
+
+        return matchesSearch;
+    });
+
 
     if (loading) {
         return <div className="min-h-screen flex items-center justify-center bg-[#f6f8f7] dark:bg-[#102217] text-slate-500">Loading Library...</div>;
@@ -105,25 +141,18 @@ const LibraryPage = () => {
                 <div className="max-w-7xl mx-auto flex items-center justify-between p-4">
                     <div className="flex items-center gap-3">
                         <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/20 text-primary">
-                            <span className="material-symbols-outlined">menu_book</span>
+                            <span className="material-symbols-outlined">history_edu</span>
                         </div>
-                        <h1 className="text-xl font-bold tracking-tight">EduPal Library</h1>
+                        <h1 className="text-xl font-black tracking-tighter">Academic Archive</h1>
                     </div>
                     <div className="flex items-center gap-4">
                         <button
                             onClick={() => router.push('/library/upload')}
-                            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-all text-sm font-medium"
+                            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-background-dark hover:scale-105 active:scale-95 transition-all text-sm font-black shadow-lg shadow-primary/20"
                         >
                             <span className="material-symbols-outlined text-[20px]">cloud_upload</span>
                             <span className="hidden sm:inline">Upload PQ</span>
                         </button>
-                        <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden border-2 border-primary/30">
-                            <img
-                                alt="User Profile"
-                                src={userAvatar}
-                                className="w-full h-full object-cover"
-                            />
-                        </div>
                     </div>
                 </div>
             </header>
@@ -136,116 +165,118 @@ const LibraryPage = () => {
                             <span className="material-symbols-outlined">search</span>
                         </div>
                         <input
-                            className="block w-full h-14 pl-12 pr-4 bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent text-base text-slate-900 dark:text-white placeholder:text-slate-400"
-                            placeholder="Search course code or title (e.g. MTH 101)..."
+                            className="block w-full h-16 pl-12 pr-4 bg-white dark:bg-slate-800/50 border-2 border-slate-200 dark:border-slate-700 rounded-2xl focus:ring-4 focus:ring-primary/10 focus:border-primary text-base text-slate-900 dark:text-white placeholder:text-slate-400 shadow-xl shadow-primary/5 transition-all"
+                            placeholder="Direct search by course code (e.g. CSC421)..."
                             type="text"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
                     </div>
-                    {/* Horizontal Filters */}
-                    <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide no-scrollbar">
-                        {['Institution', 'Department', 'Level', 'Course Code'].map((filter) => (
-                            <button key={filter} className="flex shrink-0 items-center justify-center gap-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4 py-2 hover:border-primary transition-colors text-slate-700 dark:text-slate-300">
-                                <span className="text-sm font-medium">{filter}</span>
-                                <span className="material-symbols-outlined text-[18px]">keyboard_arrow_down</span>
-                            </button>
-                        ))}
+
+                    {/* Hierarchical Filter Selects */}
+                    <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar">
+                        <select
+                            value={selectedInst}
+                            onChange={(e) => setSelectedInst(e.target.value)}
+                            className="flex shrink-0 items-center justify-center gap-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4 py-3 hover:border-primary transition-colors text-sm font-bold text-slate-700 dark:text-slate-300 outline-none"
+                        >
+                            <option value="">All Institutions</option>
+                            {institutions.map(inst => <option key={inst.id} value={inst.id}>{inst.name}</option>)}
+                        </select>
+
+                        <select
+                            value={selectedDept}
+                            onChange={(e) => {
+                                setSelectedDept(e.target.value);
+                                fetchResources(selectedInst, e.target.value, selectedLevel);
+                            }}
+                            disabled={!selectedInst}
+                            className="flex shrink-0 items-center justify-center gap-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4 py-3 hover:border-primary transition-colors text-sm font-bold text-slate-700 dark:text-slate-300 outline-none disabled:opacity-50"
+                        >
+                            <option value="">All Departments</option>
+                            {departments.map(dept => <option key={dept.id} value={dept.id}>{dept.name}</option>)}
+                        </select>
+
+                        <select
+                            value={selectedLevel}
+                            onChange={(e) => {
+                                setSelectedLevel(e.target.value);
+                                fetchResources(selectedInst, selectedDept, e.target.value);
+                            }}
+                            className="flex shrink-0 items-center justify-center gap-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4 py-3 hover:border-primary transition-colors text-sm font-bold text-slate-700 dark:text-slate-300 outline-none"
+                        >
+                            <option value="">All Levels</option>
+                            {['100', '200', '300', '400', '500'].map(lvl => <option key={lvl} value={lvl}>{lvl}L</option>)}
+                        </select>
                     </div>
                 </section>
 
-                {/* Fast Access / Recent Section */}
-                <section className="px-4 py-2">
-                    <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-lg font-bold">Recommended for You</h2>
-                        <button className="text-primary text-sm font-medium hover:underline">See all</button>
+                {/* Unified Archive Section */}
+                <section className="px-4 py-8">
+                    <div className="flex items-center justify-between mb-8">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 bg-primary/10 rounded-lg">
+                                <span className="material-symbols-outlined text-primary">folder_open</span>
+                            </div>
+                            <h2 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">All Academic Materials</h2>
+                        </div>
+                        <span className="text-slate-400 text-xs font-black uppercase tracking-widest bg-slate-100 dark:bg-slate-800/50 px-3 py-1 rounded-full">{filteredResources.length} Results</span>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {/* PQ Cards */}
-                        {filteredResources.slice(0, 3).map((res, index) => (
-                            <div key={res.id} className="group relative flex flex-col justify-between overflow-hidden rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 hover:shadow-lg hover:shadow-primary/5 transition-all">
-                                <div className="flex items-start justify-between mb-4">
-                                    <div className="space-y-1">
-                                        <h3 className="font-bold text-slate-900 dark:text-white line-clamp-1">{res.title}</h3>
-                                        <div className="flex items-center gap-2">
-                                            <span className="bg-primary/20 text-primary text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">{res.courseCode}</span>
-                                            <span className="text-slate-400 dark:text-slate-500 text-xs">• {res.year} Session</span>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {filteredResources.map((res) => (
+                            <div key={res.id} className="group relative flex flex-col justify-between overflow-hidden rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 hover:shadow-2xl hover:shadow-primary/10 hover:border-primary/50 transition-all text-left">
+                                <div className="flex items-start justify-between mb-6">
+                                    <div className="space-y-1 pr-2">
+                                        <h3 className="font-extrabold text-slate-900 dark:text-white text-lg leading-tight line-clamp-2">{res.course_title || res.title}</h3>
+                                        <div className="flex flex-wrap items-center gap-2 mt-3">
+                                            <span className="bg-primary/20 text-primary text-[10px] font-black px-2.5 py-1 rounded-md uppercase tracking-widest border border-primary/20">{res.course_code}</span>
+                                            <span className="text-slate-400 dark:text-slate-500 text-[10px] font-bold uppercase tracking-widest">• {res.session_name}</span>
                                         </div>
                                     </div>
-                                    <div className="w-16 h-16 rounded-lg bg-slate-100 dark:bg-slate-800 flex-shrink-0 overflow-hidden border border-slate-200 dark:border-slate-700">
-                                        <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-                                            <span className="material-symbols-outlined text-primary/40 text-3xl">description</span>
-                                        </div>
+                                    <div className="w-14 h-14 rounded-xl bg-slate-50 dark:bg-slate-800/50 flex flex-col items-center justify-center flex-shrink-0 border border-slate-100 dark:border-slate-700">
+                                        <span className="material-symbols-outlined text-primary/40 text-3xl">description</span>
+                                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-tighter">{res.type}</span>
                                     </div>
                                 </div>
-                                <div className="flex items-center justify-between mt-auto">
-                                    <div className="flex -space-x-2">
-                                        {/* Mock multiple avatars or single uploader */}
-                                        <div className="w-6 h-6 rounded-full border border-white dark:border-slate-900 bg-slate-200 dark:bg-slate-700 text-[10px] flex items-center justify-center text-slate-700 dark:text-slate-300 font-bold">
-                                            {res.uploaderAbbr[0]}
+                                <div className="flex items-center justify-between mt-auto pt-5 border-t border-slate-100 dark:border-slate-800/50">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-[11px] font-black text-primary border border-primary/10">
+                                            {res.uploader_name?.split(' ').map((n: string) => n[0]).join('').substring(0, 2) || 'A'}
+                                        </div>
+                                        <div className="flex flex-col">
+                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Uploader</span>
+                                            <span className="text-xs font-bold text-slate-700 dark:text-slate-300 line-clamp-1">{res.uploader_name || 'Admin'}</span>
                                         </div>
                                     </div>
-                                    <button className="flex items-center gap-1.5 px-4 h-9 rounded-lg bg-primary text-[#102217] font-bold text-sm hover:opacity-90 transition-opacity">
+                                    <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-background-dark font-black text-[11px] hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/10 uppercase tracking-wider">
                                         <span className="material-symbols-outlined text-[18px]">download</span>
-                                        Download
+                                        Get PDF
                                     </button>
                                 </div>
                             </div>
                         ))}
 
                         {filteredResources.length === 0 && (
-                            <div className="col-span-full py-8 text-center text-slate-500">
-                                No resources found. Try a different search.
+                            <div className="col-span-full py-20 text-center">
+                                <div className="w-20 h-20 bg-slate-100 dark:bg-slate-800/50 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300">
+                                    <span className="material-symbols-outlined text-4xl">search_off</span>
+                                </div>
+                                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">No results found</h3>
+                                <p className="text-slate-500 max-w-xs mx-auto text-sm">We couldn't find any resources matching your search. Be the first to contribution for these course!</p>
+                                <button
+                                    onClick={() => router.push('/library/upload')}
+                                    className="mt-6 px-8 py-3 bg-primary text-background-dark font-black rounded-xl hover:scale-105 transition-all"
+                                >
+                                    Upload Now
+                                </button>
                             </div>
                         )}
                     </div>
                 </section>
-
-                {/* Category Grid */}
-                <section className="p-4 mt-6">
-                    <h2 className="text-lg font-bold mb-4">Browse by Category</h2>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                        {[
-                            { name: 'Engineering', icon: 'engineering' },
-                            { name: 'Sciences', icon: 'science' },
-                            { name: 'Law', icon: 'balance' },
-                            { name: 'Medicine', icon: 'stethoscope' }
-                        ].map(cat => (
-                            <div key={cat.name} className="flex flex-col items-center justify-center p-4 rounded-xl bg-white dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 hover:bg-primary/10 hover:border-primary transition-all cursor-pointer group">
-                                <span className="material-symbols-outlined text-3xl text-primary mb-2">{cat.icon}</span>
-                                <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">{cat.name}</span>
-                            </div>
-                        ))}
-                    </div>
-                </section>
-
-                {/* Latest Uploads List */}
-                <section className="p-4 mt-2">
-                    <h2 className="text-lg font-bold mb-4">Latest Uploads</h2>
-                    <div className="space-y-3">
-                        {filteredResources.slice(3, 8).map((res) => (
-                            <div key={res.id} className="flex items-center gap-4 bg-white dark:bg-slate-900 p-3 rounded-lg border border-slate-200 dark:border-slate-800 group hover:border-primary/50 transition-colors">
-                                <div className="w-12 h-12 rounded-lg bg-primary/10 text-primary flex items-center justify-center flex-shrink-0">
-                                    <span className="material-symbols-outlined">description</span>
-                                </div>
-                                <div className="flex-grow min-w-0">
-                                    <h4 className="text-sm font-bold truncate text-slate-900 dark:text-white">{res.title}</h4>
-                                    <p className="text-[11px] text-slate-500 uppercase font-semibold">{res.courseCode} • {res.year}</p>
-                                </div>
-                                <button className="w-9 h-9 rounded-lg flex items-center justify-center bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-primary hover:text-[#102217] transition-colors">
-                                    <span className="material-symbols-outlined text-[20px]">download</span>
-                                </button>
-                            </div>
-                        ))}
-                    </div>
-                    <button className="w-full mt-6 py-3 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl text-slate-500 dark:text-slate-400 font-medium hover:border-primary hover:text-primary transition-all flex items-center justify-center gap-2">
-                        <span className="material-symbols-outlined">add_circle</span>
-                        Load more questions
-                    </button>
-                </section>
             </main>
 
-            <BottomNav navItems={navItems} />
+            <BottomNav />
         </div>
     );
 };

@@ -19,9 +19,9 @@ export default function BottomNav({ navItems: customNavItems }: BottomNavProps) 
 
   const defaultNavItems: NavItem[] = [
     { icon: 'home', label: 'Home', path: '/home', filled: true },
-    { icon: 'menu_book', label: 'Library', path: '/library' },
-    { icon: 'school', label: 'Courses', path: '/classes' },
-    { icon: 'forum', label: 'Social', path: '/community' },
+    { icon: 'history_edu', label: 'Past Questions', path: '/library' },
+    { icon: 'add_circle', label: 'Upload', path: '/library/upload' },
+    { icon: 'forum', label: 'Discussions', path: '/community' },
     { icon: 'person', label: 'Profile', path: '/profile' },
   ];
 
@@ -51,7 +51,9 @@ export default function BottomNav({ navItems: customNavItems }: BottomNavProps) 
             <div
               className={`px-5 py-1 rounded-full transition-colors ${itemActive
                 ? 'bg-primary/20 text-primary'
-                : 'group-hover:bg-white/5'
+                : item.label === 'Upload'
+                  ? 'bg-primary text-background-dark shadow-lg shadow-primary/20'
+                  : 'group-hover:bg-white/5'
                 }`}
             >
               <span className={`material-symbols-outlined ${item.filled && itemActive ? 'fill-1' : ''}`}>

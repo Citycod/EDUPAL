@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 
 import Header from '@/components/Header';
 import BottomNav from '@/components/BottomNav';
+import UploadMaterialModal, { UploadData } from '@/components/UploadMaterialModal';
 import { supabase } from '@/lib/supabase';
 
 interface StudyResource {
@@ -15,13 +16,7 @@ interface StudyResource {
   image: string;
 }
 
-interface UploadData {
-  title: string;
-  department: string;
-  courseCode: string;
-  description: string;
-  file: File | null;
-}
+
 
 const StudyResources: React.FC = () => {
   const router = useRouter();
@@ -97,10 +92,132 @@ const StudyResources: React.FC = () => {
     setIsUploadModalOpen(true);
   };
 
-  const handleUploadSubmit = (uploadData: UploadData) => {
-    console.log('Upload data:', uploadData);
-    // Handle the upload logic here (API call, etc.)
-    setIsUploadModalOpen(false);
+  const handleUploadSubmit = async (uploadData: UploadData) => {
+    try {
+      // Get current user
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
+        alert('You must be logged in to upload resources');
+        return;
+      }
+
+      // Get user's profile to get department_id
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('department_id, institution_id')
+        .eq('id', user.id)
+        .single();
+
+      if (profileError || !profile?.department_id) {
+        alert('Please complete your profile with department information first');
+        return;
+      }
+
+      // Check if course exists, if not create it
+      let courseId: string | null = null;
+
+      const { data: existingCourse, error: courseCheckError } = await supabase
+        .from('hub_courses')
+        .select('id')
+        .eq('course_code', uploadData.courseCode)
+        .eq('department_id', profile.department_id)
+        .maybeSingle();
+
+      if (courseCheckError) {
+        console.error('Error checking course:', courseCheckError);
+      }
+
+      if (existingCourse) {
+        courseId = existingCourse.id;
+      } else {
+        // Create new course
+        const { data: newCourse, error: courseCreateError } = await supabase
+          .from('academic.courses')
+          .insert({
+            title: uploadData.courseTitle,
+            course_code: uploadData.courseCode,
+            department_id: profile.department_id
+          })
+          .select('id')
+          .single();
+
+        if (courseCreateError) {
+          console.error('Error creating course:', courseCreateError);
+          alert('Failed to create course. Please try again.');
+          return;
+        }
+
+        courseId = newCourse.id;
+      }
+
+      // Upload file to Supabase Storage
+      if (!uploadData.file) {
+        alert('Please select a file to upload');
+        return;
+      }
+
+      const fileExt = uploadData.file.name.split('.').pop();
+      const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+      const filePath = `resources/${user.id}/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('study-materials')
+        .upload(filePath, uploadData.file);
+
+      if (uploadError) {
+        console.error('Error uploading file:', uploadError);
+        alert('Failed to upload file. Please try again.');
+        return;
+      }
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('study-materials')
+        .getPublicUrl(filePath);
+
+      // Create resource record
+      const { error: resourceError } = await supabase
+        .from('academic.resources')
+        .insert({
+          title: uploadData.title,
+          description: uploadData.description,
+          type: uploadData.type,
+          course_id: courseId,
+          uploader_id: user.id,
+          file_url: publicUrl,
+          file_size: `${(uploadData.file.size / 1024 / 1024).toFixed(2)} MB`
+        });
+
+      if (resourceError) {
+        console.error('Error creating resource:', resourceError);
+        alert('Failed to save resource. Please try again.');
+        return;
+      }
+
+      // Success! Refresh resources list
+      alert('Resource uploaded successfully!');
+      setIsUploadModalOpen(false);
+
+      // Refresh the resources list
+      const { data, error } = await supabase
+        .from('resources')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (!error && data) {
+        const formattedResources: StudyResource[] = data.map((res: any) => ({
+          id: res.id,
+          title: res.title,
+          type: res.type || 'PDF',
+          uploadedBy: 'EduPal User',
+          image: res.image_url || 'https://images.unsplash.com/photo-1546410531-bb4caa6b424d?q=80&w=2071&auto=format&fit=crop'
+        }));
+        setResources(formattedResources);
+      }
+    } catch (error) {
+      console.error('Unexpected error:', error);
+      alert('An unexpected error occurred. Please try again.');
+    }
   };
 
   const handleUploadClose = () => {
@@ -257,12 +374,12 @@ const StudyResources: React.FC = () => {
       {/* Fixed Bottom Navigation */}
       <BottomNav navItems={navItems} />
 
-      {/* Upload Material Modal - TODO: Create this component */}
-      {/* <UploadMaterialModal
+      {/* Upload Material Modal */}
+      <UploadMaterialModal
         isOpen={isUploadModalOpen}
         onClose={handleUploadClose}
         onSubmit={handleUploadSubmit}
-      /> */}
+      />
     </div>
   );
 };

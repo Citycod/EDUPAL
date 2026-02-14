@@ -1,21 +1,54 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import BottomNav from '@/components/BottomNav';
 
 const UploadPage = () => {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(false);
   const [success, setSuccess] = useState(false);
+
+  // Structured Data
+  const [institutions, setInstitutions] = useState<any[]>([]);
+  const [departments, setDepartments] = useState<any[]>([]);
+  const [sessions, setSessions] = useState<any[]>([]);
+
   const [formData, setFormData] = useState({
+    institutionId: '',
+    departmentId: '',
     courseTitle: '',
     courseCode: '',
-    department: '',
-    level: '100L',
-    yearSemester: '2025/2026 - 1st',
+    sessionId: '',
+    level: '100',
     file: null as File | null
   });
+
+  // Fetch Institutions & Sessions via Bridge
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      const { data: inst } = await supabase.from('hub_institutions').select('*').order('name');
+      const { data: sess } = await supabase.from('hub_sessions').select('*').order('name', { ascending: false });
+      if (inst) setInstitutions(inst);
+      if (sess) setSessions(sess);
+    };
+    fetchInitialData();
+  }, []);
+
+  // Fetch Departments via Bridge
+  useEffect(() => {
+    if (!formData.institutionId) return;
+    const fetchDepts = async () => {
+      const { data } = await supabase.from('hub_departments').select('*').eq('institution_id', formData.institutionId).order('name');
+      setDepartments(data || []);
+      setFormData(prev => ({ ...prev, departmentId: '' }));
+    };
+    fetchDepts();
+  }, [formData.institutionId]);
+
+
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -30,7 +63,7 @@ const UploadPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.file || !formData.courseCode || !formData.courseTitle) {
+    if (!formData.file || !formData.courseTitle || !formData.courseCode || !formData.sessionId) {
       alert('Please fill in all required fields and upload a file.');
       return;
     }
@@ -40,6 +73,43 @@ const UploadPage = () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('You must be logged in to upload.');
+
+      // Check if course exists, if not create it
+      let courseId: string | null = null;
+      
+      const { data: existingCourse, error: courseCheckError } = await supabase
+        .from('hub_courses')
+        .select('id')
+        .eq('course_code', formData.courseCode)
+        .eq('department_id', formData.departmentId)
+        .maybeSingle();
+
+      if (courseCheckError) {
+        console.error('Error checking course:', courseCheckError);
+      }
+
+      if (existingCourse) {
+        courseId = existingCourse.id;
+      } else {
+        // Create new course
+        const { data: newCourse, error: courseCreateError } = await supabase
+          .from('academic.courses')
+          .insert({
+            title: formData.courseTitle,
+            course_code: formData.courseCode,
+            department_id: formData.departmentId
+          })
+          .select('id')
+          .single();
+
+        if (courseCreateError) {
+          console.error('Error creating course:', courseCreateError);
+          alert('Failed to create course. Please try again.');
+          return;
+        }
+
+        courseId = newCourse.id;
+      }
 
       // 1. Upload File
       const fileExt = formData.file.name.split('.').pop();
@@ -56,42 +126,20 @@ const UploadPage = () => {
         .from('resources')
         .getPublicUrl(filePath);
 
-      // 2. Handle Course (Find or Create)
-      let courseId;
-      const { data: existingCourse } = await supabase
-        .from('courses')
-        .select('id')
-        .eq('course_code', formData.courseCode.toUpperCase())
-        .single();
+      // 2. Get session details for title
+      const selectedSession = sessions.find(s => s.id === formData.sessionId);
 
-      if (existingCourse) {
-        courseId = existingCourse.id;
-      } else {
-        const { data: newCourse, error: courseError } = await supabase
-          .from('courses')
-          .insert({
-            title: formData.courseTitle,
-            course_code: formData.courseCode.toUpperCase(),
-            instructor_name: 'TBA' // Default
-          })
-          .select('id')
-          .single();
-
-        if (courseError) throw courseError;
-        courseId = newCourse.id;
-      }
-
-      // 3. Insert Resource Record
+      // 3. Insert Resource Record using new scalable structure via Bridge
       const { error: insertError } = await supabase
-        .from('resources')
+        .from('hub_resources')
         .insert({
-          title: `${formData.courseCode} - ${formData.yearSemester}`,
+          title: `${formData.courseCode} - ${selectedSession?.name}`,
           type: fileExt?.toUpperCase() || 'DOC',
           category: 'past-questions',
           course_id: courseId,
+          session_id: formData.sessionId,
           uploader_id: user.id,
           file_url: publicUrl,
-          department: formData.department,
           level: formData.level,
           file_size: (formData.file.size / 1024 / 1024).toFixed(2) + ' MB'
         });
@@ -105,13 +153,7 @@ const UploadPage = () => {
 
     } catch (error: any) {
       console.error('Upload failed details:', error);
-      let errorMsg = error.message || 'An unknown error occurred';
-
-      if (errorMsg === 'Failed to fetch') {
-        errorMsg = 'Network error: Could not reach Supabase. Please check your internet connection or ad-blocker.';
-      }
-
-      alert(`Upload failed: ${errorMsg}`);
+      alert(`Upload failed: ${error.message || 'An unknown error occurred'}`);
     } finally {
       setLoading(false);
     }
@@ -144,89 +186,97 @@ const UploadPage = () => {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Course Information Group */}
+            {/* Academic Hierarchy Selection */}
             <section className="space-y-4">
               <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-primary text-xl">auto_stories</span>
-                <h3 className="text-slate-900 dark:text-white text-lg font-bold leading-tight tracking-tight">Course Information</h3>
+                <span className="material-symbols-outlined text-primary text-xl">account_balance</span>
+                <h3 className="text-slate-900 dark:text-white text-lg font-bold leading-tight tracking-tight">Academic Archive Context</h3>
               </div>
               <div className="space-y-4">
                 <label className="flex flex-col w-full">
-                  <p className="text-slate-700 dark:text-white/80 text-sm font-medium pb-2 ml-1">Course Title</p>
+                  <p className="text-slate-700 dark:text-white/80 text-sm font-medium pb-2 ml-1">Institution</p>
+                  <select
+                    name="institutionId"
+                    value={formData.institutionId}
+                    onChange={handleInputChange}
+                    required
+                    className="form-select flex w-full rounded-xl text-black dark:text-white focus:outline-0 focus:ring-1 focus:ring-primary border border-slate-300 dark:border-white/10 bg-white dark:bg-[#1c2720] focus:border-primary h-14 p-4 text-base"
+                  >
+                    <option value="">Select Institution</option>
+                    {institutions.map(inst => <option key={inst.id} value={inst.id}>{inst.name}</option>)}
+                  </select>
+                </label>
+
+                <label className="flex flex-col w-full">
+                  <p className="text-slate-700 dark:text-white/80 text-sm font-medium pb-2 ml-1">Department</p>
+                  <select
+                    name="departmentId"
+                    value={formData.departmentId}
+                    onChange={handleInputChange}
+                    disabled={!formData.institutionId}
+                    required
+                    className="form-select flex w-full rounded-xl text-black dark:text-white focus:outline-0 focus:ring-1 focus:ring-primary border border-slate-300 dark:border-white/10 bg-white dark:bg-[#1c2720] focus:border-primary h-14 p-4 text-base disabled:opacity-50"
+                  >
+                    <option value="">Select Department</option>
+                    {departments.map(dept => <option key={dept.id} value={dept.id}>{dept.name}</option>)}
+                  </select>
+                </label>
+
+                <label className="flex flex-col w-full">
+                  <p className="text-slate-700 dark:text-white/80 text-sm font-medium pb-2 ml-1">Course Title *</p>
                   <input
+                    type="text"
                     name="courseTitle"
                     value={formData.courseTitle}
                     onChange={handleInputChange}
-                    className="form-input flex w-full rounded-xl text-black dark:text-white focus:outline-0 focus:ring-1 focus:ring-primary border border-slate-300 dark:border-white/10 bg-white dark:bg-[#1c2720] focus:border-primary h-14 placeholder:text-slate-400 dark:placeholder:text-white/30 p-4 text-base font-normal"
-                    placeholder="e.g. Introduction to Psychology"
-                    type="text"
+                    placeholder="e.g., Introduction to Computer Science"
+                    disabled={!formData.departmentId}
                     required
+                    className="form-input flex w-full rounded-xl text-black dark:text-white focus:outline-0 focus:ring-1 focus:ring-primary border border-slate-300 dark:border-white/10 bg-white dark:bg-[#1c2720] focus:border-primary h-14 px-4 text-base disabled:opacity-50"
                   />
                 </label>
+
                 <label className="flex flex-col w-full">
-                  <p className="text-slate-700 dark:text-white/80 text-sm font-medium pb-2 ml-1">Course Code</p>
+                  <p className="text-slate-700 dark:text-white/80 text-sm font-medium pb-2 ml-1">Course Code *</p>
                   <input
+                    type="text"
                     name="courseCode"
                     value={formData.courseCode}
                     onChange={handleInputChange}
-                    className="form-input flex w-full rounded-xl text-black dark:text-white focus:outline-0 focus:ring-1 focus:ring-primary border border-slate-300 dark:border-white/10 bg-white dark:bg-[#1c2720] focus:border-primary h-14 placeholder:text-slate-400 dark:placeholder:text-white/30 p-4 text-base font-normal"
-                    placeholder="e.g. PSY 101"
-                    type="text"
+                    placeholder="e.g., CS101"
+                    disabled={!formData.departmentId}
                     required
+                    className="form-input flex w-full rounded-xl text-black dark:text-white focus:outline-0 focus:ring-1 focus:ring-primary border border-slate-300 dark:border-white/10 bg-white dark:bg-[#1c2720] focus:border-primary h-14 px-4 text-base disabled:opacity-50"
                   />
                 </label>
-              </div>
-            </section>
 
-            {/* Academic Details Group */}
-            <section className="space-y-4">
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-primary text-xl">school</span>
-                <h3 className="text-slate-900 dark:text-white text-lg font-bold leading-tight tracking-tight">Academic Details</h3>
-              </div>
-              <div className="space-y-4">
-                <label className="flex flex-col w-full">
-                  <p className="text-slate-700 dark:text-white/80 text-sm font-medium pb-2 ml-1">Department</p>
-                  <input
-                    name="department"
-                    value={formData.department}
-                    onChange={handleInputChange}
-                    className="form-input flex w-full rounded-xl text-black dark:text-white focus:outline-0 focus:ring-1 focus:ring-primary border border-slate-300 dark:border-white/10 bg-white dark:bg-[#1c2720] focus:border-primary h-14 placeholder:text-slate-400 dark:placeholder:text-white/30 p-4 text-base font-normal"
-                    placeholder="e.g. Computer Science"
-                    type="text"
-                    required
-                  />
-                </label>
                 <div className="grid grid-cols-2 gap-4">
                   <label className="flex flex-col">
-                    <p className="text-black text-sm font-medium pb-2 ml-1">Level</p>
+                    <p className="text-slate-700 dark:text-white/80 text-sm font-medium pb-2 ml-1">Level</p>
                     <select
                       name="level"
                       value={formData.level}
                       onChange={handleInputChange}
-                      className="form-select flex w-full rounded-xl text-black focus:outline-0 focus:ring-1 focus:ring-primary border border-slate-300 dark:border-border-dark bg-white dark:bg-surface-dark focus:border-primary h-14 p-4 text-black font-normal"
+                      className="form-select flex w-full rounded-xl text-black dark:text-white focus:outline-0 focus:ring-1 focus:ring-primary border border-slate-300 dark:border-white/10 bg-white dark:bg-[#1c2720] focus:border-primary h-14 p-4 text-base"
                     >
-                      <option>100L</option>
-                      <option>200L</option>
-                      <option>300L</option>
-                      <option>400L</option>
-                      <option>500L</option>
+                      <option>100</option>
+                      <option>200</option>
+                      <option>300</option>
+                      <option>400</option>
+                      <option>500</option>
                     </select>
                   </label>
                   <label className="flex flex-col">
-                    <p className="text-black text-sm font-medium pb-2 ml-1">Year/Semester</p>
+                    <p className="text-slate-700 dark:text-white/80 text-sm font-medium pb-2 ml-1">Session</p>
                     <select
-                      name="yearSemester"
-                      value={formData.yearSemester}
+                      name="sessionId"
+                      value={formData.sessionId}
                       onChange={handleInputChange}
-                      className="form-select flex w-full rounded-xl text-black focus:outline-0 focus:ring-1 focus:ring-primary border border-slate-300 dark:border-border-dark  focus:border-primary h-14 p-4 text-black font-normal"
+                      required
+                      className="form-select flex w-full rounded-xl text-black dark:text-white focus:outline-0 focus:ring-1 focus:ring-primary border border-slate-300 dark:border-white/10 bg-white dark:bg-[#1c2720] focus:border-primary h-14 p-4 text-base"
                     >
-                      <option>2025/2026 - 1st</option>
-                      <option>2025/2026 - 2nd</option>
-                      <option>2024/2025 - 1st</option>
-                      <option>2024/2025 - 2nd</option>
-                      <option>2023/2024 - 1st</option>
-                      <option>2023/2024 - 2nd</option>
+                      <option value="">Select Session</option>
+                      {sessions.map(sess => <option key={sess.id} value={sess.id}>{sess.name}</option>)}
                     </select>
                   </label>
                 </div>
@@ -297,6 +347,7 @@ const UploadPage = () => {
         )}
 
         <div className="h-8 bg-background-light dark:bg-background-dark"></div>
+        <BottomNav />
       </div>
     </div>
   );

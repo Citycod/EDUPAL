@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import BottomNav from '@/components/BottomNav';
 
 // Helper to format time relative (e.g. "2m ago")
 const formatTimeAgo = (dateString: string) => {
@@ -36,60 +37,91 @@ interface Thread {
 
 const CommunityPage: React.FC = () => {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const boardId = searchParams.get('board');
+
   const [threads, setThreads] = useState<Thread[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeFilter, setActiveFilter] = useState('All Threads');
-  const [userAvatar, setUserAvatar] = useState('https://ui-avatars.com/api/?name=User&background=random');
+  const [userProfile, setUserProfile] = useState<any>(null);
+
+  // Selection State
+  const [courses, setCourses] = useState<any[]>([]);
+  const [selectedCourseId, setSelectedCourseId] = useState<string>('');
+
   const [newPostContent, setNewPostContent] = useState('');
   const [isPosting, setIsPosting] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchInitialData = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
-          const { data: profile } = await supabase.from('profiles').select('avatar_url').eq('id', user.id).single();
-          if (profile?.avatar_url) setUserAvatar(profile.avatar_url);
-        }
+          // Fetch Academic Context via Bridge
+          const { data: academicProfile } = await supabase
+            .from('hub_profiles')
+            .select('*')
+            .eq('id', user.id)
+            .single();
 
-        // Fetch Posts (Threads)
+          setUserProfile(academicProfile);
+
+          // Fetch Course Boards via Bridge
+          const { data: courseData } = await supabase
+            .from('hub_courses')
+            .select('id, course_code, title')
+            .order('course_code');
+
+          if (courseData) {
+            setCourses(courseData);
+            // Pre-select board from param if it exists, otherwise use first
+            if (boardId) {
+              setSelectedCourseId(boardId);
+            } else if (courseData.length > 0) {
+              setSelectedCourseId(courseData[0].id);
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching initial data:", error);
+      }
+    };
+    fetchInitialData();
+  }, [boardId]);
+
+  useEffect(() => {
+    if (!selectedCourseId) return;
+
+    const fetchThreads = async () => {
+      setLoading(true);
+      try {
         const { data: posts, error } = await supabase
-          .from('posts')
+          .from('hub_posts')
           .select(`
             *,
             profiles:author_id (full_name, avatar_url),
-            comments (count),
-            post_likes (count)
+            hub_courses!inner (course_code)
           `)
+          .eq('course_id', selectedCourseId)
           .order('created_at', { ascending: false });
 
-        if (error) {
-          console.error("Supabase Error Full:", JSON.stringify(error, null, 2));
-          throw error;
-        }
+        if (error) throw error;
 
         const formattedThreads = posts.map((post: any, index: number) => {
-          // Derive a title from the first few words of content
           const title = post.content.split(' ').slice(0, 8).join(' ') + (post.content.split(' ').length > 8 ? '...' : '?');
-
-          // Mock categories for visual variety
-          const categories: ('General' | 'Homework' | 'Exam' | 'Project')[] = ['General', 'Homework', 'Exam', 'Project'];
-          const category = categories[index % categories.length];
-
           return {
             id: post.id,
             title: title,
             content: post.content,
             author: {
               name: post.profiles?.full_name || 'Anonymous',
-              avatar: post.profiles?.avatar_url || 'https://ui-avatars.com/api/?name=Student&background=random',
+              avatar: post.profiles?.avatar_url || 'https://ui-avatars.com/api/?name=Scholar&background=random',
             },
             timestamp: post.created_at,
-            repliesCount: post.comments?.[0]?.count || 0,
-            views: (post.post_likes?.[0]?.count || 0) * 15 + 42, // Mock views based on likes
-            category: category,
-            isResolved: index % 5 === 0 // Mock resolved status
+            repliesCount: 0,
+            views: 42,
+            category: (['General', 'Homework', 'Exam', 'Project'] as const)[index % 4],
+            isResolved: index % 5 === 0
           };
         });
 
@@ -101,33 +133,32 @@ const CommunityPage: React.FC = () => {
       }
     };
 
-    fetchData();
-  }, []);
+    fetchThreads();
+  }, [selectedCourseId]);
 
   const handlePostSubmit = async () => {
-    if (!newPostContent.trim()) return;
+    if (!newPostContent.trim() || !selectedCourseId) return;
     setIsPosting(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        alert("Please log in to post.");
-        return;
-      }
+      if (!user) return;
 
-      const { error } = await supabase.from('posts').insert({
-        content: newPostContent,
-        author_id: user.id
-      });
+      const { error } = await supabase
+        .from('hub_posts')
+        .insert({
+          content: newPostContent,
+          author_id: user.id,
+          course_id: selectedCourseId
+        });
 
       if (error) throw error;
 
       setNewPostContent('');
-      // Optimistic update or refetch could go here. For simplicity, we reload.
       window.location.reload();
 
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating post:", error);
-      alert("Failed to post. Please try again.");
+      alert(`Failed to post: ${error.message}`);
     } finally {
       setIsPosting(false);
     }
@@ -151,39 +182,39 @@ const CommunityPage: React.FC = () => {
     <div className="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen transition-colors duration-300">
       <div className="max-w-3xl mx-auto flex flex-col min-h-screen border-x border-slate-200 dark:border-slate-800 bg-background-light dark:bg-background-dark">
 
-        {/* TopAppBar */}
+        {/* TopAppBar - Course Board Identity */}
         <header className="sticky top-0 z-10 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
           <div className="flex items-center p-4 pb-2 justify-between">
             <div
-              onClick={() => router.push('/home')} // Or back
+              onClick={() => router.push('/home')}
               className="text-slate-900 dark:text-white flex size-10 shrink-0 items-center justify-center cursor-pointer hover:bg-slate-200 dark:hover:bg-surface-dark rounded-full transition-colors"
             >
               <span className="material-symbols-outlined">arrow_back</span>
             </div>
             <div className="flex flex-col flex-1 px-4 text-center">
-              <h2 className="text-slate-900 dark:text-white text-lg font-bold leading-tight tracking-tight">Community Discussions</h2>
-              <p className="text-xs text-primary font-medium">Active: 42 Students online</p>
+              <h2 className="text-slate-900 dark:text-white text-lg font-black leading-tight tracking-tighter uppercase">Course Boards</h2>
+              <p className="text-[10px] text-primary font-black tracking-widest uppercase">Academic Discussions</p>
             </div>
             <div className="flex w-12 items-center justify-end">
-              <button className="flex size-10 items-center justify-center rounded-full hover:bg-slate-200 dark:hover:bg-surface-dark transition-colors">
-                <span className="material-symbols-outlined text-slate-900 dark:text-white">search</span>
-              </button>
+              <div
+                className="bg-center bg-no-repeat aspect-square bg-cover rounded-lg size-8 border border-primary/30"
+                style={{ backgroundImage: `url("${userProfile?.avatar_url || 'https://ui-avatars.com/api/?name=User&background=random'}")` }}
+              />
             </div>
           </div>
 
-          {/* Filter Tabs */}
-          <div className="flex gap-2 px-4 py-3 overflow-x-auto no-scrollbar scrollbar-hide">
-            {['All Threads', 'Unread', 'Assignments', 'General'].map(filter => (
+          {/* Board Switcher (Courses) */}
+          <div className="flex gap-2 px-4 py-4 overflow-x-auto no-scrollbar scrollbar-hide">
+            {courses.map(course => (
               <button
-                key={filter}
-                onClick={() => setActiveFilter(filter)}
-                className={`flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-lg px-4 font-semibold text-sm transition-colors ${activeFilter === filter
-                  ? 'bg-primary text-background-dark'
-                  : 'bg-slate-200 dark:bg-surface-dark text-slate-700 dark:text-white hover:bg-primary/20'
+                key={course.id}
+                onClick={() => setSelectedCourseId(course.id)}
+                className={`flex h-10 shrink-0 items-center justify-center gap-x-2 rounded-xl px-5 font-black text-xs transition-all border uppercase tracking-widest ${selectedCourseId === course.id
+                  ? 'bg-primary border-primary text-background-dark shadow-lg shadow-primary/20 scale-105'
+                  : 'bg-white dark:bg-surface-dark border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:border-primary/50'
                   }`}
               >
-                <span>{filter}</span>
-                {filter !== 'All Threads' && <span className="material-symbols-outlined text-base">keyboard_arrow_down</span>}
+                <span>{course.course_code}</span>
               </button>
             ))}
           </div>
@@ -239,7 +270,7 @@ const CommunityPage: React.FC = () => {
           <div className="flex items-end gap-3 bg-slate-100 dark:bg-surface-dark rounded-xl p-3 focus-within:ring-2 focus-within:ring-primary/50 transition-all shadow-sm">
             <div className="shrink-0 pb-1">
               <div className="h-8 w-8 rounded-full overflow-hidden border-2 border-primary">
-                <img className="h-full w-full object-cover" src={userAvatar} alt="My Avatar" />
+                <img className="h-full w-full object-cover" src={userProfile?.avatar_url || 'https://ui-avatars.com/api/?name=User&background=random'} alt="My Avatar" />
               </div>
             </div>
             <div className="flex-1">
@@ -248,7 +279,7 @@ const CommunityPage: React.FC = () => {
                 value={newPostContent}
                 onChange={(e) => setNewPostContent(e.target.value)}
                 className="w-full bg-transparent border-none focus:ring-0 text-dark  text-sm placeholder-slate-500 resize-none py-1 max-h-32"
-                placeholder="Start a new discussion..."
+                placeholder={`Post to ${courses.find(c => c.id === selectedCourseId)?.course_code || 'Board'}...`}
                 rows={1}
                 style={{ minHeight: '34px ', textDecoration: 'none', color: 'black' }}
               ></textarea>
@@ -279,32 +310,7 @@ const CommunityPage: React.FC = () => {
       </div>
 
       {/* Global Bottom Nav - Placed outside the max-w-3xl container to span full width */}
-      <div className="fixed bottom-0 w-full z-30">
-        <nav className="flex justify-around items-center p-2 pb-3 border-t border-slate-200 dark:border-slate-800 bg-background-light dark:bg-background-dark md:hidden">
-          {[
-            { icon: 'home', label: 'Home', path: '/home' },
-            { icon: 'menu_book', label: 'Library', path: '/library' },
-            { icon: 'school', label: 'Courses', path: '/classes' },
-            { icon: 'chat_bubble', label: 'Social', path: '/community', active: true },
-            { icon: 'person', label: 'Profile', path: '/profile' }
-          ].map((item) => (
-            <button
-              key={item.label}
-              onClick={() => router.push(item.path)}
-              className={`flex flex-col items-center gap-1 ${item.active ? 'text-primary' : 'text-slate-500 dark:text-slate-400'}`}
-            >
-              {item.active ? (
-                <div className="bg-primary/20 text-primary px-5 py-1 rounded-full flex flex-col items-center">
-                  <span className="material-symbols-outlined fill-1">{item.icon}</span>
-                </div>
-              ) : (
-                <span className="material-symbols-outlined">{item.icon}</span>
-              )}
-              <span className={`text-[10px] ${item.active ? 'font-bold' : 'font-medium'}`}>{item.label}</span>
-            </button>
-          ))}
-        </nav>
-      </div>
+      <BottomNav />
     </div>
   );
 };
