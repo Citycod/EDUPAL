@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import BottomNav from '@/components/BottomNav';
+import { useInstitutionContext } from '@/lib/hooks/useInstitutionContext';
 
 const UploadPage = () => {
   const router = useRouter();
@@ -11,13 +12,13 @@ const UploadPage = () => {
   const [fetching, setFetching] = useState(false);
   const [success, setSuccess] = useState(false);
 
+  const { institution, loading: contextLoading } = useInstitutionContext();
+
   // Structured Data
-  const [institutions, setInstitutions] = useState<any[]>([]);
   const [departments, setDepartments] = useState<any[]>([]);
   const [sessions, setSessions] = useState<any[]>([]);
 
   const [formData, setFormData] = useState({
-    institutionId: '',
     departmentId: '',
     courseTitle: '',
     courseCode: '',
@@ -26,27 +27,25 @@ const UploadPage = () => {
     file: null as File | null
   });
 
-  // Fetch Institutions & Sessions via Bridge
+  // Fetch Sessions via Bridge
   useEffect(() => {
     const fetchInitialData = async () => {
-      const { data: inst } = await supabase.from('hub_institutions').select('*').order('name');
       const { data: sess } = await supabase.from('hub_sessions').select('*').order('name', { ascending: false });
-      if (inst) setInstitutions(inst);
       if (sess) setSessions(sess);
     };
     fetchInitialData();
   }, []);
 
-  // Fetch Departments via Bridge
+  // Fetch Departments based on User Institution
   useEffect(() => {
-    if (!formData.institutionId) return;
+    if (!institution?.id) return;
     const fetchDepts = async () => {
-      const { data } = await supabase.from('hub_departments').select('*').eq('institution_id', formData.institutionId).order('name');
+      const { data } = await supabase.from('hub_departments').select('*').eq('institution_id', institution.id).order('name');
       setDepartments(data || []);
       setFormData(prev => ({ ...prev, departmentId: '' }));
     };
     fetchDepts();
-  }, [formData.institutionId]);
+  }, [institution?.id]);
 
 
 
@@ -63,6 +62,12 @@ const UploadPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!institution) {
+      alert('Institution data not found. Please refresh the page.');
+      return;
+    }
+
     if (!formData.file || !formData.courseTitle || !formData.courseCode || !formData.sessionId) {
       alert('Please fill in all required fields and upload a file.');
       return;
@@ -76,7 +81,7 @@ const UploadPage = () => {
 
       // Check if course exists, if not create it
       let courseId: string | null = null;
-      
+
       const { data: existingCourse, error: courseCheckError } = await supabase
         .from('hub_courses')
         .select('id')
@@ -91,9 +96,9 @@ const UploadPage = () => {
       if (existingCourse) {
         courseId = existingCourse.id;
       } else {
-        // Create new course
+        // Create new course with institution_id auto-injected
         const { data: newCourse, error: courseCreateError } = await supabase
-          .from('academic.courses')
+          .from('hub_courses')
           .insert({
             title: formData.courseTitle,
             course_code: formData.courseCode,
@@ -140,7 +145,6 @@ const UploadPage = () => {
           session_id: formData.sessionId,
           uploader_id: user.id,
           file_url: publicUrl,
-          level: formData.level,
           file_size: (formData.file.size / 1024 / 1024).toFixed(2) + ' MB'
         });
 
@@ -193,19 +197,19 @@ const UploadPage = () => {
                 <h3 className="text-slate-900 dark:text-white text-lg font-bold leading-tight tracking-tight">Academic Archive Context</h3>
               </div>
               <div className="space-y-4">
-                <label className="flex flex-col w-full">
-                  <p className="text-slate-700 dark:text-white/80 text-sm font-medium pb-2 ml-1">Institution</p>
-                  <select
-                    name="institutionId"
-                    value={formData.institutionId}
-                    onChange={handleInputChange}
-                    required
-                    className="form-select flex w-full rounded-xl text-black dark:text-white focus:outline-0 focus:ring-1 focus:ring-primary border border-slate-300 dark:border-white/10 bg-white dark:bg-[#1c2720] focus:border-primary h-14 p-4 text-base"
-                  >
-                    <option value="">Select Institution</option>
-                    {institutions.map(inst => <option key={inst.id} value={inst.id}>{inst.name}</option>)}
-                  </select>
-                </label>
+                {institution ? (
+                  <div className="p-4 bg-primary/10 rounded-xl border border-primary/20 flex flex-col gap-1">
+                    <p className="text-xs text-primary/80 font-bold uppercase tracking-wider">Active Institution</p>
+                    <p className="text-slate-900 dark:text-white font-bold text-lg">{institution.name}</p>
+                    <p className="text-xs text-slate-500 dark:text-white/40 italic">Institution cannot be changed. All uploads are scoped to your university.</p>
+                  </div>
+                ) : contextLoading ? (
+                  <div className="h-16 w-full animate-pulse bg-slate-200 dark:bg-surface-dark rounded-xl"></div>
+                ) : (
+                  <div className="p-4 bg-red-500/10 rounded-xl border border-red-500/20">
+                    <p className="text-red-500 font-medium">No institution assigned. Please update your profile.</p>
+                  </div>
+                )}
 
                 <label className="flex flex-col w-full">
                   <p className="text-slate-700 dark:text-white/80 text-sm font-medium pb-2 ml-1">Department</p>
@@ -213,7 +217,7 @@ const UploadPage = () => {
                     name="departmentId"
                     value={formData.departmentId}
                     onChange={handleInputChange}
-                    disabled={!formData.institutionId}
+                    disabled={!institution}
                     required
                     className="form-select flex w-full rounded-xl text-black dark:text-white focus:outline-0 focus:ring-1 focus:ring-primary border border-slate-300 dark:border-white/10 bg-white dark:bg-[#1c2720] focus:border-primary h-14 p-4 text-base disabled:opacity-50"
                   >

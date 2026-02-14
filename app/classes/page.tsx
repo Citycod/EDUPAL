@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { useInstitutionContext } from '@/lib/hooks/useInstitutionContext';
 import BottomNav from '@/components/BottomNav';
 
 interface Course {
@@ -40,17 +41,15 @@ const CoursesPage: React.FC = () => {
   const [addingCourse, setAddingCourse] = useState(false);
   const [departments, setDepartments] = useState<any[]>([]);
 
+  const { institution, loading: contextLoading } = useInstitutionContext();
+
   const fetchData = async () => {
     try {
       setLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
 
-      // 1. Fetch Academic Context via Bridge
-      const { data: profile } = user ? await supabase.from('hub_profiles').select('*').eq('id', user.id).single() : { data: null };
-
-      // Fetch Departments for the modal
-      if (profile?.institution_id) {
-        const { data: deptData } = await supabase.from('hub_departments').select('*').eq('institution_id', profile.institution_id);
+      // Fetch Departments for the modal using context
+      if (institution?.id) {
+        const { data: deptData } = await supabase.from('hub_departments').select('*').eq('institution_id', institution.id);
         setDepartments(deptData || []);
       }
 
@@ -60,9 +59,9 @@ const CoursesPage: React.FC = () => {
         hub_departments (name, institution_id)
       `);
 
-      // Filter by institution if profile exists
-      if (profile?.institution_id) {
-        query = query.eq('hub_departments.institution_id', profile.institution_id);
+      // Filter by institution from context
+      if (institution?.id) {
+        query = query.eq('institution_id', institution.id);
       }
 
       const { data: coursesData } = await query.order('course_code');
@@ -111,8 +110,10 @@ const CoursesPage: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (institution?.id) {
+      fetchData();
+    }
+  }, [institution?.id]);
 
   const handleAddCourse = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -125,7 +126,8 @@ const CoursesPage: React.FC = () => {
         title: newCourse.title,
         course_code: newCourse.course_code.toUpperCase(),
         department_id: newCourse.department_id,
-        level: level
+        level: level,
+        institution_id: institution?.id // Explicitly set institution_id
       });
 
       if (error) throw error;

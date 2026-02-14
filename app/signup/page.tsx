@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import EduPalLogo from '@/assets/images/edupal.png';
+import { supabase } from '@/lib/supabase';
 
 export default function SignUp() {
     const router = useRouter();
@@ -18,6 +19,27 @@ export default function SignUp() {
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [institutionsList, setInstitutionsList] = useState<string[]>([]);
+    const [departmentsList, setDepartmentsList] = useState<string[]>([]); // Future: dynamic based on inst
+
+    useEffect(() => {
+        const fetchInstitutions = async () => {
+            try {
+                const { data, error } = await supabase
+                    .from('hub_institutions')
+                    .select('name')
+                    .order('name');
+
+                if (data) {
+                    setInstitutionsList(data.map(i => i.name));
+                }
+            } catch (err) {
+                console.error('Failed to fetch institutions', err);
+                // Fallback or retry?
+            }
+        };
+        fetchInstitutions();
+    }, []);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
@@ -171,17 +193,24 @@ export default function SignUp() {
                         <div className="flex flex-col gap-1.5 text-left">
                             <label className="text-white/80 text-sm font-medium">Institution</label>
                             <div className="relative">
-                                <input
+                                <select
                                     name="institution"
-                                    type="text"
                                     value={formData.institution}
                                     onChange={handleInputChange}
-                                    className="w-full rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary/50 border border-border-accent bg-input-bg h-12 placeholder:text-white/30 px-4 text-base font-normal"
-                                    placeholder="Your University or School"
+                                    className="w-full rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary/50 border border-border-accent bg-input-bg h-12 px-4 text-base font-normal appearance-none cursor-pointer placeholder:text-white/30"
                                     required
-                                />
+                                >
+                                    <option value="" disabled>Select your University</option>
+                                    {institutionsList.length > 0 ? (
+                                        institutionsList.map((inst) => (
+                                            <option key={inst} value={inst} className="bg-background-dark text-white">{inst}</option>
+                                        ))
+                                    ) : (
+                                        <option value="" disabled>Loading institutions...</option>
+                                    )}
+                                </select>
                                 <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-white/30 pointer-events-none">
-                                    account_balance
+                                    arrow_drop_down
                                 </span>
                             </div>
                         </div>

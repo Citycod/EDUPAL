@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { useInstitutionContext } from '@/lib/hooks/useInstitutionContext';
 import BottomNav from '@/components/BottomNav';
 
 // Helper to format time relative (e.g. "2m ago")
@@ -42,6 +43,7 @@ const CommunityPage: React.FC = () => {
 
   const [threads, setThreads] = useState<Thread[]>([]);
   const [loading, setLoading] = useState(true);
+  const { institution, loading: contextLoading } = useInstitutionContext();
   const [userProfile, setUserProfile] = useState<any>(null);
 
   // Selection State
@@ -66,19 +68,22 @@ const CommunityPage: React.FC = () => {
 
           setUserProfile(academicProfile);
 
-          // Fetch Course Boards via Bridge
-          const { data: courseData } = await supabase
-            .from('hub_courses')
-            .select('id, course_code, title')
-            .order('course_code');
+          // Fetch Course Boards via Bridge (Filtered by Institution)
+          if (institution?.id) {
+            const { data: courseData } = await supabase
+              .from('hub_courses')
+              .select('id, course_code, title')
+              .eq('institution_id', institution.id)
+              .order('course_code');
 
-          if (courseData) {
-            setCourses(courseData);
-            // Pre-select board from param if it exists, otherwise use first
-            if (boardId) {
-              setSelectedCourseId(boardId);
-            } else if (courseData.length > 0) {
-              setSelectedCourseId(courseData[0].id);
+            if (courseData) {
+              setCourses(courseData);
+              // Pre-select board from param if it exists, otherwise use first
+              if (boardId) {
+                setSelectedCourseId(boardId);
+              } else if (courseData.length > 0) {
+                setSelectedCourseId(courseData[0].id);
+              }
             }
           }
         }
@@ -86,8 +91,10 @@ const CommunityPage: React.FC = () => {
         console.error("Error fetching initial data:", error);
       }
     };
-    fetchInitialData();
-  }, [boardId]);
+    if (institution?.id) {
+      fetchInitialData();
+    }
+  }, [boardId, institution?.id]);
 
   useEffect(() => {
     if (!selectedCourseId) return;

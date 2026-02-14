@@ -4,11 +4,14 @@ import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import BottomNav from '@/components/BottomNav';
 import { supabase } from '@/lib/supabase';
+import { useInstitutionContext } from '@/lib/hooks/useInstitutionContext';
 
 export default function Home() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+
+  const { institution, loading: contextLoading } = useInstitutionContext();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -67,7 +70,7 @@ export default function Home() {
               Find Past Questions for Your Course <span className="text-primary italic font-serif underline decoration-primary/30 underline-offset-8">Instantly</span>
             </h1>
             <p className="text-slate-500 dark:text-slate-400 text-lg">
-              The organized academic archive for <span className="text-slate-900 dark:text-white font-bold">{user?.university || 'Your University'}</span>
+              The organized academic archive for <span className="text-slate-900 dark:text-white font-bold">{institution?.name || 'Your University'}</span>
             </p>
           </div>
 

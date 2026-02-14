@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import BottomNav from '@/components/BottomNav';
+import { useInstitutionContext } from '@/lib/hooks/useInstitutionContext';
 
 // Interface for Resource data
 interface LibraryResource {
@@ -26,11 +27,12 @@ const LibraryPage = () => {
     const [userProfile, setUserProfile] = useState<any>(null);
 
     // Filter State
-    const [institutions, setInstitutions] = useState<any[]>([]);
+    const { institution, loading: contextLoading } = useInstitutionContext();
+
+    // Filter State
     const [departments, setDepartments] = useState<any[]>([]);
     const [sessions, setSessions] = useState<any[]>([]);
 
-    const [selectedInst, setSelectedInst] = useState('');
     const [selectedDept, setSelectedDept] = useState('');
     const [selectedLevel, setSelectedLevel] = useState('');
 
@@ -46,10 +48,8 @@ const LibraryPage = () => {
                     setUserProfile(profile);
                 }
 
-                // 2. Fetch Institutions & Sessions via Bridge
-                const { data: inst } = await supabase.from('hub_institutions').select('*').order('name');
+                // 2. Fetch Sessions via Bridge
                 const { data: sess } = await supabase.from('hub_sessions').select('*').order('name', { ascending: false });
-                if (inst) setInstitutions(inst);
                 if (sess) setSessions(sess);
 
                 // 3. Handle External Search Params (e.g. from Courses page)
@@ -65,7 +65,11 @@ const LibraryPage = () => {
                         .single();
 
                     if (courseRef) {
-                        setSelectedInst(courseRef.hub_departments.institution_id);
+                        // Institution context is already set globally
+                        if (institution?.id && courseRef.hub_departments.institution_id !== institution.id) {
+                            console.warn("Course institution mismatch");
+                            // Optional: redirect or handle mismatch
+                        }
                         setSelectedDept(courseRef.department_id);
                         setSelectedLevel(courseRef.level);
                         fetchResources(courseRef.hub_departments.institution_id, courseRef.department_id, courseRef.level);
@@ -74,10 +78,9 @@ const LibraryPage = () => {
                 }
 
                 // Default context logic if no param
-                if (profileData?.institution_id) {
-                    setSelectedInst(profileData.institution_id);
-                } else {
-                    fetchResources();
+                // Initial fetch will be triggered by institution context effect
+                if (!courseIdParam && institution?.id) {
+                    fetchResources(institution.id);
                 }
 
             } catch (error) {
@@ -88,7 +91,7 @@ const LibraryPage = () => {
         };
 
         fetchInitialData();
-    }, []);
+    }, [institution?.id]); // Re-run if institution loads late
 
     const fetchResources = async (instId?: string, deptId?: string, level?: string) => {
         let query = supabase
@@ -109,16 +112,16 @@ const LibraryPage = () => {
         setResources(data || []);
     };
 
-    // Update departments when institution changes
+    // Update departments and resources when institution available
     useEffect(() => {
-        if (!selectedInst) return;
+        if (!institution?.id) return;
         const fetchDepts = async () => {
-            const { data } = await supabase.from('hub_departments').select('*').eq('institution_id', selectedInst).order('name');
+            const { data } = await supabase.from('hub_departments').select('*').eq('institution_id', institution.id).order('name');
             setDepartments(data || []);
-            fetchResources(selectedInst);
+            fetchResources(institution.id);
         };
         fetchDepts();
-    }, [selectedInst]);
+    }, [institution?.id]);
 
     // Filter resources based on search and filters
     const filteredResources = resources.filter(res => {
@@ -145,6 +148,11 @@ const LibraryPage = () => {
                         </div>
                         <h1 className="text-xl font-black tracking-tighter">Academic Archive</h1>
                     </div>
+                    {institution && (
+                        <div className="hidden md:block text-sm font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full border border-slate-200 dark:border-slate-700">
+                            Accessing resources for {institution.name}
+                        </div>
+                    )}
                     <div className="flex items-center gap-4">
                         <button
                             onClick={() => router.push('/library/upload')}
@@ -175,22 +183,19 @@ const LibraryPage = () => {
 
                     {/* Hierarchical Filter Selects */}
                     <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar">
-                        <select
-                            value={selectedInst}
-                            onChange={(e) => setSelectedInst(e.target.value)}
-                            className="flex shrink-0 items-center justify-center gap-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4 py-3 hover:border-primary transition-colors text-sm font-bold text-slate-700 dark:text-slate-300 outline-none"
-                        >
-                            <option value="">All Institutions</option>
-                            {institutions.map(inst => <option key={inst.id} value={inst.id}>{inst.name}</option>)}
-                        </select>
+                        {/* Institution Display (Read-Only) */}
+                        <div className="flex shrink-0 items-center justify-center gap-2 rounded-xl bg-primary/5 border border-primary/20 px-4 py-3 text-sm font-bold text-primary">
+                            <span className="material-symbols-outlined text-[18px]">account_balance</span>
+                            <span>{institution?.name || 'Loading Institution...'}</span>
+                        </div>
 
                         <select
                             value={selectedDept}
                             onChange={(e) => {
                                 setSelectedDept(e.target.value);
-                                fetchResources(selectedInst, e.target.value, selectedLevel);
+                                fetchResources(institution?.id, e.target.value, selectedLevel);
                             }}
-                            disabled={!selectedInst}
+                            disabled={!institution?.id}
                             className="flex shrink-0 items-center justify-center gap-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4 py-3 hover:border-primary transition-colors text-sm font-bold text-slate-700 dark:text-slate-300 outline-none disabled:opacity-50"
                         >
                             <option value="">All Departments</option>
@@ -201,7 +206,7 @@ const LibraryPage = () => {
                             value={selectedLevel}
                             onChange={(e) => {
                                 setSelectedLevel(e.target.value);
-                                fetchResources(selectedInst, selectedDept, e.target.value);
+                                fetchResources(institution?.id, selectedDept, e.target.value);
                             }}
                             className="flex shrink-0 items-center justify-center gap-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4 py-3 hover:border-primary transition-colors text-sm font-bold text-slate-700 dark:text-slate-300 outline-none"
                         >
