@@ -10,42 +10,56 @@ import { useInstitutionContext } from '@/lib/hooks/useInstitutionContext';
 interface LibraryResource {
     id: string;
     title: string;
-    courseCode: string; // From joined course
-    year: string; // Derived or from course
+    course_code: string;
+    course_title: string;
+    session_name: string;
     type: string;
     category: string;
-    downloads: number;
-    uploaderAbbr: string[]; // Initials for avatars
-    colorCheck: string; // For random coloring
+    upvotes_count: number;
+    is_verified: boolean;
+    file_url: string;
+    file_size: string;
+    uploader_name: string;
+    uploader_avatar: string;
+    institution_id: string;
+    department_id: string;
+    level: string;
 }
 
 const LibraryPage = () => {
     const router = useRouter();
-    const [resources, setResources] = useState<any[]>([]);
+    const [resources, setResources] = useState<LibraryResource[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [userProfile, setUserProfile] = useState<any>(null);
+    const [userVotes, setUserVotes] = useState<Set<string>>(new Set());
 
     // Filter State
     const { institution, loading: contextLoading } = useInstitutionContext();
 
-    // Filter State
     const [departments, setDepartments] = useState<any[]>([]);
     const [sessions, setSessions] = useState<any[]>([]);
 
     const [selectedDept, setSelectedDept] = useState('');
     const [selectedLevel, setSelectedLevel] = useState('');
+    const [selectedSession, setSelectedSession] = useState('');
+    const [selectedType, setSelectedType] = useState('');
+    const [sortBy, setSortBy] = useState<'newest' | 'popular'>('newest');
 
     useEffect(() => {
         const fetchInitialData = async () => {
             try {
                 // 1. Fetch User Profile
                 const { data: { user } } = await supabase.auth.getUser();
-                let profileData = null;
                 if (user) {
                     const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
-                    profileData = profile;
                     setUserProfile(profile);
+
+                    // Fetch user's votes
+                    const { data: votes } = await supabase.from('resource_votes').select('resource_id').eq('user_id', user.id);
+                    if (votes) {
+                        setUserVotes(new Set(votes.map(v => v.resource_id)));
+                    }
                 }
 
                 // 2. Fetch Sessions via Bridge
@@ -56,8 +70,7 @@ const LibraryPage = () => {
                 const params = new URLSearchParams(window.location.search);
                 const courseIdParam = params.get('course');
 
-                if (courseIdParam) {
-                    // Fetch course details via Bridge
+                if (courseIdParam && institution?.id) {
                     const { data: courseRef } = await supabase
                         .from('hub_courses')
                         .select('*, hub_departments (*)')
@@ -65,22 +78,15 @@ const LibraryPage = () => {
                         .single();
 
                     if (courseRef) {
-                        // Institution context is already set globally
-                        if (institution?.id && courseRef.hub_departments.institution_id !== institution.id) {
-                            console.warn("Course institution mismatch");
-                            // Optional: redirect or handle mismatch
-                        }
                         setSelectedDept(courseRef.department_id);
                         setSelectedLevel(courseRef.level);
-                        fetchResources(courseRef.hub_departments.institution_id, courseRef.department_id, courseRef.level);
-                        return; // Initial fetch done by context setting
+                        fetchResources({ instId: institution.id, deptId: courseRef.department_id, level: courseRef.level });
+                        return;
                     }
                 }
 
-                // Default context logic if no param
-                // Initial fetch will be triggered by institution context effect
-                if (!courseIdParam && institution?.id) {
-                    fetchResources(institution.id);
+                if (institution?.id) {
+                    fetchResources({ instId: institution.id });
                 }
 
             } catch (error) {
@@ -90,19 +96,27 @@ const LibraryPage = () => {
             }
         };
 
-        fetchInitialData();
-    }, [institution?.id]); // Re-run if institution loads late
+        if (institution?.id) {
+            fetchInitialData();
+        }
+    }, [institution?.id]);
 
-    const fetchResources = async (instId?: string, deptId?: string, level?: string) => {
+    const fetchResources = async (filters: { instId?: string, deptId?: string, level?: string, sessionId?: string, type?: string, sort?: 'newest' | 'popular' }) => {
         let query = supabase
             .from('hub_resources')
-            .select('*')
-            .order('created_at', { ascending: false });
+            .select('*');
 
-        // Filtering via simplified joins or flattened fields
-        if (instId) query = query.eq('institution_id', instId);
-        if (deptId) query = query.eq('department_id', deptId);
-        if (level) query = query.eq('level', level);
+        if (filters.instId) query = query.eq('institution_id', filters.instId);
+        if (filters.deptId) query = query.eq('department_id', filters.deptId);
+        if (filters.level) query = query.eq('level', filters.level);
+        if (filters.sessionId) query = query.eq('session_id', filters.sessionId);
+        if (filters.type) query = query.eq('type', filters.type);
+
+        if (filters.sort === 'popular') {
+            query = query.order('upvotes_count', { ascending: false });
+        } else {
+            query = query.order('created_at', { ascending: false });
+        }
 
         const { data, error } = await query;
         if (error) {
@@ -112,22 +126,70 @@ const LibraryPage = () => {
         setResources(data || []);
     };
 
-    // Update departments and resources when institution available
+    const handleVote = async (resourceId: string) => {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const isUpvoted = userVotes.has(resourceId);
+
+        if (isUpvoted) {
+            // Remove vote
+            const { error } = await supabase.from('resource_votes').delete().eq('user_id', user.id).eq('resource_id', resourceId);
+            if (!error) {
+                setUserVotes(prev => {
+                    const next = new Set(prev);
+                    next.delete(resourceId);
+                    return next;
+                });
+                setResources(prev => prev.map(r => r.id === resourceId ? { ...r, upvotes_count: r.upvotes_count - 1 } : r));
+            }
+        } else {
+            // Add vote
+            const { error } = await supabase.from('resource_votes').insert({ user_id: user.id, resource_id: resourceId });
+            if (!error) {
+                setUserVotes(prev => new Set([...prev, resourceId]));
+                setResources(prev => prev.map(r => r.id === resourceId ? { ...r, upvotes_count: r.upvotes_count + 1 } : r));
+            }
+        }
+    };
+
+    const handleReport = async (resourceId: string) => {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const reason = prompt("Why are you reporting this resource? (e.g. Inappropriate, Spam, Wrong Course)");
+        if (!reason) return;
+
+        const { error } = await supabase.from('resource_reports').insert({
+            reporter_id: user.id,
+            resource_id: resourceId,
+            reason: reason,
+            status: 'pending'
+        });
+
+        if (error) {
+            alert("Failed to submit report. Please try again.");
+        } else {
+            alert("Report submitted. Thank you for keeping EduPal safe!");
+        }
+    };
+
+    // Update departments when institution available
     useEffect(() => {
         if (!institution?.id) return;
         const fetchDepts = async () => {
             const { data } = await supabase.from('hub_departments').select('*').eq('institution_id', institution.id).order('name');
             setDepartments(data || []);
-            fetchResources(institution.id);
         };
         fetchDepts();
     }, [institution?.id]);
 
-    // Filter resources based on search and filters
+    // Filter resources based on search
     const filteredResources = resources.filter(res => {
         const matchesSearch = !searchQuery ||
             res.course_code?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            res.course_title?.toLowerCase().includes(searchQuery.toLowerCase());
+            res.course_title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            res.title?.toLowerCase().includes(searchQuery.toLowerCase());
 
         return matchesSearch;
     });
@@ -168,35 +230,45 @@ const LibraryPage = () => {
             <main className="max-w-7xl mx-auto pb-24 flex-1 w-full">
                 {/* Search and Filter Section */}
                 <section className="p-4 space-y-4">
-                    <div className="relative group">
-                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
-                            <span className="material-symbols-outlined">search</span>
+                    <div className="flex gap-4 items-center">
+                        <div className="relative group flex-1">
+                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
+                                <span className="material-symbols-outlined">search</span>
+                            </div>
+                            <input
+                                className="block w-full h-16 pl-12 pr-4 bg-white dark:bg-slate-800/50 border-2 border-slate-200 dark:border-slate-700 rounded-2xl focus:ring-4 focus:ring-primary/10 focus:border-primary text-base text-slate-900 dark:text-white placeholder:text-slate-400 shadow-xl shadow-primary/5 transition-all"
+                                placeholder="Search by course code or title..."
+                                type="text"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                            />
                         </div>
-                        <input
-                            className="block w-full h-16 pl-12 pr-4 bg-white dark:bg-slate-800/50 border-2 border-slate-200 dark:border-slate-700 rounded-2xl focus:ring-4 focus:ring-primary/10 focus:border-primary text-base text-slate-900 dark:text-white placeholder:text-slate-400 shadow-xl shadow-primary/5 transition-all"
-                            placeholder="Direct search by course code (e.g. CSC421)..."
-                            type="text"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                        />
+
+                        {/* Sort Toggle */}
+                        <div className="flex bg-white dark:bg-slate-800 p-1 rounded-2xl border border-slate-200 dark:border-slate-700 h-16 shadow-lg">
+                            <button
+                                onClick={() => { setSortBy('newest'); fetchResources({ instId: institution?.id, deptId: selectedDept, level: selectedLevel, sessionId: selectedSession, type: selectedType, sort: 'newest' }); }}
+                                className={`px-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${sortBy === 'newest' ? 'bg-primary text-background-dark shadow-md' : 'text-slate-400 hover:text-slate-600'}`}>
+                                Newest
+                            </button>
+                            <button
+                                onClick={() => { setSortBy('popular'); fetchResources({ instId: institution?.id, deptId: selectedDept, level: selectedLevel, sessionId: selectedSession, type: selectedType, sort: 'popular' }); }}
+                                className={`px-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${sortBy === 'popular' ? 'bg-primary text-background-dark shadow-md' : 'text-slate-400 hover:text-slate-600'}`}>
+                                Popular
+                            </button>
+                        </div>
                     </div>
 
                     {/* Hierarchical Filter Selects */}
                     <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar">
-                        {/* Institution Display (Read-Only) */}
-                        <div className="flex shrink-0 items-center justify-center gap-2 rounded-xl bg-primary/5 border border-primary/20 px-4 py-3 text-sm font-bold text-primary">
-                            <span className="material-symbols-outlined text-[18px]">account_balance</span>
-                            <span>{institution?.name || 'Loading Institution...'}</span>
-                        </div>
-
                         <select
                             value={selectedDept}
                             onChange={(e) => {
                                 setSelectedDept(e.target.value);
-                                fetchResources(institution?.id, e.target.value, selectedLevel);
+                                fetchResources({ instId: institution?.id, deptId: e.target.value, level: selectedLevel, sessionId: selectedSession, type: selectedType, sort: sortBy });
                             }}
                             disabled={!institution?.id}
-                            className="flex shrink-0 items-center justify-center gap-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4 py-3 hover:border-primary transition-colors text-sm font-bold text-slate-700 dark:text-slate-300 outline-none disabled:opacity-50"
+                            className="flex shrink-0 items-center justify-center gap-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4 py-3 hover:border-primary transition-colors text-sm font-black text-slate-700 dark:text-slate-300 outline-none disabled:opacity-50"
                         >
                             <option value="">All Departments</option>
                             {departments.map(dept => <option key={dept.id} value={dept.id}>{dept.name}</option>)}
@@ -206,12 +278,37 @@ const LibraryPage = () => {
                             value={selectedLevel}
                             onChange={(e) => {
                                 setSelectedLevel(e.target.value);
-                                fetchResources(institution?.id, selectedDept, e.target.value);
+                                fetchResources({ instId: institution?.id, deptId: selectedDept, level: e.target.value, sessionId: selectedSession, type: selectedType, sort: sortBy });
                             }}
-                            className="flex shrink-0 items-center justify-center gap-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4 py-3 hover:border-primary transition-colors text-sm font-bold text-slate-700 dark:text-slate-300 outline-none"
+                            className="flex shrink-0 items-center justify-center gap-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4 py-3 hover:border-primary transition-colors text-sm font-black text-slate-700 dark:text-slate-300 outline-none"
                         >
                             <option value="">All Levels</option>
                             {['100', '200', '300', '400', '500'].map(lvl => <option key={lvl} value={lvl}>{lvl}L</option>)}
+                        </select>
+
+                        <select
+                            value={selectedSession}
+                            onChange={(e) => {
+                                setSelectedSession(e.target.value);
+                                fetchResources({ instId: institution?.id, deptId: selectedDept, level: selectedLevel, sessionId: e.target.value, type: selectedType, sort: sortBy });
+                            }}
+                            className="flex shrink-0 items-center justify-center gap-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4 py-3 hover:border-primary transition-colors text-sm font-black text-slate-700 dark:text-slate-300 outline-none"
+                        >
+                            <option value="">All Sessions</option>
+                            {sessions.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                        </select>
+
+                        <select
+                            value={selectedType}
+                            onChange={(e) => {
+                                setSelectedType(e.target.value);
+                                fetchResources({ instId: institution?.id, deptId: selectedDept, level: selectedLevel, sessionId: selectedSession, type: e.target.value, sort: sortBy });
+                            }}
+                            className="flex shrink-0 items-center justify-center gap-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4 py-3 hover:border-primary transition-colors text-sm font-black text-slate-700 dark:text-slate-300 outline-none"
+                        >
+                            <option value="">All Types</option>
+                            <option value="Lecture Note">Lecture Notes</option>
+                            <option value="Past Question">Past Questions</option>
                         </select>
                     </div>
                 </section>
@@ -223,57 +320,91 @@ const LibraryPage = () => {
                             <div className="p-2 bg-primary/10 rounded-lg">
                                 <span className="material-symbols-outlined text-primary">folder_open</span>
                             </div>
-                            <h2 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">All Academic Materials</h2>
+                            <h2 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">Academic Archive</h2>
                         </div>
-                        <span className="text-slate-400 text-xs font-black uppercase tracking-widest bg-slate-100 dark:bg-slate-800/50 px-3 py-1 rounded-full">{filteredResources.length} Results</span>
+                        <span className="text-slate-400 text-xs font-black uppercase tracking-widest bg-slate-100 dark:bg-slate-800/50 px-3 py-1 rounded-full">{filteredResources.length} Materials Found</span>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {filteredResources.map((res) => (
                             <div key={res.id} className="group relative flex flex-col justify-between overflow-hidden rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 hover:shadow-2xl hover:shadow-primary/10 hover:border-primary/50 transition-all text-left">
-                                <div className="flex items-start justify-between mb-6">
+                                {/* Verified Badge Top Left */}
+                                {res.is_verified && (
+                                    <div className="absolute top-0 right-0 bg-green-500 text-white px-3 py-1 text-[9px] font-black uppercase tracking-tighter rounded-bl-xl flex items-center gap-1 shadow-lg z-10">
+                                        <span className="material-symbols-outlined text-[12px]">verified</span>
+                                        Verified
+                                    </div>
+                                )}
+
+                                <div className="flex items-start justify-between mb-4">
                                     <div className="space-y-1 pr-2">
-                                        <h3 className="font-extrabold text-slate-900 dark:text-white text-lg leading-tight line-clamp-2">{res.course_title || res.title}</h3>
+                                        <h3 className="font-extrabold text-slate-900 dark:text-white text-lg leading-tight line-clamp-2">{res.title}</h3>
                                         <div className="flex flex-wrap items-center gap-2 mt-3">
                                             <span className="bg-primary/20 text-primary text-[10px] font-black px-2.5 py-1 rounded-md uppercase tracking-widest border border-primary/20">{res.course_code}</span>
                                             <span className="text-slate-400 dark:text-slate-500 text-[10px] font-bold uppercase tracking-widest">• {res.session_name}</span>
+                                            <span className="bg-slate-100 dark:bg-slate-800 text-[10px] text-slate-500 font-black px-2 py-0.5 rounded uppercase">{res.type}</span>
                                         </div>
                                     </div>
-                                    <div className="w-14 h-14 rounded-xl bg-slate-50 dark:bg-slate-800/50 flex flex-col items-center justify-center flex-shrink-0 border border-slate-100 dark:border-slate-700">
-                                        <span className="material-symbols-outlined text-primary/40 text-3xl">description</span>
-                                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-tighter">{res.type}</span>
+
+                                    {/* Download Icon */}
+                                    <div className="w-12 h-12 rounded-xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center flex-shrink-0 border border-slate-100 dark:border-slate-700">
+                                        <span className="material-symbols-outlined text-primary/40 text-2xl">description</span>
                                     </div>
                                 </div>
+
                                 <div className="flex items-center justify-between mt-auto pt-5 border-t border-slate-100 dark:border-slate-800/50">
+                                    {/* Uploader Bio */}
                                     <div className="flex items-center gap-3">
                                         <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-[11px] font-black text-primary border border-primary/10">
                                             {res.uploader_name?.split(' ').map((n: string) => n[0]).join('').substring(0, 2) || 'A'}
                                         </div>
                                         <div className="flex flex-col">
-                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Uploader</span>
+                                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Uploader</span>
                                             <span className="text-xs font-bold text-slate-700 dark:text-slate-300 line-clamp-1">{res.uploader_name || 'Admin'}</span>
                                         </div>
                                     </div>
-                                    <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-background-dark font-black text-[11px] hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/10 uppercase tracking-wider">
-                                        <span className="material-symbols-outlined text-[18px]">download</span>
-                                        Get PDF
-                                    </button>
+
+                                    {/* Interaction Buttons */}
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); handleVote(res.id); }}
+                                            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl transition-all font-black text-[11px] border ${userVotes.has(res.id) ? 'bg-primary text-background-dark border-primary shadow-lg shadow-primary/20' : 'bg-transparent text-slate-400 border-slate-200 dark:border-slate-700 hover:border-primary/40 hover:text-primary'}`}
+                                        >
+                                            <span className="material-symbols-outlined text-[18px]">thumb_up</span>
+                                            {res.upvotes_count || 0}
+                                        </button>
+
+                                        <button
+                                            onClick={() => router.push(res.file_url)}
+                                            className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary text-background-dark font-black hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/10"
+                                        >
+                                            <span className="material-symbols-outlined text-[20px]">download</span>
+                                        </button>
+
+                                        <button
+                                            onClick={() => handleReport(res.id)}
+                                            className="flex items-center justify-center w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-all border border-transparent hover:border-red-200 dark:hover:border-red-900"
+                                            title="Report content"
+                                        >
+                                            <span className="material-symbols-outlined text-[20px]">flag</span>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         ))}
 
                         {filteredResources.length === 0 && (
                             <div className="col-span-full py-20 text-center">
-                                <div className="w-20 h-20 bg-slate-100 dark:bg-slate-800/50 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300">
+                                <div className="w-20 h-20 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300">
                                     <span className="material-symbols-outlined text-4xl">search_off</span>
                                 </div>
-                                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">No results found</h3>
-                                <p className="text-slate-500 max-w-xs mx-auto text-sm">We couldn't find any resources matching your search. Be the first to contribution for these course!</p>
+                                <h3 className="text-xl font-black text-slate-900 dark:text-white mb-2 uppercase tracking-tight">No Resources found</h3>
+                                <p className="text-slate-500 max-w-xs mx-auto text-sm font-medium">Be the first to contribute or try adjusting your filters!</p>
                                 <button
                                     onClick={() => router.push('/library/upload')}
-                                    className="mt-6 px-8 py-3 bg-primary text-background-dark font-black rounded-xl hover:scale-105 transition-all"
+                                    className="mt-8 px-8 py-3.5 bg-primary text-background-dark font-black rounded-xl hover:scale-105 active:scale-95 transition-all shadow-xl shadow-primary/20 uppercase tracking-widest text-xs"
                                 >
-                                    Upload Now
+                                    Upload Material
                                 </button>
                             </div>
                         )}

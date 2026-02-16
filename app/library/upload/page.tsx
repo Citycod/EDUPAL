@@ -24,6 +24,7 @@ const UploadPage = () => {
     courseCode: '',
     sessionId: '',
     level: '100',
+    type: 'Past Question',
     file: null as File | null
   });
 
@@ -138,9 +139,9 @@ const UploadPage = () => {
       const { error: insertError } = await supabase
         .from('hub_resources')
         .insert({
-          title: `${formData.courseCode} - ${selectedSession?.name}`,
-          type: fileExt?.toUpperCase() || 'DOC',
-          category: 'past-questions',
+          title: `${formData.courseCode} - ${formData.type}`,
+          type: formData.type,
+          category: formData.type.toLowerCase().replace(' ', '-'),
           course_id: courseId,
           session_id: formData.sessionId,
           uploader_id: user.id,
@@ -284,6 +285,20 @@ const UploadPage = () => {
                     </select>
                   </label>
                 </div>
+
+                <label className="flex flex-col w-full">
+                  <p className="text-slate-700 dark:text-white/80 text-sm font-medium pb-2 ml-1">Material Type</p>
+                  <select
+                    name="type"
+                    value={formData.type}
+                    onChange={handleInputChange}
+                    required
+                    className="form-select flex w-full rounded-xl text-black dark:text-white focus:outline-0 focus:ring-1 focus:ring-primary border border-slate-300 dark:border-white/10 bg-white dark:bg-[#1c2720] focus:border-primary h-14 p-4 text-base"
+                  >
+                    <option value="Past Question">Past Question</option>
+                    <option value="Lecture Note">Lecture Note</option>
+                  </select>
+                </label>
               </div>
             </section>
 

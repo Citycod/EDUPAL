@@ -1,17 +1,16 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { useInstitutionContext } from '@/lib/hooks/useInstitutionContext';
 import BottomNav from '@/components/BottomNav';
+import { Suspense } from 'react';
 
-// Helper to format time relative (e.g. "2m ago")
 const formatTimeAgo = (dateString: string) => {
   const date = new Date(dateString);
   const now = new Date();
   const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-
   if (seconds < 60) return `${seconds}s ago`;
   const minutes = Math.floor(seconds / 60);
   if (minutes < 60) return `${minutes}m ago`;
@@ -21,57 +20,76 @@ const formatTimeAgo = (dateString: string) => {
   return `${days}d ago`;
 };
 
-interface Thread {
+interface Post {
   id: string;
-  title: string; // We might need to derive this from content if not in DB
   content: string;
-  author: {
-    name: string;
-    avatar: string;
-  };
-  timestamp: string;
-  repliesCount: number;
-  views: number; // Mock if not in DB
-  category: 'General' | 'Homework' | 'Exam' | 'Project'; // Derive or mock
-  isResolved?: boolean;
+  author_id: string;
+  author_name: string;
+  author_avatar: string;
+  created_at: string;
+  replies_count: number;
+  course_code?: string;
 }
 
-import { Suspense } from 'react';
+interface Comment {
+  id: string;
+  post_id: string;
+  author_id: string;
+  author_name: string;
+  author_avatar: string;
+  content: string;
+  upvotes_count: number;
+  created_at: string;
+  user_has_voted?: boolean;
+}
 
 const CommunityContent: React.FC = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const boardId = searchParams.get('board');
 
-  const [threads, setThreads] = useState<Thread[]>([]);
-  const [loading, setLoading] = useState(true);
   const { institution, loading: contextLoading } = useInstitutionContext();
   const [userProfile, setUserProfile] = useState<any>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
-  // Selection State
+  // Course selection
   const [courses, setCourses] = useState<any[]>([]);
   const [selectedCourseId, setSelectedCourseId] = useState<string>('');
 
+  // Posts
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Thread detail
+  const [expandedPostId, setExpandedPostId] = useState<string | null>(null);
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [loadingComments, setLoadingComments] = useState(false);
+
+  // Composer
   const [newPostContent, setNewPostContent] = useState('');
+  const [newReplyContent, setNewReplyContent] = useState('');
   const [isPosting, setIsPosting] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  // Top contributors (for badges)
+  const [topContributorIds, setTopContributorIds] = useState<Set<string>>(new Set());
+
+  // Fetch initial data
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
-          // Fetch Academic Context via Bridge
-          const { data: academicProfile } = await supabase
+          setCurrentUserId(user.id);
+          const { data: profile } = await supabase
             .from('hub_profiles')
             .select('*')
             .eq('id', user.id)
             .single();
+          setUserProfile(profile);
 
-          setUserProfile(academicProfile);
-
-          // Fetch Course Boards via Bridge (Filtered by Institution)
           if (institution?.id) {
+            // Fetch courses
             const { data: courseData } = await supabase
               .from('hub_courses')
               .select('id, course_code, title')
@@ -80,129 +98,243 @@ const CommunityContent: React.FC = () => {
 
             if (courseData) {
               setCourses(courseData);
-              // Pre-select board from param if it exists, otherwise use first
-              if (boardId) {
-                setSelectedCourseId(boardId);
-              } else if (courseData.length > 0) {
-                setSelectedCourseId(courseData[0].id);
-              }
+              if (boardId) setSelectedCourseId(boardId);
+              else if (courseData.length > 0) setSelectedCourseId(courseData[0].id);
+            }
+
+            // Fetch top 10 contributors for badge display
+            const { data: topData } = await supabase
+              .from('contributor_scores')
+              .select('user_id')
+              .eq('institution_id', institution.id)
+              .order('score', { ascending: false })
+              .limit(10);
+
+            if (topData) {
+              setTopContributorIds(new Set(topData.map((t: any) => t.user_id)));
             }
           }
         }
       } catch (error) {
-        console.error("Error fetching initial data:", error);
+        console.error('Error fetching initial data:', error);
       }
     };
-    if (institution?.id) {
-      fetchInitialData();
-    }
+
+    if (institution?.id) fetchInitialData();
   }, [boardId, institution?.id]);
 
-  useEffect(() => {
+  // Fetch posts for selected course
+  const fetchPosts = useCallback(async () => {
     if (!selectedCourseId) return;
-
-    const fetchThreads = async () => {
-      setLoading(true);
-      try {
-        const { data: posts, error } = await supabase
-          .from('hub_posts')
-          .select(`
-            *,
-            profiles:author_id (full_name, avatar_url),
-            hub_courses!inner (course_code)
-          `)
-          .eq('course_id', selectedCourseId)
-          .order('created_at', { ascending: false });
-
-        if (error) throw error;
-
-        const formattedThreads = posts.map((post: any, index: number) => {
-          const title = post.content.split(' ').slice(0, 8).join(' ') + (post.content.split(' ').length > 8 ? '...' : '?');
-          return {
-            id: post.id,
-            title: title,
-            content: post.content,
-            author: {
-              name: post.profiles?.full_name || 'Anonymous',
-              avatar: post.profiles?.avatar_url || 'https://ui-avatars.com/api/?name=Scholar&background=random',
-            },
-            timestamp: post.created_at,
-            repliesCount: 0,
-            views: 42,
-            category: (['General', 'Homework', 'Exam', 'Project'] as const)[index % 4],
-            isResolved: index % 5 === 0
-          };
-        });
-
-        setThreads(formattedThreads);
-      } catch (error) {
-        console.error("Error fetching threads:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchThreads();
-  }, [selectedCourseId]);
-
-  const handlePostSubmit = async () => {
-    if (!newPostContent.trim() || !selectedCourseId) return;
-    setIsPosting(true);
+    setLoading(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('hub_posts')
-        .insert({
-          content: newPostContent,
-          author_id: user.id,
-          course_id: selectedCourseId
-        });
+        .select(`
+          *,
+          profiles:author_id (full_name, avatar_url),
+          hub_courses!inner (course_code)
+        `)
+        .eq('course_id', selectedCourseId)
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      setNewPostContent('');
-      window.location.reload();
+      // Fetch reply counts
+      const postIds = data?.map((p: any) => p.id) || [];
+      let replyCounts: Record<string, number> = {};
 
+      if (postIds.length > 0) {
+        const { data: commentData } = await supabase
+          .from('hub_comments')
+          .select('post_id')
+          .in('post_id', postIds);
+
+        if (commentData) {
+          replyCounts = commentData.reduce((acc: Record<string, number>, c: any) => {
+            acc[c.post_id] = (acc[c.post_id] || 0) + 1;
+            return acc;
+          }, {});
+        }
+      }
+
+      const formattedPosts: Post[] = (data || []).map((post: any) => ({
+        id: post.id,
+        content: post.content,
+        author_id: post.author_id,
+        author_name: post.profiles?.full_name || 'Anonymous',
+        author_avatar: post.profiles?.avatar_url || `https://ui-avatars.com/api/?name=User&background=random`,
+        created_at: post.created_at,
+        replies_count: replyCounts[post.id] || 0,
+        course_code: post.hub_courses?.course_code
+      }));
+
+      setPosts(formattedPosts);
+    } catch (error) {
+      console.error('Error fetching posts:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [selectedCourseId]);
+
+  useEffect(() => { fetchPosts(); }, [fetchPosts]);
+
+  // Real-time subscription for new posts
+  useEffect(() => {
+    if (!selectedCourseId) return;
+
+    const channel = supabase
+      .channel('community-posts')
+      .on('postgres_changes', { event: 'INSERT', schema: 'academic', table: 'posts', filter: `course_id=eq.${selectedCourseId}` }, () => {
+        fetchPosts();
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [selectedCourseId, fetchPosts]);
+
+  // Fetch comments for expanded post
+  const fetchComments = async (postId: string) => {
+    setLoadingComments(true);
+    try {
+      const { data, error } = await supabase
+        .from('hub_comments')
+        .select('*')
+        .eq('post_id', postId)
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+
+      // Check which comments current user has voted on
+      let votedCommentIds = new Set<string>();
+      if (currentUserId && data && data.length > 0) {
+        const commentIds = data.map((c: any) => c.id);
+        const { data: votes } = await supabase
+          .from('comment_votes')
+          .select('comment_id')
+          .eq('user_id', currentUserId)
+          .in('comment_id', commentIds);
+
+        if (votes) {
+          votedCommentIds = new Set(votes.map((v: any) => v.comment_id));
+        }
+      }
+
+      const formattedComments: Comment[] = (data || []).map((c: any) => ({
+        id: c.id,
+        post_id: c.post_id,
+        author_id: c.author_id,
+        author_name: c.author_name || 'Anonymous',
+        author_avatar: c.author_avatar || `https://ui-avatars.com/api/?name=User&background=random`,
+        content: c.content,
+        upvotes_count: c.upvotes_count || 0,
+        created_at: c.created_at,
+        user_has_voted: votedCommentIds.has(c.id)
+      }));
+
+      setComments(formattedComments);
+    } catch (error) {
+      console.error('Error fetching comments:', error);
+    } finally {
+      setLoadingComments(false);
+    }
+  };
+
+  const toggleThread = (postId: string) => {
+    if (expandedPostId === postId) {
+      setExpandedPostId(null);
+      setComments([]);
+    } else {
+      setExpandedPostId(postId);
+      fetchComments(postId);
+    }
+  };
+
+  // Create new post
+  const handlePostSubmit = async () => {
+    if (!newPostContent.trim() || !selectedCourseId || !currentUserId) return;
+    setIsPosting(true);
+    try {
+      const { error } = await supabase
+        .from('hub_posts')
+        .insert({ content: newPostContent, author_id: currentUserId, course_id: selectedCourseId });
+
+      if (error) throw error;
+      setNewPostContent('');
+      fetchPosts();
     } catch (error: any) {
-      console.error("Error creating post:", error);
+      console.error('Error creating post:', error);
       alert(`Failed to post: ${error.message}`);
     } finally {
       setIsPosting(false);
     }
   };
 
-  const getCategoryIcon = (category: string, isResolved?: boolean) => {
-    if (isResolved) return { icon: 'check_circle', color: 'text-slate-400', bg: 'bg-slate-500/10 border-slate-500/20' };
-    switch (category) {
-      case 'Homework': return { icon: 'event_note', color: 'text-blue-400', bg: 'bg-blue-500/10 border-blue-500/20' };
-      case 'Exam': return { icon: 'help', color: 'text-amber-400', bg: 'bg-amber-500/10 border-amber-500/20' };
-      case 'Project': return { icon: 'rocket_launch', color: 'text-purple-400', bg: 'bg-purple-500/10 border-purple-500/20' };
-      default: return { icon: 'terminal', color: 'text-primary', bg: 'bg-primary/10 border-primary/20' };
+  // Create reply
+  const handleReplySubmit = async (postId: string) => {
+    if (!newReplyContent.trim() || !currentUserId) return;
+    setIsPosting(true);
+    try {
+      const { error } = await supabase
+        .from('hub_comments')
+        .insert({ post_id: postId, author_id: currentUserId, content: newReplyContent });
+
+      if (error) throw error;
+      setNewReplyContent('');
+      fetchComments(postId);
+      // Update reply count locally
+      setPosts(prev => prev.map(p => p.id === postId ? { ...p, replies_count: p.replies_count + 1 } : p));
+    } catch (error: any) {
+      console.error('Error adding reply:', error);
+      alert(`Failed to reply: ${error.message}`);
+    } finally {
+      setIsPosting(false);
     }
   };
 
-  if (loading) {
-    return <div className="min-h-screen flex items-center justify-center bg-background-light dark:bg-background-dark text-slate-500">Loading Discussions...</div>;
+  // Vote on comment
+  const handleCommentVote = async (commentId: string, hasVoted: boolean) => {
+    if (!currentUserId) return;
+    try {
+      if (hasVoted) {
+        await supabase.from('comment_votes').delete().eq('user_id', currentUserId).eq('comment_id', commentId);
+      } else {
+        await supabase.from('comment_votes').insert({ user_id: currentUserId, comment_id: commentId });
+      }
+      // Refresh comments
+      if (expandedPostId) fetchComments(expandedPostId);
+    } catch (error) {
+      console.error('Error voting on comment:', error);
+    }
+  };
+
+  const isTopContributor = (userId: string) => topContributorIds.has(userId);
+
+  if (loading && posts.length === 0) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background-light dark:bg-background-dark gap-4">
+        <div className="w-16 h-16 rounded-full border-4 border-primary border-t-transparent animate-spin" />
+        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Loading Discussions</p>
+      </div>
+    );
   }
 
   return (
     <div className="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen transition-colors duration-300">
       <div className="max-w-3xl mx-auto flex flex-col min-h-screen border-x border-slate-200 dark:border-slate-800 bg-background-light dark:bg-background-dark">
 
-        {/* TopAppBar - Course Board Identity */}
+        {/* Header */}
         <header className="sticky top-0 z-10 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
           <div className="flex items-center p-4 pb-2 justify-between">
-            <div
+            <button
               onClick={() => router.push('/home')}
-              className="text-slate-900 dark:text-white flex size-10 shrink-0 items-center justify-center cursor-pointer hover:bg-slate-200 dark:hover:bg-surface-dark rounded-full transition-colors"
+              className="flex size-10 shrink-0 items-center justify-center cursor-pointer hover:bg-slate-200 dark:hover:bg-white/10 rounded-full transition-colors"
             >
               <span className="material-symbols-outlined">arrow_back</span>
-            </div>
+            </button>
             <div className="flex flex-col flex-1 px-4 text-center">
-              <h2 className="text-slate-900 dark:text-white text-lg font-black leading-tight tracking-tighter uppercase">Course Boards</h2>
-              <p className="text-[10px] text-primary font-black tracking-widest uppercase">Academic Discussions</p>
+              <h2 className="text-lg font-black leading-tight tracking-tighter uppercase">Course Boards</h2>
+              <p className="text-[9px] text-primary font-black tracking-[0.2em] uppercase">Academic Discussions</p>
             </div>
             <div className="flex w-12 items-center justify-end">
               <div
@@ -212,74 +344,172 @@ const CommunityContent: React.FC = () => {
             </div>
           </div>
 
-          {/* Board Switcher (Courses) */}
+          {/* Course Switcher */}
           <div className="flex gap-2 px-4 py-4 overflow-x-auto no-scrollbar scrollbar-hide">
-            {courses.map(course => (
+            {courses.map((course: any) => (
               <button
                 key={course.id}
-                onClick={() => setSelectedCourseId(course.id)}
+                onClick={() => { setSelectedCourseId(course.id); setExpandedPostId(null); }}
                 className={`flex h-10 shrink-0 items-center justify-center gap-x-2 rounded-xl px-5 font-black text-xs transition-all border uppercase tracking-widest ${selectedCourseId === course.id
-                  ? 'bg-primary border-primary text-background-dark shadow-lg shadow-primary/20 scale-105'
-                  : 'bg-white dark:bg-surface-dark border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:border-primary/50'
+                    ? 'bg-primary border-primary text-background-dark shadow-lg shadow-primary/20 scale-105'
+                    : 'bg-white dark:bg-white/5 border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:border-primary/50'
                   }`}
               >
-                <span>{course.course_code}</span>
+                {course.course_code}
               </button>
             ))}
           </div>
         </header>
 
         {/* Thread List */}
-        <main className="flex-1 overflow-y-auto pb-20">
-          {threads.map((thread) => {
-            const style = getCategoryIcon(thread.category, thread.isResolved);
+        <main className="flex-1 overflow-y-auto pb-28">
+          {posts.map(post => {
+            const isExpanded = expandedPostId === post.id;
+            const isTop = isTopContributor(post.author_id);
+
             return (
-              <div key={thread.id} className={`flex gap-4 px-4 py-5 border-b border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-surface-dark/40 cursor-pointer transition-colors group ${thread.isResolved ? 'opacity-75' : ''}`}>
-                <div className="shrink-0 pt-1">
-                  <div className={`${style.bg} flex items-center justify-center rounded-lg h-12 w-12 ${style.color}`}>
-                    <span className="material-symbols-outlined">{style.icon}</span>
+              <div key={post.id} className="border-b border-slate-200 dark:border-slate-800">
+                {/* Post Card */}
+                <div
+                  onClick={() => toggleThread(post.id)}
+                  className={`flex gap-3.5 px-4 py-4 cursor-pointer transition-colors group ${isExpanded ? 'bg-primary/5' : 'hover:bg-slate-50 dark:hover:bg-white/5'
+                    }`}
+                >
+                  <div className="shrink-0 pt-0.5 relative">
+                    <div
+                      className="w-10 h-10 rounded-full bg-cover bg-center border-2 border-slate-200 dark:border-white/10"
+                      style={{ backgroundImage: `url("${post.author_avatar}")` }}
+                    />
+                    {isTop && (
+                      <div className="absolute -top-1 -right-1 w-5 h-5 bg-yellow-400 rounded-full flex items-center justify-center text-[10px] shadow-lg" title="Top Contributor">
+                        👑
+                      </div>
+                    )}
                   </div>
-                </div>
-                <div className="flex flex-1 flex-col gap-1">
-                  <div className="flex justify-between items-start">
-                    <p className={`text-slate-900 dark:text-white text-base font-semibold leading-snug group-hover:text-primary transition-colors ${thread.isResolved ? 'italic' : ''}`}>
-                      {thread.isResolved && 'Resolved: '}{thread.title}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-bold text-sm truncate">{post.author_name}</span>
+                      {isTop && (
+                        <span className="px-1.5 py-0.5 rounded-md bg-yellow-400/10 text-yellow-500 text-[8px] font-black uppercase tracking-widest border border-yellow-400/20">
+                          Top 10
+                        </span>
+                      )}
+                      <span className="text-slate-400 text-xs ml-auto shrink-0">{formatTimeAgo(post.created_at)}</span>
+                    </div>
+                    <p className="text-slate-700 dark:text-slate-300 text-sm leading-relaxed line-clamp-3">
+                      {post.content}
                     </p>
-                    <span className="text-slate-500 dark:text-slate-400 text-xs shrink-0 ml-4">{formatTimeAgo(thread.timestamp)}</span>
-                  </div>
-                  <p className="text-slate-600 dark:text-slate-400 text-sm font-normal line-clamp-2">
-                    {thread.content}
-                  </p>
-                  <div className="flex items-center gap-4 mt-2">
-                    <div className={`flex items-center gap-1 text-xs font-medium ${thread.repliesCount > 0 ? 'text-primary' : 'text-slate-500 dark:text-slate-400'}`}>
-                      <span className="material-symbols-outlined text-sm">chat_bubble</span>
-                      <span>{thread.repliesCount} replies</span>
-                    </div>
-                    <div className="flex items-center gap-1 text-slate-500 dark:text-slate-400 text-xs">
-                      <span className="material-symbols-outlined text-sm">visibility</span>
-                      <span>{thread.views} views</span>
-                    </div>
-                    <div className="text-xs text-slate-400 ml-auto">
-                      Posted by {thread.author.name.split(' ')[0]}
+                    <div className="flex items-center gap-4 mt-2.5">
+                      <div className={`flex items-center gap-1 text-xs font-medium ${post.replies_count > 0 ? 'text-primary' : 'text-slate-400'
+                        }`}>
+                        <span className="material-symbols-outlined text-sm">chat_bubble</span>
+                        <span>{post.replies_count} {post.replies_count === 1 ? 'reply' : 'replies'}</span>
+                      </div>
+                      <div className="flex items-center gap-1 text-slate-400 text-xs">
+                        <span className="material-symbols-outlined text-sm">{isExpanded ? 'expand_less' : 'expand_more'}</span>
+                        <span>{isExpanded ? 'Collapse' : 'View thread'}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
+
+                {/* Expanded Thread */}
+                {isExpanded && (
+                  <div className="bg-slate-50 dark:bg-white/[0.02] border-t border-slate-200 dark:border-white/5">
+                    {/* Reply list */}
+                    {loadingComments ? (
+                      <div className="flex items-center justify-center py-8 gap-2 text-slate-400">
+                        <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                        <span className="text-xs">Loading replies...</span>
+                      </div>
+                    ) : comments.length === 0 ? (
+                      <div className="text-center py-6 text-slate-400">
+                        <p className="text-xs">No replies yet. Be the first!</p>
+                      </div>
+                    ) : (
+                      <div className="divide-y divide-slate-100 dark:divide-white/5">
+                        {comments.map(comment => {
+                          const commentIsTop = isTopContributor(comment.author_id);
+                          return (
+                            <div key={comment.id} className="flex gap-3 px-4 py-3 pl-8">
+                              <div className="shrink-0 pt-0.5 relative">
+                                <div
+                                  className="w-8 h-8 rounded-full bg-cover bg-center border border-slate-200 dark:border-white/10"
+                                  style={{ backgroundImage: `url("${comment.author_avatar}")` }}
+                                />
+                                {commentIsTop && (
+                                  <div className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-yellow-400 rounded-full flex items-center justify-center text-[8px]">👑</div>
+                                )}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-0.5">
+                                  <span className="font-bold text-xs">{comment.author_name}</span>
+                                  {commentIsTop && (
+                                    <span className="text-[7px] font-black text-yellow-500 uppercase tracking-widest">Top 10</span>
+                                  )}
+                                  <span className="text-slate-400 text-[10px] ml-auto">{formatTimeAgo(comment.created_at)}</span>
+                                </div>
+                                <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">{comment.content}</p>
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); handleCommentVote(comment.id, !!comment.user_has_voted); }}
+                                  className={`flex items-center gap-1 mt-1.5 text-xs font-medium transition-all ${comment.user_has_voted
+                                      ? 'text-primary'
+                                      : 'text-slate-400 hover:text-primary'
+                                    }`}
+                                >
+                                  <span className="material-symbols-outlined text-sm">{comment.user_has_voted ? 'thumb_up' : 'thumb_up_off_alt'}</span>
+                                  {comment.upvotes_count > 0 && <span>{comment.upvotes_count}</span>}
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {/* Reply Composer */}
+                    <div className="px-4 py-3 pl-8 border-t border-slate-200 dark:border-white/5">
+                      <div className="flex items-end gap-2 bg-white dark:bg-white/5 rounded-xl p-2.5 border border-slate-200 dark:border-white/10 focus-within:border-primary/50 transition-all">
+                        <input
+                          type="text"
+                          value={newReplyContent}
+                          onChange={(e) => setNewReplyContent(e.target.value)}
+                          onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleReplySubmit(post.id); } }}
+                          placeholder="Write a reply..."
+                          className="flex-1 bg-transparent border-none focus:ring-0 focus:outline-none text-sm placeholder-slate-400 text-slate-900 dark:text-white py-1"
+                        />
+                        <button
+                          onClick={() => handleReplySubmit(post.id)}
+                          disabled={!newReplyContent.trim() || isPosting}
+                          className="flex items-center justify-center h-8 w-8 bg-primary text-background-dark rounded-lg hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+                        >
+                          <span className="material-symbols-outlined text-sm font-bold">send</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             );
           })}
-          {threads.length === 0 && (
-            <div className="text-center py-12 text-slate-500">
-              <p>No threads yet. Start a discussion!</p>
+
+          {posts.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-20 text-center px-8">
+              <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
+                <span className="material-symbols-outlined text-primary text-3xl">forum</span>
+              </div>
+              <h3 className="font-black text-lg tracking-tight mb-1">No Threads Yet</h3>
+              <p className="text-slate-400 text-sm">Start a discussion for {courses.find(c => c.id === selectedCourseId)?.course_code || 'this course'}!</p>
             </div>
           )}
         </main>
 
-        {/* Reply / Post Input Area */}
-        <div className="fixed bottom-[52px] md:bottom-0 left-0 right-0 z-20 p-4 bg-background-light dark:bg-background-dark border-t border-slate-200 dark:border-slate-800 max-w-3xl mx-auto">
-          <div className="flex items-end gap-3 bg-slate-100 dark:bg-surface-dark rounded-xl p-3 focus-within:ring-2 focus-within:ring-primary/50 transition-all shadow-sm">
-            <div className="shrink-0 pb-1">
+        {/* Post Composer (Fixed Bottom) */}
+        <div className="fixed bottom-[56px] md:bottom-0 left-0 right-0 z-20 p-3 bg-background-light dark:bg-background-dark border-t border-slate-200 dark:border-slate-800 max-w-3xl mx-auto">
+          <div className="flex items-end gap-2.5 bg-slate-100 dark:bg-white/5 rounded-xl p-3 focus-within:ring-2 focus-within:ring-primary/50 transition-all shadow-sm border border-slate-200 dark:border-white/10">
+            <div className="shrink-0 pb-0.5">
               <div className="h-8 w-8 rounded-full overflow-hidden border-2 border-primary">
-                <img className="h-full w-full object-cover" src={userProfile?.avatar_url || 'https://ui-avatars.com/api/?name=User&background=random'} alt="My Avatar" />
+                <img className="h-full w-full object-cover" src={userProfile?.avatar_url || 'https://ui-avatars.com/api/?name=User&background=random'} alt="Avatar" />
               </div>
             </div>
             <div className="flex-1">
@@ -287,16 +517,13 @@ const CommunityContent: React.FC = () => {
                 ref={textareaRef}
                 value={newPostContent}
                 onChange={(e) => setNewPostContent(e.target.value)}
-                className="w-full bg-transparent border-none focus:ring-0 text-dark  text-sm placeholder-slate-500 resize-none py-1 max-h-32"
+                className="w-full bg-transparent border-none focus:ring-0 focus:outline-none text-sm placeholder-slate-500 resize-none py-1 max-h-32 text-slate-900 dark:text-white"
                 placeholder={`Post to ${courses.find(c => c.id === selectedCourseId)?.course_code || 'Board'}...`}
                 rows={1}
-                style={{ minHeight: '34px ', textDecoration: 'none', color: 'black' }}
-              ></textarea>
+                style={{ minHeight: '34px' }}
+              />
             </div>
             <div className="flex gap-2">
-              <button className="flex items-center justify-center h-8 w-8 text-slate-500 dark:text-slate-400 hover:text-primary transition-colors">
-                <span className="material-symbols-outlined">attach_file</span>
-              </button>
               <button
                 onClick={handlePostSubmit}
                 disabled={!newPostContent.trim() || isPosting}
@@ -307,18 +534,8 @@ const CommunityContent: React.FC = () => {
             </div>
           </div>
         </div>
-
-        {/* Sticky Mobile Nav (Synced with Global BottomNav visually, but using this for layout match) */}
-        {/* Note: In Next.js app directory layout, the global BottomNav might overlap. 
-            We should check if we want to suppress the global one or use this one. 
-            For now, I'll rely on the global BottomNav and add padding to main.
-            The user prompt had a custom nav, but consistent app nav is better. 
-            I will use the global BottomNav component at the bottom of the page structure 
-            to ensure consistency with other pages. 
-        */}
       </div>
 
-      {/* Global Bottom Nav - Placed outside the max-w-3xl container to span full width */}
       <BottomNav />
     </div>
   );
@@ -326,7 +543,7 @@ const CommunityContent: React.FC = () => {
 
 const CommunityPage = () => {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading Community...</div>}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-background-light dark:bg-background-dark text-slate-400">Loading Community...</div>}>
       <CommunityContent />
     </Suspense>
   );
