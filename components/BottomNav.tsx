@@ -47,7 +47,6 @@ export default function BottomNav({ navItems: customNavItems }: BottomNavProps) 
       }
 
       baseItems.push(
-        { icon: 'add_circle', label: 'Upload', path: '/library/upload' },
         { icon: 'forum', label: 'Discuss', path: '/community' },
         { icon: 'person', label: 'Profile', path: '/profile' }
       );
@@ -82,9 +81,7 @@ export default function BottomNav({ navItems: customNavItems }: BottomNavProps) 
             <div
               className={`px-5 py-1 rounded-full transition-colors ${itemActive
                 ? 'bg-primary/20 text-primary'
-                : item.label === 'Upload'
-                  ? 'bg-primary text-background-dark shadow-lg shadow-primary/20'
-                  : 'group-hover:bg-white/5'
+                : 'group-hover:bg-white/5'
                 }`}
             >
               <span className={`material-symbols-outlined ${item.filled && itemActive ? 'fill-1' : ''}`}>

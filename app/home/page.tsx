@@ -196,6 +196,16 @@ export default function Home() {
           </div>
         </main>
 
+        {/* Floating Upload Button */}
+        <div className="fixed bottom-20 right-5 z-40">
+          <button
+            onClick={() => router.push('/library/upload')}
+            className="bg-primary text-background-dark h-14 w-14 rounded-full shadow-2xl shadow-primary/30 flex items-center justify-center transition-all active:scale-90 hover:scale-110 hover:rotate-90"
+          >
+            <span className="material-symbols-outlined text-[28px] font-bold">add</span>
+          </button>
+        </div>
+
         <BottomNav />
       </div>
     </div>
