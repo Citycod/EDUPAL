@@ -170,10 +170,8 @@ const ProfilePage: React.FC = () => {
         .from('profiles')
         .update({
           full_name: editForm.full_name,
-          institution_id: editForm.institution_id,
-          department_id: editForm.department_id,
-          level: editForm.level,
           avatar_url: avatarUrl
+          // Academic fields (institution_id, department_id, level) are locked after registration
         })
         .eq('id', user.id);
 
@@ -373,52 +371,68 @@ const ProfilePage: React.FC = () => {
                   <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Digitize Signature</p>
                 </div>
 
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Legal Name</label>
-                  <input
-                    name="full_name"
-                    value={editForm.full_name}
-                    onChange={handleEditChange}
-                    className="w-full bg-slate-100 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-2xl py-4 px-5 focus:outline-none focus:border-primary transition-all font-bold"
-                  />
-                </div>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl mb-2">
+                    <span className="material-symbols-outlined text-amber-500 text-sm">lock</span>
+                    <p className="text-[10px] text-amber-500 font-bold uppercase tracking-wider">Academic details are permanent</p>
+                  </div>
 
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Institution</label>
-                  <select
-                    name="institution_id"
-                    value={editForm.institution_id}
-                    onChange={handleEditChange}
-                    className="w-full bg-slate-100 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-2xl py-4 px-5 focus:outline-none focus:border-primary transition-all font-bold"
-                  >
-                    <option value="">Select Institution</option>
-                    {institutions.map(inst => <option key={inst.id} value={inst.id}>{inst.name}</option>)}
-                  </select>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Dept</label>
-                    <select
-                      name="department_id"
-                      value={editForm.department_id}
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Legal Name</label>
+                    <input
+                      name="full_name"
+                      value={editForm.full_name}
                       onChange={handleEditChange}
-                      className="w-full bg-slate-100 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-2xl py-4 px-3 text-sm focus:outline-none focus:border-primary transition-all font-bold"
+                      className="w-full bg-slate-100 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-2xl py-4 px-5 focus:outline-none focus:border-primary transition-all font-bold"
+                    />
+                  </div>
+
+                  <div className="space-y-2 opacity-60">
+                    <div className="flex items-center justify-between">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Institution</label>
+                      <span className="material-symbols-outlined text-xs">lock</span>
+                    </div>
+                    <select
+                      name="institution_id"
+                      value={editForm.institution_id}
+                      disabled
+                      className="w-full bg-slate-100 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-2xl py-4 px-5 font-bold cursor-not-allowed"
                     >
-                      <option value="">Select</option>
-                      {departments.map(dept => <option key={dept.id} value={dept.id}>{dept.name}</option>)}
+                      <option value="">Select Institution</option>
+                      {institutions.map(inst => <option key={inst.id} value={inst.id}>{inst.name}</option>)}
                     </select>
                   </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Level</label>
-                    <select
-                      name="level"
-                      value={editForm.level}
-                      onChange={handleEditChange}
-                      className="w-full bg-slate-100 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-2xl py-4 px-3 text-sm focus:outline-none focus:border-primary transition-all font-bold"
-                    >
-                      {['100', '200', '300', '400', '500'].map(lvl => <option key={lvl} value={lvl}>{lvl}L</option>)}
-                    </select>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2 opacity-60">
+                      <div className="flex items-center justify-between">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Dept</label>
+                        <span className="material-symbols-outlined text-xs">lock</span>
+                      </div>
+                      <select
+                        name="department_id"
+                        value={editForm.department_id}
+                        disabled
+                        className="w-full bg-slate-100 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-2xl py-4 px-3 text-sm font-bold cursor-not-allowed"
+                      >
+                        <option value="">Select</option>
+                        {departments.map(dept => <option key={dept.id} value={dept.id}>{dept.name}</option>)}
+                      </select>
+                    </div>
+                    <div className="space-y-2 opacity-60">
+                      <div className="flex items-center justify-between">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Level</label>
+                        <span className="material-symbols-outlined text-xs">lock</span>
+                      </div>
+                      <select
+                        name="level"
+                        value={editForm.level}
+                        disabled
+                        className="w-full bg-slate-100 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-2xl py-4 px-3 text-sm font-bold cursor-not-allowed"
+                      >
+                        {['100', '200', '300', '400', '500'].map(lvl => <option key={lvl} value={lvl}>{lvl}L</option>)}
+                      </select>
+                    </div>
                   </div>
                 </div>
 

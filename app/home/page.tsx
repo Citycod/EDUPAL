@@ -10,8 +10,9 @@ export default function Home() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-
   const { institution, loading: contextLoading } = useInstitutionContext();
+  const [recentResources, setRecentResources] = useState<any[]>([]);
+  const [trendingResources, setTrendingResources] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -26,6 +27,34 @@ export default function Home() {
             .single();
 
           setUser(profile);
+
+          if (profile?.institution_id) {
+            // Fetch Recent Resources
+            const { data: recent } = await supabase
+              .from('hub_resources')
+              .select(`
+                *,
+                hub_courses (course_code, title)
+              `)
+              .eq('institution_id', profile.institution_id)
+              .order('created_at', { ascending: false })
+              .limit(4);
+
+            if (recent) setRecentResources(recent);
+
+            // Fetch Trending (Most Upvoted)
+            const { data: trending } = await supabase
+              .from('hub_resources')
+              .select(`
+                *,
+                hub_courses (course_code, title)
+              `)
+              .eq('institution_id', profile.institution_id)
+              .order('upvotes_count', { ascending: false })
+              .limit(3);
+
+            if (trending) setTrendingResources(trending);
+          }
         }
       } catch (error) {
         console.error('Error fetching home data:', error);
@@ -38,23 +67,30 @@ export default function Home() {
   }, []);
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center bg-background-light dark:bg-background-dark text-slate-500">Loading...</div>;
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background-light dark:bg-background-dark gap-4">
+        <div className="w-12 h-12 rounded-full border-4 border-primary border-t-transparent animate-spin"></div>
+        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Initializing Archive</p>
+      </div>
+    );
   }
 
   return (
     <div className="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-white min-h-[100dvh]">
       <div className="relative flex h-auto min-h-[100dvh] w-full flex-col overflow-x-hidden pb-20">
         {/* Top Header */}
-        <nav className="flex items-center bg-background-light dark:bg-background-dark p-4 justify-between sticky top-0 z-50 border-b border-white/5">
+        <nav className="flex items-center bg-background-light dark:bg-background-dark p-4 justify-between sticky top-0 z-50 border-b border-white/5 backdrop-blur-md">
           <div className="flex shrink-0 items-center">
             <div
-              className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border-2 border-primary cursor-pointer"
+              className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border-2 border-primary cursor-pointer shadow-lg shadow-primary/20"
               style={{ backgroundImage: `url("${user?.avatar_url || 'https://ui-avatars.com/api/?name=Student&background=random'}")` }}
               onClick={() => router.push('/profile')}
             />
           </div>
-          <div className="flex-1 px-4">
-            <h2 className="text-slate-900 dark:text-white text-xl font-bold leading-tight tracking-tighter">EduPal</h2>
+          <div className="flex-1 px-4 text-center">
+            <h2 className="text-slate-900 dark:text-white text-xl font-black tracking-tighter italic uppercase">
+              Edu<span className="text-primary font-serif">Pal</span>
+            </h2>
           </div>
           <div className="flex items-center gap-2">
             <button className="flex items-center justify-center rounded-full h-10 w-10 bg-primary/10 text-primary transition-colors hover:bg-primary/20">
@@ -119,28 +155,46 @@ export default function Home() {
                   <div className="p-2 bg-primary/10 rounded-lg">
                     <span className="material-symbols-outlined text-primary">history</span>
                   </div>
-                  <h2 className="text-slate-900 dark:text-white text-2xl font-black tracking-tight">Recently Accessed</h2>
+                  <h2 className="text-slate-900 dark:text-white text-2xl font-black tracking-tight">Recently Added</h2>
                 </div>
-                <button className="text-primary text-sm font-bold hover:underline">View All Archive</button>
+                <button onClick={() => router.push('/library')} className="text-primary text-sm font-bold hover:underline">View All Archive</button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
-                {[
-                  { code: 'CSC421', title: 'Net-Centric Computing', session: '2023/2024', size: '15.2 MB' },
-                  { code: 'MTH101', title: 'General Mathematics I', session: '2022/2023', size: '8.4 MB' }
-                ].map((item, idx) => (
-                  <div key={idx} className="p-5 bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-white/5 rounded-2xl flex items-center gap-5 cursor-pointer hover:border-primary/50 hover:bg-slate-50 dark:hover:bg-white/5 transition-all group shadow-sm">
-                    <div className="w-14 h-14 bg-primary/10 rounded-xl flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
-                      <span className="material-symbols-outlined text-3xl">description</span>
+              {recentResources.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
+                  {recentResources.map((res, idx) => (
+                    <div
+                      key={res.id}
+                      onClick={() => router.push(`/resource?id=${res.id}`)}
+                      className="p-5 bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-white/5 rounded-2xl flex items-center gap-5 cursor-pointer hover:border-primary/50 hover:bg-slate-50 dark:hover:bg-white/5 transition-all group shadow-sm"
+                    >
+                      <div className="w-14 h-14 bg-primary/10 rounded-xl flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                        <span className="material-symbols-outlined text-3xl">description</span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-bold truncate text-slate-900 dark:text-white text-lg">
+                          {(res.hub_courses?.course_code || 'CODE')} - {(res.hub_courses?.title || res.title)}
+                        </h3>
+                        <p className="text-xs text-primary font-black uppercase tracking-widest mt-1">
+                          {res.type || 'Material'} • {res.file_size || '0 MB'}
+                        </p>
+                      </div>
+                      <span className="material-symbols-outlined text-slate-300 group-hover:text-primary transition-colors">download</span>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-bold truncate text-slate-900 dark:text-white text-lg">{item.code} - {item.title}</h3>
-                      <p className="text-xs text-primary font-black uppercase tracking-widest mt-1">{item.session} Session • {item.size}</p>
-                    </div>
-                    <span className="material-symbols-outlined text-slate-300 group-hover:text-primary transition-colors">download</span>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="py-12 flex flex-col items-center justify-center border-2 border-dashed border-slate-200 dark:border-white/5 rounded-3xl">
+                  <span className="material-symbols-outlined text-4xl text-slate-300 mb-4 opacity-50">auto_stories</span>
+                  <p className="text-slate-400 font-medium text-sm">No course materials found for your department yet.</p>
+                  <button
+                    onClick={() => router.push('/library/upload')}
+                    className="mt-4 text-primary text-xs font-black uppercase tracking-widest border border-primary/20 px-4 py-2 rounded-lg hover:bg-primary/5"
+                  >
+                    Be the first to upload
+                  </button>
+                </div>
+              )}
             </section>
 
             {/* Supply Engine / Contributor CTA */}
@@ -173,25 +227,33 @@ export default function Home() {
                 </div>
                 <h2 className="text-slate-900 dark:text-white text-2xl font-black tracking-tight">Top Downloaded This Week</h2>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-left">
-                {[
-                  { code: 'CSC302', title: 'Data Structures', dl: 184 },
-                  { code: 'GST111', title: 'Communication in English', dl: 245 },
-                  { code: 'PHY101', title: 'General Physics I', dl: 156 }
-                ].map((item, i) => (
-                  <div key={i} className="bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-white/5 rounded-2xl p-6 relative overflow-hidden group hover:border-primary transition-all shadow-sm">
-                    <span className="absolute top-4 right-4 text-4xl font-black text-primary/5 group-hover:text-primary/10">0{i + 1}</span>
-                    <p className="text-slate-400 font-bold text-xs uppercase tracking-widest mb-2">{item.code}</p>
-                    <h4 className="text-slate-900 dark:text-white font-bold mb-4 leading-tight">{item.title}</h4>
-                    <div className="flex items-center justify-between">
-                      <span className="text-primary font-black text-sm">{item.dl} Downloads</span>
-                      <button className="h-8 w-8 rounded-lg bg-slate-100 dark:bg-white/5 flex items-center justify-center text-slate-400 group-hover:bg-primary group-hover:text-background-dark transition-all">
-                        <span className="material-symbols-outlined text-sm">download</span>
-                      </button>
+
+              {trendingResources.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-left">
+                  {trendingResources.map((item, i) => (
+                    <div
+                      key={item.id}
+                      onClick={() => router.push(`/resource?id=${item.id}`)}
+                      className="bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-white/5 rounded-2xl p-6 relative overflow-hidden group hover:border-primary transition-all shadow-sm cursor-pointer"
+                    >
+                      <span className="absolute top-4 right-4 text-4xl font-black text-primary/5 group-hover:text-primary/10">0{i + 1}</span>
+                      <p className="text-slate-400 font-bold text-xs uppercase tracking-widest mb-2">{item.hub_courses?.course_code || 'CODE'}</p>
+                      <h4 className="text-slate-900 dark:text-white font-bold mb-4 leading-tight truncate">{item.hub_courses?.title || item.title}</h4>
+                      <div className="flex items-center justify-between">
+                        <span className="text-primary font-black text-sm">{item.downloads_count || 0} Downloads</span>
+                        <button className="h-8 w-8 rounded-lg bg-slate-100 dark:bg-white/5 flex items-center justify-center text-slate-400 group-hover:bg-primary group-hover:text-background-dark transition-all">
+                          <span className="material-symbols-outlined text-sm">download</span>
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="py-12 flex flex-col items-center justify-center bg-white/5 dark:bg-white/5 rounded-3xl border border-slate-200 dark:border-white/5">
+                  <span className="material-symbols-outlined text-4xl text-slate-300 mb-4 opacity-50">star_outline</span>
+                  <p className="text-slate-400 text-sm font-medium">Trending resources will appear here.</p>
+                </div>
+              )}
             </section>
           </div>
         </main>
