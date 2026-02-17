@@ -61,6 +61,7 @@ const ResourceDetail: React.FC = () => {
         if (data) {
           setResource({
             id: data.id,
+            courseId: data.course_id,
             courseCode: data.course_code || 'N/A',
             courseTitle: data.course_title || data.title,
             department: 'Department Faculty', // Derived metadata from bridge
@@ -332,17 +333,27 @@ const ResourceDetail: React.FC = () => {
           </div>
         </div>
 
-        {/* Download Action Area */}
-        <div className="px-4 py-4 flex gap-4">
+        {/* Action Area */}
+        <div className="px-4 py-4 flex flex-col gap-4">
+          <div className="flex gap-4">
+            <button
+              onClick={handleDownload}
+              className="flex-1 bg-primary text-background-dark h-16 rounded-[2rem] flex items-center justify-center gap-3 shadow-2xl shadow-primary/30 transition-all hover:scale-[1.02] active:scale-[0.98]"
+            >
+              <span className="material-symbols-outlined font-black">download</span>
+              <span className="text-xs font-black uppercase tracking-[0.2em]">Authorize Access</span>
+            </button>
+            <button className="size-16 rounded-[2rem] bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-500 transition-all hover:border-primary/30">
+              <span className="material-symbols-outlined">bookmark</span>
+            </button>
+          </div>
+
           <button
-            onClick={handleDownload}
-            className="flex-1 bg-primary text-background-dark h-16 rounded-[2rem] flex items-center justify-center gap-3 shadow-2xl shadow-primary/30 transition-all hover:scale-[1.02] active:scale-[0.98]"
+            onClick={() => router.push(`/community?board=${resource.courseId}&resource=${resource.id}`)}
+            className="w-full h-14 bg-white dark:bg-slate-900 border-2 border-primary/20 hover:border-primary/50 text-slate-900 dark:text-white rounded-[2rem] flex items-center justify-center gap-3 transition-all active:scale-95"
           >
-            <span className="material-symbols-outlined font-black">download</span>
-            <span className="text-xs font-black uppercase tracking-[0.2em]">Authorize Access</span>
-          </button>
-          <button className="size-16 rounded-[2rem] bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-500 transition-all hover:border-primary/30">
-            <span className="material-symbols-outlined">bookmark</span>
+            <span className="material-symbols-outlined text-primary">forum</span>
+            <span className="text-[10px] font-black uppercase tracking-[0.2em]">Discuss in Community</span>
           </button>
         </div>
 

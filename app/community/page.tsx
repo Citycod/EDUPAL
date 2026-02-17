@@ -29,6 +29,8 @@ interface Post {
   created_at: string;
   replies_count: number;
   course_code?: string;
+  resource_id?: string;
+  resource_title?: string;
 }
 
 interface Comment {
@@ -70,6 +72,10 @@ const CommunityContent: React.FC = () => {
   const [newReplyContent, setNewReplyContent] = useState('');
   const [isPosting, setIsPosting] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Linked Resource (from query param)
+  const linkedResourceId = searchParams.get('resource');
+  const [linkedResourceInfo, setLinkedResourceInfo] = useState<any>(null);
 
   // Top contributors (for badges)
   const [topContributorIds, setTopContributorIds] = useState<Set<string>>(new Set());
@@ -113,6 +119,16 @@ const CommunityContent: React.FC = () => {
             if (topData) {
               setTopContributorIds(new Set(topData.map((t: any) => t.user_id)));
             }
+          }
+
+          // Fetch linked resource info if parameter exists
+          if (linkedResourceId) {
+            const { data: resInfo } = await supabase
+              .from('hub_resources')
+              .select('id, title, course_code')
+              .eq('id', linkedResourceId)
+              .single();
+            if (resInfo) setLinkedResourceInfo(resInfo);
           }
         }
       } catch (error) {
@@ -166,7 +182,9 @@ const CommunityContent: React.FC = () => {
         author_avatar: post.profiles?.avatar_url || `https://ui-avatars.com/api/?name=User&background=random`,
         created_at: post.created_at,
         replies_count: replyCounts[post.id] || 0,
-        course_code: post.hub_courses?.course_code
+        course_code: post.hub_courses?.course_code,
+        resource_id: post.resource_id,
+        resource_title: post.resource_title
       }));
 
       setPosts(formattedPosts);
@@ -257,10 +275,20 @@ const CommunityContent: React.FC = () => {
     try {
       const { error } = await supabase
         .from('hub_posts')
-        .insert({ content: newPostContent, author_id: currentUserId, course_id: selectedCourseId });
+        .insert({
+          content: newPostContent,
+          author_id: currentUserId,
+          course_id: selectedCourseId,
+          resource_id: linkedResourceId // Use from URL if present
+        });
 
       if (error) throw error;
       setNewPostContent('');
+      // Redirect to clear resource param after posting if desired, or just refresh
+      if (linkedResourceId) {
+        router.replace(`/community?board=${selectedCourseId}`);
+        setLinkedResourceInfo(null);
+      }
       fetchPosts();
     } catch (error: any) {
       console.error('Error creating post:', error);
@@ -351,8 +379,8 @@ const CommunityContent: React.FC = () => {
                 key={course.id}
                 onClick={() => { setSelectedCourseId(course.id); setExpandedPostId(null); }}
                 className={`flex h-10 shrink-0 items-center justify-center gap-x-2 rounded-xl px-5 font-black text-xs transition-all border uppercase tracking-widest ${selectedCourseId === course.id
-                    ? 'bg-primary border-primary text-background-dark shadow-lg shadow-primary/20 scale-105'
-                    : 'bg-white dark:bg-white/5 border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:border-primary/50'
+                  ? 'bg-primary border-primary text-background-dark shadow-lg shadow-primary/20 scale-105'
+                  : 'bg-white dark:bg-white/5 border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:border-primary/50'
                   }`}
               >
                 {course.course_code}
@@ -410,6 +438,25 @@ const CommunityContent: React.FC = () => {
                         <span>{isExpanded ? 'Collapse' : 'View thread'}</span>
                       </div>
                     </div>
+
+                    {post.resource_id && (
+                      <div className="mt-3 p-3 bg-slate-50 dark:bg-white/5 rounded-xl border border-slate-100 dark:border-white/5 flex items-center gap-2 group/res">
+                        <span className="material-symbols-outlined text-xs text-primary">description</span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[10px] font-black uppercase text-slate-400 leading-none mb-1">Discussing Material</p>
+                          <p className="text-[11px] font-bold text-slate-600 dark:text-slate-300 truncate tracking-tight">{post.resource_title}</p>
+                        </div>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            router.push(`/resource?id=${post.resource_id}`);
+                          }}
+                          className="px-3 py-1 bg-primary/10 text-primary text-[9px] font-black uppercase tracking-widest rounded-lg hover:bg-primary transition-all hover:text-background-dark"
+                        >
+                          View File
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -453,8 +500,8 @@ const CommunityContent: React.FC = () => {
                                 <button
                                   onClick={(e) => { e.stopPropagation(); handleCommentVote(comment.id, !!comment.user_has_voted); }}
                                   className={`flex items-center gap-1 mt-1.5 text-xs font-medium transition-all ${comment.user_has_voted
-                                      ? 'text-primary'
-                                      : 'text-slate-400 hover:text-primary'
+                                    ? 'text-primary'
+                                    : 'text-slate-400 hover:text-primary'
                                     }`}
                                 >
                                   <span className="material-symbols-outlined text-sm">{comment.user_has_voted ? 'thumb_up' : 'thumb_up_off_alt'}</span>
@@ -506,6 +553,24 @@ const CommunityContent: React.FC = () => {
 
         {/* Post Composer (Fixed Bottom) */}
         <div className="fixed bottom-[56px] md:bottom-0 left-0 right-0 z-20 p-3 bg-background-light dark:bg-background-dark border-t border-slate-200 dark:border-slate-800 max-w-3xl mx-auto">
+          {linkedResourceInfo && (
+            <div className="mb-2 px-3 py-2 bg-primary/10 border border-primary/20 rounded-xl flex items-center justify-between animate-in slide-in-from-bottom-2">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-primary text-sm">link</span>
+                <p className="text-[10px] font-bold text-primary uppercase tracking-widest">
+                  Linking to: {linkedResourceInfo.course_code} - {linkedResourceInfo.title}
+                </p>
+              </div>
+              <button onClick={() => {
+                setLinkedResourceInfo(null);
+                const params = new URLSearchParams(searchParams.toString());
+                params.delete('resource');
+                router.replace(`/community?${params.toString()}`);
+              }}>
+                <span className="material-symbols-outlined text-slate-400 text-sm hover:text-red-500">close</span>
+              </button>
+            </div>
+          )}
           <div className="flex items-end gap-2.5 bg-slate-100 dark:bg-white/5 rounded-xl p-3 focus-within:ring-2 focus-within:ring-primary/50 transition-all shadow-sm border border-slate-200 dark:border-white/10">
             <div className="shrink-0 pb-0.5">
               <div className="h-8 w-8 rounded-full overflow-hidden border-2 border-primary">
