@@ -48,16 +48,14 @@ export default function Verification() {
             <div className="w-full max-w-md bg-white dark:bg-[#102217] border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl overflow-hidden">
                 {/* Header / Logo Area */}
                 <div className="flex flex-col items-center justify-center p-8 pb-0">
-                    <div className="w-20 h-20 bg-[#0d191c] rounded-2xl flex items-center justify-center border border-primary/30 shadow-lg shadow-primary/10 mb-6">
-                        <Image
-                            src={EduPalLogo}
-                            alt="EduPal Logo"
-                            width={48}
-                            height={48}
-                            className="w-12 h-12 object-contain"
-                            priority
-                        />
-                    </div>
+                    <Image
+                        src={EduPalLogo}
+                        alt="EduPal Logo"
+                        width={280}
+                        height={280}
+                        className="w-60 h-60 object-contain brightness-125 drop-shadow-[0_0_25px_rgba(19,236,106,0.4)] mb-6"
+                        priority
+                    />
                     <h2 className="text-[#0d191c] dark:text-white tracking-tight text-2xl font-bold leading-tight text-center">
                         Verify your email
                     </h2>

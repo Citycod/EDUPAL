@@ -108,9 +108,7 @@ export default function SignUp() {
                             <span className="material-symbols-outlined">arrow_back</span>
                         </button>
                         <div className="flex-1 flex items-center justify-center pr-10 gap-3">
-                            <div className="w-8 h-8 bg-[#0d191c] rounded-lg flex items-center justify-center border border-primary/20 p-1 shadow-lg">
-                                <Image src={EduPalLogo} alt="EduPal Logo" width={24} height={24} className="w-full h-full object-contain" />
-                            </div>
+                            <Image src={EduPalLogo} alt="EduPal Logo" width={80} height={80} className="w-16 h-16 object-contain brightness-125 drop-shadow-[0_0_10px_rgba(19,236,106,0.6)]" />
                             <h2 className="text-white text-lg font-medium leading-tight tracking-[-0.015em]">
                                 Create Account
                             </h2>
@@ -119,9 +117,7 @@ export default function SignUp() {
 
                     <div className="px-8 pt-8 pb-4 text-center">
                         <div className="mb-6 flex justify-center">
-                            <div className="w-24 h-24 bg-[#0d191c] rounded-[1.75rem] flex items-center justify-center border border-primary/30 overflow-hidden shadow-xl shadow-black/30">
-                                <Image src={EduPalLogo} alt="EduPal Logo" width={72} height={72} className="w-16 h-16 object-contain drop-shadow-[0_0_8px_rgba(76,175,80,0.3)]" />
-                            </div>
+                            <Image src={EduPalLogo} alt="EduPal Logo" width={280} height={280} className="w-64 h-64 object-contain brightness-125 drop-shadow-[0_0_30px_rgba(19,236,106,0.4)]" />
                         </div>
                         <h1 className="text-white tracking-tight text-3xl font-bold leading-tight">Join EduPal</h1>
                         <p className="text-white/60 text-base font-normal leading-normal mt-2 px-10">

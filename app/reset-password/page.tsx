@@ -110,9 +110,7 @@ export default function ResetPassword() {
                 </button>
 
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-[#0d191c] rounded-xl flex items-center justify-center border border-primary/20 p-1.5 shadow-lg shadow-black/20">
-                        <Image src={EduPalLogo} alt="EduPal Logo" width={32} height={32} className="w-full h-full object-contain" />
-                    </div>
+                    <Image src={EduPalLogo} alt="EduPal Logo" width={120} height={120} className="w-20 h-20 object-contain brightness-125 drop-shadow-[0_0_10px_rgba(19,236,106,0.6)]" />
                     <h2 className="text-slate-900 dark:text-white text-lg font-bold tracking-tight">EduPal</h2>
                 </div>
 
@@ -121,9 +119,7 @@ export default function ResetPassword() {
 
             <div className="flex-1 px-4 py-8 max-w-md mx-auto w-full">
                 <div className="text-center mb-10">
-                    <div className="w-28 h-28 bg-[#0d191c] rounded-[2rem] flex items-center justify-center border border-primary/40 overflow-hidden shadow-2xl shadow-black/40 mx-auto mb-6">
-                        <Image src={EduPalLogo} alt="EduPal Logo" width={80} height={80} className="w-20 h-20 object-contain drop-shadow-[0_0_12px_rgba(76,175,80,0.4)]" />
-                    </div>
+                    <Image src={EduPalLogo} alt="EduPal Logo" width={320} height={320} className="w-72 h-72 object-contain brightness-125 drop-shadow-[0_0_30px_rgba(19,236,106,0.4)] mx-auto mb-6" />
                     <h3 className="text-slate-900 dark:text-white tracking-tight text-3xl font-bold leading-tight px-4">
                         {step === 'request' ? 'Reset Password' : 'New Password'}
                     </h3>
