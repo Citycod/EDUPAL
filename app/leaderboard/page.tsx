@@ -33,9 +33,9 @@ const LeaderboardPage: React.FC = () => {
 
                 if (!institution?.id) return;
 
-                // Query contributor_scores view filtered by institution
+                // Query hub_contributor_scores view filtered by institution
                 const { data, error } = await supabase
-                    .from('contributor_scores')
+                    .from('hub_contributor_scores')
                     .select('*')
                     .eq('institution_id', institution.id)
                     .order('score', { ascending: false })
@@ -115,8 +115,8 @@ const LeaderboardPage: React.FC = () => {
                                     key={f.key}
                                     onClick={() => setTimeFilter(f.key as any)}
                                     className={`px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border ${timeFilter === f.key
-                                            ? 'bg-primary text-background-dark border-primary shadow-lg shadow-primary/20 scale-105'
-                                            : 'bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-400 hover:border-primary/50'
+                                        ? 'bg-primary text-background-dark border-primary shadow-lg shadow-primary/20 scale-105'
+                                        : 'bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-400 hover:border-primary/50'
                                         }`}
                                 >
                                     {f.label}

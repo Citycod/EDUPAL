@@ -55,8 +55,8 @@ const LibraryPage = () => {
                     const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
                     setUserProfile(profile);
 
-                    // Fetch user's votes
-                    const { data: votes } = await supabase.from('resource_votes').select('resource_id').eq('user_id', user.id);
+                    // Fetch user's votes via bridge
+                    const { data: votes } = await supabase.from('hub_resource_votes').select('resource_id').eq('user_id', user.id);
                     if (votes) {
                         setUserVotes(new Set(votes.map(v => v.resource_id)));
                     }
@@ -133,8 +133,8 @@ const LibraryPage = () => {
         const isUpvoted = userVotes.has(resourceId);
 
         if (isUpvoted) {
-            // Remove vote
-            const { error } = await supabase.from('resource_votes').delete().eq('user_id', user.id).eq('resource_id', resourceId);
+            // Remove vote via bridge
+            const { error } = await supabase.from('hub_resource_votes').delete().eq('user_id', user.id).eq('resource_id', resourceId);
             if (!error) {
                 setUserVotes(prev => {
                     const next = new Set(prev);
@@ -144,8 +144,8 @@ const LibraryPage = () => {
                 setResources(prev => prev.map(r => r.id === resourceId ? { ...r, upvotes_count: r.upvotes_count - 1 } : r));
             }
         } else {
-            // Add vote
-            const { error } = await supabase.from('resource_votes').insert({ user_id: user.id, resource_id: resourceId });
+            // Add vote via bridge
+            const { error } = await supabase.from('hub_resource_votes').insert({ user_id: user.id, resource_id: resourceId });
             if (!error) {
                 setUserVotes(prev => new Set([...prev, resourceId]));
                 setResources(prev => prev.map(r => r.id === resourceId ? { ...r, upvotes_count: r.upvotes_count + 1 } : r));
@@ -160,7 +160,7 @@ const LibraryPage = () => {
         const reason = prompt("Why are you reporting this resource? (e.g. Inappropriate, Spam, Wrong Course)");
         if (!reason) return;
 
-        const { error } = await supabase.from('resource_reports').insert({
+        const { error } = await supabase.from('hub_resource_reports').insert({
             reporter_id: user.id,
             resource_id: resourceId,
             reason: reason,
