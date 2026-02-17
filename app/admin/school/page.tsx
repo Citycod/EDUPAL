@@ -139,7 +139,7 @@ const SchoolAdminDashboard = () => {
     // Handlers
     const toggleVerify = async (id: string, currentStatus: boolean) => {
         const { error } = await supabase
-            .from('resources')
+            .from('hub_resources')
             .update({ is_verified: !currentStatus })
             .eq('id', id);
 
@@ -152,7 +152,7 @@ const SchoolAdminDashboard = () => {
 
         const finalId = showDeleteModal || showDetailsModal.id;
 
-        const { error } = await supabase.from('resources').delete().eq('id', finalId);
+        const { error } = await supabase.from('hub_resources').delete().eq('id', finalId);
         if (error) alert("Delete failed");
         setShowDeleteModal(null);
         setShowDetailsModal(null);
