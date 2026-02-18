@@ -108,9 +108,9 @@ const CommunityContent: React.FC = () => {
               else if (courseData.length > 0) setSelectedCourseId(courseData[0].id);
             }
 
-            // Fetch top 10 contributors for badge display
+            // Fetch top 10 contributors for badge display via bridge
             const { data: topData } = await supabase
-              .from('contributor_scores')
+              .from('hub_contributor_scores')
               .select('user_id')
               .eq('institution_id', institution.id)
               .order('score', { ascending: false })
@@ -128,7 +128,11 @@ const CommunityContent: React.FC = () => {
               .select('id, title, course_code')
               .eq('id', linkedResourceId)
               .single();
-            if (resInfo) setLinkedResourceInfo(resInfo);
+            if (resInfo) {
+              setLinkedResourceInfo(resInfo);
+              // Pre-populate composer with title suggestion
+              setNewPostContent(`Discussion: ${resInfo.title}\n\n`);
+            }
           }
         }
       } catch (error) {
@@ -228,7 +232,7 @@ const CommunityContent: React.FC = () => {
       if (currentUserId && data && data.length > 0) {
         const commentIds = data.map((c: any) => c.id);
         const { data: votes } = await supabase
-          .from('comment_votes')
+          .from('hub_comment_votes')
           .select('comment_id')
           .eq('user_id', currentUserId)
           .in('comment_id', commentIds);
@@ -325,11 +329,20 @@ const CommunityContent: React.FC = () => {
     if (!currentUserId) return;
     try {
       if (hasVoted) {
-        await supabase.from('comment_votes').delete().eq('user_id', currentUserId).eq('comment_id', commentId);
+        // Remove vote via bridge
+        const { error } = await supabase
+          .from('hub_comment_votes')
+          .delete()
+          .eq('user_id', currentUserId)
+          .eq('comment_id', commentId);
+        if (error) throw error;
       } else {
-        await supabase.from('comment_votes').insert({ user_id: currentUserId, comment_id: commentId });
+        // Add vote via bridge
+        const { error } = await supabase
+          .from('hub_comment_votes')
+          .insert({ user_id: currentUserId, comment_id: commentId });
+        if (error) throw error;
       }
-      // Refresh comments
       if (expandedPostId) fetchComments(expandedPostId);
     } catch (error) {
       console.error('Error voting on comment:', error);
@@ -449,9 +462,9 @@ const CommunityContent: React.FC = () => {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            router.push(`/resource?id=${post.resource_id}`);
+                            router.push(`/resource/${post.resource_id}`);
                           }}
-                          className="px-3 py-1 bg-primary/10 text-primary text-[9px] font-black uppercase tracking-widest rounded-lg hover:bg-primary transition-all hover:text-background-dark"
+                          className="px-3 py-1 bg-primary/20 text-primary text-[9px] font-black uppercase tracking-widest rounded-lg hover:bg-primary transition-all hover:text-background-dark shadow-sm border border-primary/20"
                         >
                           View File
                         </button>
@@ -558,7 +571,7 @@ const CommunityContent: React.FC = () => {
               <div className="flex items-center gap-2">
                 <span className="material-symbols-outlined text-primary text-sm">link</span>
                 <p className="text-[10px] font-bold text-primary uppercase tracking-widest">
-                  Linking to: {linkedResourceInfo.course_code} - {linkedResourceInfo.title}
+                  Creating Resource Thread: {linkedResourceInfo.course_code} - {linkedResourceInfo.title}
                 </p>
               </div>
               <button onClick={() => {

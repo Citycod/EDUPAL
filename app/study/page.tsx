@@ -32,7 +32,7 @@ const StudyResources: React.FC = () => {
         const institutionId = await getUserInstitutionId();
 
         let query = supabase
-          .from('resources')
+          .from('hub_resources')
           .select('*')
           .order('created_at', { ascending: false });
 
@@ -111,14 +111,14 @@ const StudyResources: React.FC = () => {
         return;
       }
 
-      // Get user's profile to get department_id and institution_id
+      // Get user's profile via bridge
       const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('department_id, institution_id_permanent')
+        .from('hub_profiles')
+        .select('department_id, institution_id')
         .eq('id', user.id)
         .single();
 
-      if (profileError || !profile?.department_id || !profile?.institution_id_permanent) {
+      if (profileError || !profile?.department_id || !profile?.institution_id) {
         alert('Please complete your profile with department and institution information first');
         return;
       }
@@ -140,14 +140,14 @@ const StudyResources: React.FC = () => {
       if (existingCourse) {
         courseId = existingCourse.id;
       } else {
-        // Create new course with institution_id auto-injected
+        // Create new course via bridge
         const { data: newCourse, error: courseCreateError } = await supabase
-          .from('academic.courses')
+          .from('hub_courses')
           .insert({
             title: uploadData.courseTitle,
             course_code: uploadData.courseCode,
             department_id: profile.department_id,
-            institution_id: profile.institution_id_permanent  // Auto-inject institution
+            institution_id: profile.institution_id
           })
           .select('id')
           .single();
@@ -186,9 +186,9 @@ const StudyResources: React.FC = () => {
         .from('study-materials')
         .getPublicUrl(filePath);
 
-      // Create resource record with institution_id auto-injected
+      // Create resource record via bridge
       const { error: resourceError } = await supabase
-        .from('academic.resources')
+        .from('hub_resources')
         .insert({
           title: uploadData.title,
           description: uploadData.description,
@@ -197,7 +197,7 @@ const StudyResources: React.FC = () => {
           uploader_id: user.id,
           file_url: publicUrl,
           file_size: `${(uploadData.file.size / 1024 / 1024).toFixed(2)} MB`,
-          institution_id: profile.institution_id_permanent  // Auto-inject institution
+          institution_id: profile.institution_id
         });
 
       if (resourceError) {
@@ -212,7 +212,7 @@ const StudyResources: React.FC = () => {
 
       // Refresh the resources list
       const { data, error } = await supabase
-        .from('resources')
+        .from('hub_resources')
         .select('*')
         .order('created_at', { ascending: false });
 

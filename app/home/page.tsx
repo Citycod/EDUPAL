@@ -165,7 +165,7 @@ export default function Home() {
                   {recentResources.map((res, idx) => (
                     <div
                       key={res.id}
-                      onClick={() => router.push(`/resource?id=${res.id}`)}
+                      onClick={() => router.push(`/resource/${res.id}`)}
                       className="p-5 bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-white/5 rounded-2xl flex items-center gap-5 cursor-pointer hover:border-primary/50 hover:bg-slate-50 dark:hover:bg-white/5 transition-all group shadow-sm"
                     >
                       <div className="w-14 h-14 bg-primary/10 rounded-xl flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
@@ -233,7 +233,7 @@ export default function Home() {
                   {trendingResources.map((item, i) => (
                     <div
                       key={item.id}
-                      onClick={() => router.push(`/resource?id=${item.id}`)}
+                      onClick={() => router.push(`/resource/${item.id}`)}
                       className="bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-white/5 rounded-2xl p-6 relative overflow-hidden group hover:border-primary transition-all shadow-sm cursor-pointer"
                     >
                       <span className="absolute top-4 right-4 text-4xl font-black text-primary/5 group-hover:text-primary/10">0{i + 1}</span>

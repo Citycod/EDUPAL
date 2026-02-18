@@ -52,13 +52,27 @@ const LibraryPage = () => {
                 // 1. Fetch User Profile
                 const { data: { user } } = await supabase.auth.getUser();
                 if (user) {
-                    const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+                    const { data: profile } = await supabase.from('hub_profiles').select('*').eq('id', user.id).single();
                     setUserProfile(profile);
+
+                    // Auto-set context for student
+                    if (profile?.department && !selectedDept) setSelectedDept(profile.department);
+                    if (profile?.level && !selectedLevel) setSelectedLevel(profile.level);
 
                     // Fetch user's votes via bridge
                     const { data: votes } = await supabase.from('hub_resource_votes').select('resource_id').eq('user_id', user.id);
                     if (votes) {
                         setUserVotes(new Set(votes.map(v => v.resource_id)));
+                    }
+
+                    // Proceed with filtered fetch if context available
+                    if (institution?.id) {
+                        fetchResources({
+                            instId: institution.id,
+                            deptId: profile.department || '',
+                            level: profile.level || ''
+                        });
+                        return;
                     }
                 }
 
@@ -102,12 +116,23 @@ const LibraryPage = () => {
     }, [institution?.id]);
 
     const fetchResources = async (filters: { instId?: string, deptId?: string, level?: string, sessionId?: string, type?: string, sort?: 'newest' | 'popular' }) => {
+        // Enforce strict institution scoping
+        const currentInstId = filters.instId || institution?.id;
+        if (!currentInstId) return;
+
         let query = supabase
             .from('hub_resources')
-            .select('*');
+            .select('*')
+            .eq('institution_id', currentInstId);
 
-        if (filters.instId) query = query.eq('institution_id', filters.instId);
-        if (filters.deptId) query = query.eq('department_id', filters.deptId);
+        // Advanced Filtering for Departments (Include General Courses)
+        if (filters.deptId) {
+            // If a specific department is selected, we want that PLUS EDU, GNS, GST
+            // However, PostgREST doesn't support complex OR with AND easily in one go.
+            // We use the 'or' filter for the specific department clauses.
+            query = query.or(`department_id.eq.${filters.deptId},course_code.ilike.EDU%,course_code.ilike.GNS%,course_code.ilike.GST%`);
+        }
+
         if (filters.level) query = query.eq('level', filters.level);
         if (filters.sessionId) query = query.eq('session_id', filters.sessionId);
         if (filters.type) query = query.eq('type', filters.type);
@@ -327,7 +352,7 @@ const LibraryPage = () => {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {filteredResources.map((res) => (
-                            <div key={res.id} className="group relative flex flex-col justify-between overflow-hidden rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 hover:shadow-2xl hover:shadow-primary/10 hover:border-primary/50 transition-all text-left">
+                            <div key={res.id} onClick={() => router.push(`/resource/${res.id}`)} className="group relative flex flex-col justify-between overflow-hidden rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 hover:shadow-2xl hover:shadow-primary/10 hover:border-primary/50 transition-all text-left cursor-pointer">
                                 {/* Verified Badge Top Left */}
                                 {res.is_verified && (
                                     <div className="absolute top-0 right-0 bg-green-500 text-white px-3 py-1 text-[9px] font-black uppercase tracking-tighter rounded-bl-xl flex items-center gap-1 shadow-lg z-10">
@@ -375,14 +400,15 @@ const LibraryPage = () => {
                                         </button>
 
                                         <button
-                                            onClick={() => router.push(res.file_url)}
+                                            onClick={(e) => { e.stopPropagation(); window.open(res.file_url, '_blank'); }}
                                             className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary text-background-dark font-black hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/10"
+                                            title="Download file"
                                         >
                                             <span className="material-symbols-outlined text-[20px]">download</span>
                                         </button>
 
                                         <button
-                                            onClick={() => handleReport(res.id)}
+                                            onClick={(e) => { e.stopPropagation(); handleReport(res.id); }}
                                             className="flex items-center justify-center w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-all border border-transparent hover:border-red-200 dark:hover:border-red-900"
                                             title="Report content"
                                         >

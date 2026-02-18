@@ -41,10 +41,11 @@ interface ResourceData {
 const ResourceDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
-  const [userRating, setUserRating] = useState(0);
-  const [reviewText, setReviewText] = useState('');
   const [resource, setResource] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [userRating, setUserRating] = useState(0);
+  const [reviewText, setReviewText] = useState('');
+  const [isPreviewMode, setIsPreviewMode] = useState(false);
 
   useEffect(() => {
     const fetchResource = async () => {
@@ -59,13 +60,44 @@ const ResourceDetail: React.FC = () => {
         if (error) throw error;
 
         if (data) {
+          // Get public URL for preview
+          let publicUrl = data.file_url;
+          if (publicUrl && !publicUrl.startsWith('http')) {
+            const { data: urlData } = supabase.storage
+              .from('resources')
+              .getPublicUrl(publicUrl);
+            publicUrl = urlData.publicUrl;
+          }
+
+          // Fetch actual department and institution names
+          let departmentName = 'Department';
+          let institutionName = 'Institution';
+          if (data.department_id) {
+            const { data: deptData } = await supabase
+              .from('hub_departments')
+              .select('name, institution_id')
+              .eq('id', data.department_id)
+              .single();
+            if (deptData) {
+              departmentName = deptData.name;
+              if (deptData.institution_id) {
+                const { data: instData } = await supabase
+                  .from('hub_institutions')
+                  .select('name')
+                  .eq('id', deptData.institution_id)
+                  .single();
+                if (instData) institutionName = instData.name;
+              }
+            }
+          }
+
           setResource({
             id: data.id,
             courseId: data.course_id,
             courseCode: data.course_code || 'N/A',
             courseTitle: data.course_title || data.title,
-            department: 'Department Faculty', // Derived metadata from bridge
-            institution: 'Academic Institution', // Derived metadata from bridge
+            department: departmentName,
+            institution: institutionName,
             level: `${data.level}L`,
             session: data.session_name,
             title: data.title,
@@ -74,13 +106,13 @@ const ResourceDetail: React.FC = () => {
             author: data.uploader_name || 'EduPal User',
             authorAvatar: data.uploader_avatar,
             timeAgo: new Date(data.created_at).toLocaleDateString(),
-            rating: 4.8, // Mock high rating for premium feel
+            rating: 4.8,
             downloads: data.downloads_count || 0,
             thumbnail: data.thumbnail_url || 'https://images.unsplash.com/photo-1546410531-bb4caa6b424d?q=80&w=2071&auto=format&fit=crop',
             description: data.description || 'Verified academic material for this course.',
             fileSize: data.file_size || '1.5 MB',
             pages: data.pages || 0,
-            fileUrl: data.file_url
+            fileUrl: publicUrl
           });
         }
       } catch (err) {
@@ -152,26 +184,14 @@ const ResourceDetail: React.FC = () => {
     }
 
     try {
-      // If it's a full URL, open it. If it's a path, get public URL or download
-      let downloadUrl = resource.fileUrl;
-
-      if (!downloadUrl.startsWith('http')) {
-        const { data } = supabase.storage
-          .from('resources')
-          .getPublicUrl(downloadUrl);
-        downloadUrl = data.publicUrl;
-      }
-
-      // Create a temporary link and click it to trigger download
       const link = document.createElement('a');
-      link.href = downloadUrl;
-      link.setAttribute('download', `${resource.title}.pdf`); // Fallback extension
+      link.href = resource.fileUrl;
+      link.setAttribute('download', `${resource.title}.pdf`);
       link.setAttribute('target', '_blank');
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
 
-      // Increment download count in DB via Bridge
       await supabase
         .from('hub_resources')
         .update({ downloads_count: (resource.downloads || 0) + 1 })
@@ -184,7 +204,7 @@ const ResourceDetail: React.FC = () => {
   };
 
   const handleBackClick = () => {
-    router.back(); // Go back to previous page
+    router.back();
   };
 
   const handleNotificationClick = () => {
@@ -216,25 +236,28 @@ const ResourceDetail: React.FC = () => {
 
 
   if (loading) {
-    // ... existing loading view
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-lg">Loading resource...</div>
+      <div className="flex items-center justify-center min-h-screen bg-background-light dark:bg-background-dark">
+        <div className="flex flex-col items-center gap-4">
+          <div className="size-12 rounded-full border-4 border-primary border-t-transparent animate-spin" />
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Decoding Archive...</p>
+        </div>
       </div>
     );
   }
 
   if (!resource) {
-    // ... existing empty view
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-lg">Resource not found</div>
+      <div className="flex items-center justify-center min-h-screen bg-background-light dark:bg-background-dark">
+        <div className="text-lg font-black text-slate-400 uppercase">Archive Entry Missing</div>
       </div>
     );
   }
 
+  const isPdf = resource.fileUrl?.toLowerCase().includes('.pdf');
+
   return (
-    <div className="min-h-screen bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-white transition-colors duration-300">
+    <div className={`min-h-screen bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-white transition-colors duration-300 ${isPreviewMode ? 'overflow-hidden' : ''}`}>
       {/* Fixed Header */}
       <header className="sticky top-0 z-40 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
         <div className="flex items-center p-4 justify-between max-w-3xl mx-auto">
@@ -258,129 +281,158 @@ const ResourceDetail: React.FC = () => {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-3xl mx-auto pb-24">
-        {/* Hero Section */}
-        <div className="p-4">
-          <div
-            className="w-full bg-center bg-no-repeat bg-cover rounded-[2rem] aspect-video shadow-2xl border-4 border-primary/20 transition-transform duration-700 hover:scale-[1.01]"
-            style={{ backgroundImage: `url("${resource.thumbnail}")` }}
-          >
-            <div className="w-full h-full bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-8 rounded-[2rem]">
-              <span className="bg-primary text-background-dark text-[10px] font-black uppercase tracking-[0.2em] px-3 py-1 rounded-full w-fit mb-4">
-                Official Archive
-              </span>
-              <h1 className="text-white text-3xl font-black tracking-tighter uppercase leading-tight">
-                {resource.title}
-              </h1>
-            </div>
-          </div>
-        </div>
-
-        {/* Quick Stats */}
-        <div className="flex gap-4 px-4 py-6 overflow-x-auto no-scrollbar scrollbar-hide">
-          {[
-            { label: 'Type', value: resource.type, icon: 'article' },
-            { label: 'Size', value: resource.fileSize, icon: 'database' },
-            { label: 'Pages', value: resource.pages || 'N/A', icon: 'auto_stories' },
-            { label: 'Gets', value: resource.downloads, icon: 'download' }
-          ].map(stat => (
-            <div key={stat.label} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex items-center gap-3 shrink-0 min-w-[140px] shadow-sm">
-              <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-                <span className="material-symbols-outlined">{stat.icon}</span>
-              </div>
-              <div className="flex flex-col">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{stat.label}</span>
-                <span className="text-xs font-black uppercase tracking-tight text-slate-900 dark:text-white truncate">{stat.value}</span>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Description */}
-        <div className="px-6 py-4">
-          <h3 className="text-slate-900 dark:text-white text-xl font-black tracking-tight uppercase mb-2">Manifest</h3>
-          <p className="text-slate-500 dark:text-slate-400 text-sm font-medium leading-relaxed">
-            {resource.description}
-          </p>
-        </div>
-
-        {/* Structural Metadata Section */}
-        <div className="px-4 py-6">
-          <div className="bg-slate-50 dark:bg-slate-900/50 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 p-8 space-y-6">
-            <div className="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-4">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Institution</span>
-              <span className="text-sm font-bold text-slate-900 dark:text-white uppercase">{resource.institution}</span>
-            </div>
-            <div className="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-4">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Department</span>
-              <span className="text-sm font-bold text-slate-900 dark:text-white uppercase">{resource.department}</span>
-            </div>
-            <div className="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-4">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Course Board</span>
-              <span className="text-sm font-bold text-primary uppercase">{resource.courseTitle}</span>
-            </div>
-            <div className="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-4">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Academic Session</span>
-              <span className="text-sm font-bold text-slate-900 dark:text-white uppercase">{resource.session}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Digitized By</span>
-              <div className="flex items-center gap-2">
-                <div className="size-6 rounded-full bg-cover bg-center border border-primary/30" style={{ backgroundImage: `url("${resource.authorAvatar || 'https://ui-avatars.com/api/?name=User&background=random'}")` }} />
-                <span className="text-sm font-bold text-slate-900 dark:text-white uppercase">{resource.author}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Action Area */}
-        <div className="px-4 py-4 flex flex-col gap-4">
-          <div className="flex gap-4">
+      <main className={`max-w-3xl mx-auto ${isPreviewMode ? 'pb-0' : 'pb-24'}`}>
+        {/* Preview & Hero Section */}
+        <div className="p-4 space-y-4">
+          <div className="flex items-center justify-between px-2">
+            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Preview Material</h3>
             <button
-              onClick={handleDownload}
-              className="flex-1 bg-primary text-background-dark h-16 rounded-[2rem] flex items-center justify-center gap-3 shadow-2xl shadow-primary/30 transition-all hover:scale-[1.02] active:scale-[0.98]"
+              onClick={() => setIsPreviewMode(!isPreviewMode)}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary/10 text-primary hover:bg-primary hover:text-background-dark transition-all text-[10px] font-black uppercase tracking-widest"
             >
-              <span className="material-symbols-outlined font-black">download</span>
-              <span className="text-xs font-black uppercase tracking-[0.2em]">Authorize Access</span>
-            </button>
-            <button className="size-16 rounded-[2rem] bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-500 transition-all hover:border-primary/30">
-              <span className="material-symbols-outlined">bookmark</span>
+              <span className="material-symbols-outlined text-[18px]">
+                {isPreviewMode ? 'close_fullscreen' : 'fullscreen'}
+              </span>
+              {isPreviewMode ? 'Exit Fullscreen' : 'Fullscreen'}
             </button>
           </div>
 
-          <button
-            onClick={() => router.push(`/community?board=${resource.courseId}&resource=${resource.id}`)}
-            className="w-full h-14 bg-white dark:bg-slate-900 border-2 border-primary/20 hover:border-primary/50 text-slate-900 dark:text-white rounded-[2rem] flex items-center justify-center gap-3 transition-all active:scale-95"
-          >
-            <span className="material-symbols-outlined text-primary">forum</span>
-            <span className="text-[10px] font-black uppercase tracking-[0.2em]">Discuss in Community</span>
-          </button>
+          <div className={`relative w-full bg-slate-100 dark:bg-slate-900 rounded-[2rem] overflow-hidden border-2 border-primary/20 shadow-2xl transition-all duration-500 ${isPreviewMode ? 'fixed inset-4 z-50 !m-0 !w-[calc(100%-2rem)] !h-[calc(100%-2rem)]' : 'aspect-[3/4]'}`}>
+            {resource.fileUrl ? (
+              isPdf ? (
+                <iframe
+                  src={`${resource.fileUrl}#toolbar=0&navpanes=0&scrollbar=0`}
+                  className="w-full h-full border-none"
+                  title="PDF Preview"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center p-4">
+                  <img
+                    src={resource.fileUrl}
+                    alt={resource.title}
+                    className="max-w-full max-h-full object-contain rounded-lg shadow-lg"
+                  />
+                </div>
+              )
+            ) : (
+              <div className="w-full h-full flex flex-col items-center justify-center gap-4 text-slate-400">
+                <span className="material-symbols-outlined text-6xl">cloud_off</span>
+                <p className="text-xs font-black uppercase tracking-widest">Preview Unavailable</p>
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Reviews & Bottom Nav Placeholder */}
-        <div className="max-w-3xl mx-auto px-4 pb-24">
-          <h3 className="text-slate-900 dark:text-white text-xl font-black uppercase tracking-tight mb-8">Critiques</h3>
-          <div className="space-y-8">
-            {reviews.map(review => (
-              <div key={review.id} className="bg-slate-50 dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800">
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="size-10 rounded-full bg-cover bg-center" style={{ backgroundImage: `url("${review.userAvatar}")` }} />
-                  <div className="flex-1">
-                    <p className="text-sm font-black uppercase text-slate-900 dark:text-white">{review.userName}</p>
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{review.timeAgo}</span>
+        {/* Visibility Toggle for Metadata */}
+        {!isPreviewMode && (
+          <>
+            {/* Quick Stats */}
+            <div className="flex gap-4 px-4 py-6 overflow-x-auto no-scrollbar scrollbar-hide">
+              {[
+                { label: 'Type', value: resource.type, icon: 'article' },
+                { label: 'Size', value: resource.fileSize, icon: 'database' },
+                { label: 'Pages', value: resource.pages || 'N/A', icon: 'auto_stories' },
+                { label: 'Gets', value: resource.downloads, icon: 'download' }
+              ].map(stat => (
+                <div key={stat.label} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex items-center gap-3 shrink-0 min-w-[140px] shadow-sm">
+                  <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                    <span className="material-symbols-outlined">{stat.icon}</span>
                   </div>
-                  <div className="flex text-primary">
-                    {renderStars(review.rating, 14)}
+                  <div className="flex flex-col">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{stat.label}</span>
+                    <span className="text-xs font-black uppercase tracking-tight text-slate-900 dark:text-white truncate">{stat.value}</span>
                   </div>
                 </div>
-                <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed italic">{review.comment}</p>
+              ))}
+            </div>
+
+            {/* Description */}
+            <div className="px-6 py-4">
+              <h3 className="text-slate-900 dark:text-white text-xl font-black tracking-tight uppercase mb-2">Manifest</h3>
+              <p className="text-slate-500 dark:text-slate-400 text-sm font-medium leading-relaxed">
+                {resource.description}
+              </p>
+            </div>
+
+            {/* Structural Metadata Section */}
+            <div className="px-4 py-6">
+              <div className="bg-slate-50 dark:bg-slate-900/50 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 p-8 space-y-6">
+                <div className="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-4">
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Institution</span>
+                  <span className="text-sm font-bold text-slate-900 dark:text-white uppercase">{resource.institution}</span>
+                </div>
+                <div className="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-4">
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Department</span>
+                  <span className="text-sm font-bold text-slate-900 dark:text-white uppercase">{resource.department}</span>
+                </div>
+                <div className="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-4">
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Course Board</span>
+                  <span className="text-sm font-bold text-primary uppercase">{resource.courseTitle}</span>
+                </div>
+                <div className="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-4">
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Academic Session</span>
+                  <span className="text-sm font-bold text-slate-900 dark:text-white uppercase">{resource.session}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Digitized By</span>
+                  <div className="flex items-center gap-2">
+                    <div className="size-6 rounded-full bg-cover bg-center border border-primary/30" style={{ backgroundImage: `url("${resource.authorAvatar || 'https://ui-avatars.com/api/?name=User&background=random'}")` }} />
+                    <span className="text-sm font-bold text-slate-900 dark:text-white uppercase">{resource.author}</span>
+                  </div>
+                </div>
               </div>
-            ))}
-          </div>
-        </div>
+            </div>
+
+            {/* Action Area */}
+            <div className="px-4 py-4 flex flex-col gap-4">
+              <div className="flex gap-4">
+                <button
+                  onClick={handleDownload}
+                  className="flex-1 bg-primary text-background-dark h-16 rounded-[2rem] flex items-center justify-center gap-3 shadow-2xl shadow-primary/30 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  <span className="material-symbols-outlined font-black">download</span>
+                  <span className="text-xs font-black uppercase tracking-[0.2em]">Authorize Access</span>
+                </button>
+                <button className="size-16 rounded-[2rem] bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-500 transition-all hover:border-primary/30">
+                  <span className="material-symbols-outlined">bookmark</span>
+                </button>
+              </div>
+
+              <button
+                onClick={() => router.push(`/community?board=${resource.courseId}&resource=${resource.id}`)}
+                className="w-full h-14 bg-white dark:bg-slate-900 border-2 border-primary/20 hover:border-primary/50 text-slate-900 dark:text-white rounded-[2rem] flex items-center justify-center gap-3 transition-all active:scale-95"
+              >
+                <span className="material-symbols-outlined text-primary">forum</span>
+                <span className="text-[10px] font-black uppercase tracking-[0.2em]">Discuss in Community</span>
+              </button>
+            </div>
+
+            {/* Reviews */}
+            <div className="max-w-3xl mx-auto px-4 pb-24">
+              <h3 className="text-slate-900 dark:text-white text-xl font-black uppercase tracking-tight mb-8">Critiques</h3>
+              <div className="space-y-8">
+                {reviews.map(review => (
+                  <div key={review.id} className="bg-slate-50 dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800">
+                    <div className="flex items-center gap-4 mb-4">
+                      <div className="size-10 rounded-full bg-cover bg-center" style={{ backgroundImage: `url("${review.userAvatar}")` }} />
+                      <div className="flex-1">
+                        <p className="text-sm font-black uppercase text-slate-900 dark:text-white">{review.userName}</p>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{review.timeAgo}</span>
+                      </div>
+                      <div className="flex text-primary">
+                        {renderStars(review.rating, 14)}
+                      </div>
+                    </div>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed italic">{review.comment}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
       </main>
 
-      <BottomNav />
+      {!isPreviewMode && <BottomNav />}
     </div>
   );
 };

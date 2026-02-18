@@ -13,6 +13,9 @@ const UploadPage = () => {
   const [success, setSuccess] = useState(false);
 
   const { institution, loading: contextLoading } = useInstitutionContext();
+  const [userProfile, setUserProfile] = useState<any>(null);
+  const [institutions, setInstitutions] = useState<any[]>([]);
+  const [activeInstId, setActiveInstId] = useState<string>('');
 
   // Structured Data
   const [departments, setDepartments] = useState<any[]>([]);
@@ -28,31 +31,68 @@ const UploadPage = () => {
     file: null as File | null
   });
 
-  // Fetch Sessions via Bridge
+  // 1. Fetch User and Initial App Data
   useEffect(() => {
     const fetchInitialData = async () => {
+      // Fetch user profile
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase.from('hub_profiles').select('*').eq('id', user.id).single();
+        setUserProfile(profile);
+
+        // If super admin, fetch all institutions
+        if (profile?.role === 'super_admin') {
+          const { data: insts } = await supabase.from('hub_institutions').select('*').order('name');
+          if (insts) setInstitutions(insts);
+        }
+      }
+
+      // Fetch sessions via bridge
       const { data: sess } = await supabase.from('hub_sessions').select('*').order('name', { ascending: false });
       if (sess) setSessions(sess);
     };
     fetchInitialData();
   }, []);
 
-  // Fetch Departments based on User Institution
+  // 2. Manage Active Institution based on role and selection
   useEffect(() => {
-    if (!institution?.id) return;
-    const fetchDepts = async () => {
-      const { data } = await supabase.from('hub_departments').select('*').eq('institution_id', institution.id).order('name');
-      setDepartments(data || []);
-      setFormData(prev => ({ ...prev, departmentId: '' }));
-    };
-    fetchDepts();
+    if (institution?.id && !activeInstId) {
+      setActiveInstId(institution.id);
+    }
   }, [institution?.id]);
 
+  // 3. Fetch Departments based on Active Institution and Role
+  useEffect(() => {
+    if (!activeInstId) return;
 
+    const fetchDepts = async () => {
+      let query = supabase.from('hub_departments').select('*').eq('institution_id', activeInstId).order('name');
+
+      // If student, restrict to their department only
+      if (userProfile?.role === 'student' && userProfile?.department_id) {
+        query = query.eq('id', userProfile.department_id);
+      }
+
+      const { data } = await query;
+      setDepartments(data || []);
+
+      // Auto-select if only one option (for students)
+      if (data?.length === 1) {
+        setFormData(prev => ({ ...prev, departmentId: data[0].id }));
+      } else {
+        setFormData(prev => ({ ...prev, departmentId: '' }));
+      }
+    };
+    fetchDepts();
+  }, [activeInstId, userProfile?.id]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleInstitutionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setActiveInstId(e.target.value);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -64,7 +104,8 @@ const UploadPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!institution) {
+    const targetInstId = activeInstId || institution?.id;
+    if (!targetInstId) {
       alert('Institution data not found. Please refresh the page.');
       return;
     }
@@ -103,7 +144,8 @@ const UploadPage = () => {
           .insert({
             title: formData.courseTitle,
             course_code: formData.courseCode,
-            department_id: formData.departmentId
+            department_id: formData.departmentId,
+            institution_id: targetInstId // Explicitly set if changed by super admin
           })
           .select('id')
           .single();
@@ -198,7 +240,20 @@ const UploadPage = () => {
                 <h3 className="text-slate-900 dark:text-white text-lg font-bold leading-tight tracking-tight">Academic Archive Context</h3>
               </div>
               <div className="space-y-4">
-                {institution ? (
+                {userProfile?.role === 'super_admin' ? (
+                  <label className="flex flex-col w-full">
+                    <p className="text-[10px] text-primary/80 font-bold uppercase tracking-wider mb-2 ml-1">Active Institution (Super Admin)</p>
+                    <select
+                      value={activeInstId}
+                      onChange={handleInstitutionChange}
+                      className="form-select flex w-full rounded-xl text-black dark:text-white focus:outline-0 focus:ring-1 focus:ring-primary border border-slate-300 dark:border-white/10 bg-white dark:bg-[#1c2720] focus:border-primary h-14 p-4 text-base"
+                    >
+                      {institutions.map(inst => (
+                        <option key={inst.id} value={inst.id}>{inst.name}</option>
+                      ))}
+                    </select>
+                  </label>
+                ) : institution ? (
                   <div className="p-4 bg-primary/10 rounded-xl border border-primary/20 flex flex-col gap-1">
                     <p className="text-xs text-primary/80 font-bold uppercase tracking-wider">Active Institution</p>
                     <p className="text-slate-900 dark:text-white font-bold text-lg">{institution.name}</p>
