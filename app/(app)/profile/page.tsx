@@ -167,7 +167,7 @@ const ProfilePage: React.FC = () => {
       }
 
       const { error: updateError } = await supabase
-        .from('profiles')
+        .from('hub_profiles')
         .update({
           full_name: editForm.full_name,
           avatar_url: avatarUrl

@@ -21,7 +21,7 @@ export default function Home() {
 
         if (authUser) {
           const { data: profile } = await supabase
-            .from('profiles')
+            .from('hub_profiles')
             .select('*')
             .eq('id', authUser.id)
             .single();

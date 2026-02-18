@@ -19,7 +19,11 @@ const SchoolAdminDashboard = () => {
 
     // Modal States
     const [showDeleteModal, setShowDeleteModal] = useState<string | null>(null);
-    const [showResolveModal, setShowResolveModal] = useState<any | null>(null);
+    const [showResolveModal, setShowResolveModal] = useState<any>(null);
+    const [isAddCourseModalOpen, setIsAddCourseModalOpen] = useState(false);
+    const [allDepartments, setAllDepartments] = useState<any[]>([]);
+    const [newCourse, setNewCourse] = useState({ title: '', course_code: '', department_id: '' });
+    const [addingCourse, setAddingCourse] = useState(false);
     const [showDetailsModal, setShowDetailsModal] = useState<any | null>(null);
 
     useEffect(() => {
@@ -30,7 +34,7 @@ const SchoolAdminDashboard = () => {
                 return;
             }
 
-            const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+            const { data: profile } = await supabase.from('hub_profiles').select('role').eq('id', user.id).single();
             if (!profile || !['admin', 'school_admin', 'super_admin'].includes(profile.role)) {
                 router.push('/home');
                 return;
@@ -77,7 +81,7 @@ const SchoolAdminDashboard = () => {
         }
     };
 
-    const setupSubscriptions = (instId: string) => {
+    const setupSubscriptions = async (instId: string) => {
         // Real-time Resources
         supabase
             .channel('admin-resources')
@@ -101,6 +105,10 @@ const SchoolAdminDashboard = () => {
                 fetchInitialData(instId);
             })
             .subscribe();
+
+        // Fetch all departments for global actions
+        const { data: depts } = await supabase.from('hub_departments').select('*').eq('institution_id', instId).order('name');
+        if (depts) setAllDepartments(depts);
     };
 
     // Stats Calculation
@@ -138,12 +146,38 @@ const SchoolAdminDashboard = () => {
 
     // Handlers
     const toggleVerify = async (id: string, currentStatus: boolean) => {
+        // Optimistic update
+        setResources(prev => prev.map(r => r.id === id ? { ...r, is_verified: !currentStatus } : r));
+
         const { error } = await supabase
             .from('hub_resources')
             .update({ is_verified: !currentStatus })
             .eq('id', id);
 
-        if (error) alert("Error updating status");
+        if (error) {
+            alert("Error updating status");
+            // Rollback
+            setResources(prev => prev.map(r => r.id === id ? { ...r, is_verified: currentStatus } : r));
+        }
+    };
+
+    const updateResourceType = async (id: string, newType: string) => {
+        // Optimistic update
+        setResources(prev => prev.map(r => r.id === id ? { ...r, type: newType } : r));
+        if (showDetailsModal?.id === id) {
+            setShowDetailsModal((prev: any) => ({ ...prev, type: newType }));
+        }
+
+        const { error } = await supabase
+            .from('hub_resources')
+            .update({ type: newType })
+            .eq('id', id);
+
+        if (error) {
+            alert("Error updating type");
+            // We'd need the old type to rollback, but let's keep it simple for now or fetch again.
+            if (institution?.id) fetchInitialData(institution.id);
+        }
     };
 
     const handleDelete = async () => {
@@ -169,28 +203,54 @@ const SchoolAdminDashboard = () => {
         setShowResolveModal(null);
     };
 
-    if (contextLoading || loading) {
-        return (
-            <div className="min-h-screen flex flex-col items-center justify-center bg-[#f6f8f7] dark:bg-[#102217] font-display">
-                <div className="w-12 h-12 border-4 border-[#13ec6a] border-t-transparent rounded-full animate-spin mb-4"></div>
-                <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">Accessing Command Center...</p>
-            </div>
-        );
-    }
+    const handleAddCourse = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!institution?.id) return;
+        setAddingCourse(true);
+        try {
+            const levelMatch = newCourse.course_code.match(/\d+/);
+            const level = levelMatch ? `${Math.floor(parseInt(levelMatch[0]) / 100) * 100}` : '100';
+
+            const { error } = await supabase.from('hub_courses').insert({
+                title: newCourse.title,
+                course_code: newCourse.course_code.toUpperCase(),
+                department_id: newCourse.department_id,
+                level: level,
+                institution_id: institution.id
+            });
+
+            if (error) throw error;
+
+            setIsAddCourseModalOpen(false);
+            setNewCourse({ title: '', course_code: '', department_id: '' });
+            alert("Course board initialized!");
+        } catch (error: any) {
+            alert(`Error adding course: ${error.message}`);
+        } finally {
+            setAddingCourse(false);
+        }
+    };
 
     return (
         <div className="bg-[#f6f8f7] dark:bg-[#102217] min-h-screen font-roboto text-slate-900 dark:text-slate-100 flex flex-col pb-24">
             {/* Nav Header */}
             <header className="sticky top-0 z-40 bg-[#f6f8f7]/80 dark:bg-[#102217]/80 backdrop-blur-md border-b border-slate-200 dark:border-[#234832]/30 p-4">
                 <div className="max-w-7xl mx-auto flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-[#13ec6a]/20 flex items-center justify-center text-[#13ec6a] shadow-lg shadow-[#13ec6a]/10">
-                            <span className="material-symbols-outlined font-black">shield_person</span>
-                        </div>
-                        <div>
-                            <h1 className="text-xl font-black tracking-tighter leading-none">Admin Panel</h1>
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">{institution?.name || 'Academic Command'}</p>
-                        </div>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => setIsAddCourseModalOpen(true)}
+                            className="h-10 px-4 bg-[#13ec6a]/10 text-[#13ec6a] rounded-xl font-black text-[10px] uppercase tracking-widest border border-[#13ec6a]/20 hover:bg-[#13ec6a]/20 transition-all flex items-center gap-2"
+                        >
+                            <span className="material-symbols-outlined text-[18px]">add_circle</span>
+                            Initialize Course
+                        </button>
+                        <button
+                            onClick={() => router.push('/library/upload')}
+                            className="h-10 px-4 bg-[#13ec6a] text-[#102217] rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-[#13ec6a]/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+                        >
+                            <span className="material-symbols-outlined text-[18px]">cloud_upload</span>
+                            Add Material
+                        </button>
                     </div>
                 </div>
             </header>
@@ -484,7 +544,16 @@ const SchoolAdminDashboard = () => {
                                 </div>
                                 <div className="bg-slate-50 dark:bg-white/5 p-4 rounded-3xl border border-slate-100 dark:border-white/5">
                                     <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Type</p>
-                                    <p className="text-sm font-bold">{showDetailsModal.type}</p>
+                                    <select
+                                        className="text-sm font-bold bg-transparent border-none p-0 focus:ring-0 w-full"
+                                        value={showDetailsModal.type}
+                                        onChange={(e) => updateResourceType(showDetailsModal.id, e.target.value)}
+                                    >
+                                        <option value="Past Question">Past Question</option>
+                                        <option value="Lecture Note">Lecture Note</option>
+                                        <option value="Textbook">Textbook</option>
+                                        <option value="Assignment">Assignment</option>
+                                    </select>
                                 </div>
                                 <div className="bg-slate-50 dark:bg-white/5 p-4 rounded-3xl border border-slate-100 dark:border-white/5">
                                     <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Upvotes</p>
@@ -539,6 +608,68 @@ const SchoolAdminDashboard = () => {
             )}
 
 
+            {isAddCourseModalOpen && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[#102217]/80 backdrop-blur-md animate-in fade-in duration-300">
+                    <div className="bg-white dark:bg-[#1c1f1d] w-full max-w-sm rounded-[2.5rem] p-10 border border-slate-200 dark:border-white/10 shadow-2xl relative">
+                        <h3 className="text-3xl font-black text-slate-900 dark:text-white mb-2 tracking-tighter">New Board</h3>
+                        <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mb-8">Initialize a new course board</p>
+
+                        <form onSubmit={handleAddCourse} className="space-y-6">
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-[#13ec6a] uppercase tracking-widest ml-1">Title</label>
+                                <input
+                                    required
+                                    value={newCourse.title}
+                                    onChange={(e) => setNewCourse(prev => ({ ...prev, title: e.target.value }))}
+                                    className="w-full bg-slate-50 dark:bg-black/20 border-2 border-slate-100 dark:border-white/5 text-slate-900 dark:text-white rounded-2xl py-4 px-5 focus:outline-none focus:border-[#13ec6a] transition-all font-bold placeholder:font-normal"
+                                    placeholder="e.g. Introduction to Law"
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-[#13ec6a] uppercase tracking-widest ml-1">Code</label>
+                                <input
+                                    required
+                                    value={newCourse.course_code}
+                                    onChange={(e) => setNewCourse(prev => ({ ...prev, course_code: e.target.value }))}
+                                    className="w-full bg-slate-50 dark:bg-black/20 border-2 border-slate-100 dark:border-white/5 text-slate-900 dark:text-white rounded-2xl py-4 px-5 focus:outline-none focus:border-[#13ec6a] transition-all font-bold placeholder:font-normal"
+                                    placeholder="e.g. LAW 101"
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-[#13ec6a] uppercase tracking-widest ml-1">Department</label>
+                                <select
+                                    required
+                                    className="w-full bg-slate-50 dark:bg-black/20 border-2 border-slate-100 dark:border-white/5 text-slate-900 dark:text-white rounded-2xl py-4 px-5 focus:outline-none focus:border-[#13ec6a] transition-all font-bold"
+                                    value={newCourse.department_id}
+                                    onChange={(e) => setNewCourse(prev => ({ ...prev, department_id: e.target.value }))}
+                                >
+                                    <option value="">Select Department</option>
+                                    {allDepartments.map(dept => <option key={dept.id} value={dept.id}>{dept.name}</option>)}
+                                </select>
+                            </div>
+
+                            <div className="flex gap-4 pt-4">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsAddCourseModalOpen(false)}
+                                    className="flex-1 py-4 text-slate-500 font-bold text-sm uppercase tracking-widest rounded-2xl hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={addingCourse || !newCourse.title || !newCourse.course_code || !newCourse.department_id}
+                                    className="flex-1 bg-[#13ec6a] text-[#102217] font-black py-4 rounded-2xl shadow-xl shadow-[#13ec6a]/20 transition-all active:scale-[0.95] disabled:opacity-50 uppercase text-xs tracking-widest"
+                                >
+                                    {addingCourse ? 'Creating...' : 'Initialize'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

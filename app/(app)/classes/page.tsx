@@ -35,6 +35,7 @@ const CoursesPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [activeLevel, setActiveLevel] = useState('All Levels');
   const [searchQuery, setSearchQuery] = useState('');
+  const [userProfile, setUserProfile] = useState<any>(null);
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newCourse, setNewCourse] = useState({ title: '', course_code: '', department_id: '' });
@@ -46,6 +47,14 @@ const CoursesPage: React.FC = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
+
+      const { data: { user } } = await supabase.auth.getUser();
+      let currentProfile = null;
+      if (user) {
+        const { data: profile } = await supabase.from('hub_profiles').select('*').eq('id', user.id).single();
+        currentProfile = profile;
+        setUserProfile(profile);
+      }
 
       // Fetch Departments for the modal using context
       if (institution?.id) {
@@ -74,9 +83,26 @@ const CoursesPage: React.FC = () => {
           instructor: 'Department Faculty',
           level: `${c.level}L`,
           image: `https://images.unsplash.com/photo-1546410531-bb4caa6b424d?q=80&w=2071&auto=format&fit=crop`,
-          isEnrolled: false // Simplified for now
+          isEnrolled: false, // Simplified for now
+          department_id: c.department_id
         }));
-        setCourses(formattedCourses);
+
+        const prioritizedCourses = formattedCourses.sort((a: any, b: any) => {
+          const userDept = currentProfile?.department || currentProfile?.department_id;
+          const aDeptMatch = a.department_id === userDept;
+          const bDeptMatch = b.department_id === userDept;
+          if (aDeptMatch && !bDeptMatch) return -1;
+          if (!aDeptMatch && bDeptMatch) return 1;
+
+          const aLevelMatch = String(a.level?.replace('L', '')) === String(currentProfile?.level);
+          const bLevelMatch = String(b.level?.replace('L', '')) === String(currentProfile?.level);
+          if (aLevelMatch && !bLevelMatch) return -1;
+          if (!aLevelMatch && bLevelMatch) return 1;
+
+          return 0;
+        });
+
+        setCourses(prioritizedCourses);
       }
 
       // 3. Fetch Latest Resources

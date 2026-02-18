@@ -55,8 +55,9 @@ const LibraryPage = () => {
                     const { data: profile } = await supabase.from('hub_profiles').select('*').eq('id', user.id).single();
                     setUserProfile(profile);
 
-                    // Auto-set context for student
-                    if (profile?.department && !selectedDept) setSelectedDept(profile.department);
+                    if (institution?.id) {
+                        fetchResources({ instId: institution.id, profile });
+                    } if (profile?.department && !selectedDept) setSelectedDept(profile.department);
                     if (profile?.level && !selectedLevel) setSelectedLevel(profile.level);
 
                     // Fetch user's votes via bridge
@@ -115,7 +116,7 @@ const LibraryPage = () => {
         }
     }, [institution?.id]);
 
-    const fetchResources = async (filters: { instId?: string, deptId?: string, level?: string, sessionId?: string, type?: string, sort?: 'newest' | 'popular' }) => {
+    const fetchResources = async (filters: { instId?: string, deptId?: string, level?: string, sessionId?: string, type?: string, sort?: 'newest' | 'popular', profile?: any }) => {
         // Enforce strict institution scoping
         const currentInstId = filters.instId || institution?.id;
         if (!currentInstId) return;
@@ -126,10 +127,8 @@ const LibraryPage = () => {
             .eq('institution_id', currentInstId);
 
         // Advanced Filtering for Departments (Include General Courses)
-        if (filters.deptId) {
+        if (filters.deptId && filters.deptId !== 'all') {
             // If a specific department is selected, we want that PLUS EDU, GNS, GST
-            // However, PostgREST doesn't support complex OR with AND easily in one go.
-            // We use the 'or' filter for the specific department clauses.
             query = query.or(`department_id.eq.${filters.deptId},course_code.ilike.EDU%,course_code.ilike.GNS%,course_code.ilike.GST%`);
         }
 
@@ -148,7 +147,25 @@ const LibraryPage = () => {
             console.error("Fetch resources error:", error);
             return;
         }
-        setResources(data || []);
+
+        const currentProfile = filters.profile || userProfile;
+
+        const prioritizedData = (data || []).sort((a: any, b: any) => {
+            const userDept = currentProfile?.department || currentProfile?.department_id;
+            const aDeptMatch = a.department_id === userDept;
+            const bDeptMatch = b.department_id === userDept;
+            if (aDeptMatch && !bDeptMatch) return -1;
+            if (!aDeptMatch && bDeptMatch) return 1;
+
+            const aLevelMatch = String(a.level) === String(currentProfile?.level);
+            const bLevelMatch = String(b.level) === String(currentProfile?.level);
+            if (aLevelMatch && !bLevelMatch) return -1;
+            if (!aLevelMatch && bLevelMatch) return 1;
+
+            return 0;
+        });
+
+        setResources(prioritizedData);
     };
 
     const handleVote = async (resourceId: string) => {
