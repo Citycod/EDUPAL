@@ -54,7 +54,7 @@ export default function BottomNav({ navItems: customNavItems }: BottomNavProps) 
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 px-4 pb-6 pt-2">
+    <div className="fixed bottom-0 left-0 right-0 z-50 px-2 md:px-4 pb-6 pt-2">
       <div className="mx-auto max-w-lg bg-white/80 dark:bg-[#0a120d]/80 backdrop-blur-xl border border-white/20 dark:border-white/5 rounded-[2.5rem] shadow-2xl shadow-black/20 px-2 py-2 flex justify-between items-center transition-all duration-300">
         {navItems.map((item: any, index: number) => {
           const itemPath = 'path' in item ? item.path : undefined;
@@ -71,12 +71,12 @@ export default function BottomNav({ navItems: customNavItems }: BottomNavProps) 
                   router.push(itemPath);
                 }
               }}
-              className="flex flex-col items-center gap-1 flex-1 px-1 group outline-none"
+              className="flex flex-col items-center gap-1 flex-1 px-0.5 md:px-1 group outline-none"
             >
               <div
-                className={`relative px-5 py-2 rounded-2xl transition-all duration-300 ${itemActive
-                    ? 'bg-primary text-background-dark scale-105 shadow-lg shadow-primary/20'
-                    : 'text-slate-500 dark:text-slate-400 hover:bg-white/10'
+                className={`relative px-3 md:px-5 py-2 rounded-2xl transition-all duration-300 ${itemActive
+                  ? 'bg-primary text-background-dark scale-105 shadow-lg shadow-primary/20'
+                  : 'text-slate-500 dark:text-slate-400 hover:bg-white/10'
                   }`}
               >
                 <span className={`material-symbols-outlined text-[24px] block transition-transform duration-300 ${item.filled && itemActive ? 'fill-1' : ''
