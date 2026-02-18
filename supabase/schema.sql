@@ -354,6 +354,8 @@ SELECT
   p.full_name,
   p.avatar_url,
   p.bio,
+  p.role,
+  p.institution_id_permanent,
   COALESCE(p.institution_id, sp.institution_id) as institution_id,
   COALESCE(p.department_id, sp.department_id) as department_id,
   COALESCE(p.level, sp.level, p.year) as level,
