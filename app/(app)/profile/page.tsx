@@ -270,16 +270,16 @@ const ProfilePage: React.FC = () => {
         </div>
 
         {/* Stats Section */}
-        <div className="grid grid-cols-3 gap-4 px-4 py-6 border-y border-slate-200 dark:border-white/5 mt-4">
-          <div className="flex flex-col items-center">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 px-4 py-6 border-y border-slate-200 dark:border-white/5 mt-4">
+          <div className="flex flex-col items-center p-3">
             <span className="text-primary text-xl font-bold">{stats.uploads}</span>
             <span className="text-slate-500 dark:text-slate-400 text-[10px] uppercase tracking-wider font-semibold">Uploads</span>
           </div>
-          <div className="flex flex-col items-center border-x border-slate-200 dark:border-white/5">
+          <div className="flex flex-col items-center p-3 border-l sm:border-x border-slate-200 dark:border-white/5">
             <span className="text-primary text-xl font-bold">{stats.downloads > 999 ? (stats.downloads / 1000).toFixed(1) + 'k' : stats.downloads}</span>
             <span className="text-slate-500 dark:text-slate-400 text-[10px] uppercase tracking-wider font-semibold">Downloads</span>
           </div>
-          <div className="flex flex-col items-center">
+          <div className="flex flex-col items-center p-3 border-t md:border-t-0 col-span-2 md:col-span-1 border-slate-200 dark:border-white/5">
             <span className="text-primary text-xl font-bold">{stats.rating}</span>
             <span className="text-slate-500 dark:text-slate-400 text-[10px] uppercase tracking-wider font-semibold">Rating</span>
           </div>

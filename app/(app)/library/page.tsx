@@ -233,7 +233,7 @@ const LibraryPage = () => {
                         <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/20 text-primary">
                             <span className="material-symbols-outlined">history_edu</span>
                         </div>
-                        <h1 className="text-xl font-black tracking-tighter">Academic Archive</h1>
+                        <h1 className="text-lg sm:text-xl font-black tracking-tighter truncate">Academic Archive</h1>
                     </div>
                     {institution && (
                         <div className="hidden md:block text-sm font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full border border-slate-200 dark:border-slate-700">
@@ -255,7 +255,7 @@ const LibraryPage = () => {
             <main className="max-w-7xl mx-auto pb-24 flex-1 w-full">
                 {/* Search and Filter Section */}
                 <section className="p-4 space-y-4">
-                    <div className="flex gap-4 items-center">
+                    <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center">
                         <div className="relative group flex-1">
                             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
                                 <span className="material-symbols-outlined">search</span>
@@ -270,15 +270,15 @@ const LibraryPage = () => {
                         </div>
 
                         {/* Sort Toggle */}
-                        <div className="flex bg-white dark:bg-slate-800 p-1 rounded-2xl border border-slate-200 dark:border-slate-700 h-16 shadow-lg">
+                        <div className="flex bg-white dark:bg-slate-800 p-1 rounded-2xl border border-slate-200 dark:border-slate-700 h-14 sm:h-16 shadow-lg">
                             <button
                                 onClick={() => { setSortBy('newest'); fetchResources({ instId: institution?.id, deptId: selectedDept, level: selectedLevel, sessionId: selectedSession, type: selectedType, sort: 'newest' }); }}
-                                className={`px-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${sortBy === 'newest' ? 'bg-primary text-background-dark shadow-md' : 'text-slate-400 hover:text-slate-600'}`}>
+                                className={`flex-1 sm:px-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${sortBy === 'newest' ? 'bg-primary text-background-dark shadow-md' : 'text-slate-400 hover:text-slate-600'}`}>
                                 Newest
                             </button>
                             <button
                                 onClick={() => { setSortBy('popular'); fetchResources({ instId: institution?.id, deptId: selectedDept, level: selectedLevel, sessionId: selectedSession, type: selectedType, sort: 'popular' }); }}
-                                className={`px-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${sortBy === 'popular' ? 'bg-primary text-background-dark shadow-md' : 'text-slate-400 hover:text-slate-600'}`}>
+                                className={`flex-1 sm:px-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${sortBy === 'popular' ? 'bg-primary text-background-dark shadow-md' : 'text-slate-400 hover:text-slate-600'}`}>
                                 Popular
                             </button>
                         </div>

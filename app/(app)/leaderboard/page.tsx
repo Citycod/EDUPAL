@@ -148,14 +148,14 @@ const LeaderboardPage: React.FC = () => {
                             {/* 2nd Place */}
                             {top3[1] && (
                                 <div className="flex flex-col items-center flex-1 animate-slide-in-up" style={{ animationDelay: '0.1s' }}>
-                                    <div className="text-2xl mb-2">{getRankStyle(2).emoji}</div>
-                                    <div className={`${getRankStyle(2).size} rounded-full bg-cover bg-center ring-4 ${getRankStyle(2).ring} shadow-xl mb-3`}
+                                    <div className="text-xl sm:text-2xl mb-2">{getRankStyle(2).emoji}</div>
+                                    <div className={`${getRankStyle(2).size} rounded-full bg-cover bg-center ring-4 ${getRankStyle(2).ring} shadow-xl mb-3 scale-90 sm:scale-100 transition-transform`}
                                         style={{ backgroundImage: `url("${top3[1].avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(top3[1].full_name)}&background=random`}")` }}
                                     />
-                                    <p className="font-black text-sm text-center truncate max-w-[100px]">{top3[1].full_name?.split(' ')[0]}</p>
-                                    <p className={`text-xl font-black ${getRankStyle(2).text}`}>{top3[1].score}</p>
-                                    <div className={`w-full h-20 ${getRankStyle(2).bg} rounded-t-2xl mt-2 flex items-center justify-center border border-slate-300/20`}>
-                                        <span className="text-4xl font-black text-slate-500/20">2</span>
+                                    <p className="font-black text-[10px] sm:text-sm text-center truncate max-w-[80px] sm:max-w-[100px]">{top3[1].full_name?.split(' ')[0]}</p>
+                                    <p className={`text-lg sm:text-xl font-black ${getRankStyle(2).text}`}>{top3[1].score}</p>
+                                    <div className={`w-full h-14 sm:h-20 ${getRankStyle(2).bg} rounded-t-2xl mt-2 flex items-center justify-center border border-slate-300/20`}>
+                                        <span className="text-3xl sm:text-4xl font-black text-slate-500/20">2</span>
                                     </div>
                                 </div>
                             )}
@@ -163,14 +163,14 @@ const LeaderboardPage: React.FC = () => {
                             {/* 1st Place */}
                             {top3[0] && (
                                 <div className="flex flex-col items-center flex-1 -mt-4 animate-slide-in-up">
-                                    <div className="text-4xl mb-2 animate-float" style={{ animationDuration: '3s' }}>{getRankStyle(1).emoji}</div>
-                                    <div className={`${getRankStyle(1).size} rounded-full bg-cover bg-center ring-4 ${getRankStyle(1).ring} shadow-2xl shadow-yellow-400/30 mb-3`}
+                                    <div className="text-3xl sm:text-4xl mb-2 animate-float" style={{ animationDuration: '3s' }}>{getRankStyle(1).emoji}</div>
+                                    <div className={`${getRankStyle(1).size} rounded-full bg-cover bg-center ring-4 ${getRankStyle(1).ring} shadow-2xl shadow-yellow-400/30 mb-3 scale-95 sm:scale-100 transition-transform`}
                                         style={{ backgroundImage: `url("${top3[0].avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(top3[0].full_name)}&background=random`}")` }}
                                     />
-                                    <p className="font-black text-base text-center truncate max-w-[120px]">{top3[0].full_name?.split(' ')[0]}</p>
-                                    <p className={`text-2xl font-black ${getRankStyle(1).text}`}>{top3[0].score}</p>
-                                    <div className={`w-full h-28 ${getRankStyle(1).bg} rounded-t-2xl mt-2 flex items-center justify-center border border-yellow-400/20`}>
-                                        <span className="text-5xl font-black text-yellow-400/20">1</span>
+                                    <p className="font-black text-xs sm:text-base text-center truncate max-w-[100px] sm:max-w-[120px]">{top3[0].full_name?.split(' ')[0]}</p>
+                                    <p className={`text-xl sm:text-2xl font-black ${getRankStyle(1).text}`}>{top3[0].score}</p>
+                                    <div className={`w-full h-20 sm:h-28 ${getRankStyle(1).bg} rounded-t-2xl mt-2 flex items-center justify-center border border-yellow-400/20`}>
+                                        <span className="text-4xl sm:text-5xl font-black text-yellow-400/20">1</span>
                                     </div>
                                 </div>
                             )}
@@ -178,14 +178,14 @@ const LeaderboardPage: React.FC = () => {
                             {/* 3rd Place */}
                             {top3[2] && (
                                 <div className="flex flex-col items-center flex-1 animate-slide-in-up" style={{ animationDelay: '0.2s' }}>
-                                    <div className="text-2xl mb-2">{getRankStyle(3).emoji}</div>
-                                    <div className={`${getRankStyle(3).size} rounded-full bg-cover bg-center ring-4 ${getRankStyle(3).ring} shadow-xl mb-3`}
+                                    <div className="text-xl sm:text-2xl mb-2">{getRankStyle(3).emoji}</div>
+                                    <div className={`${getRankStyle(3).size} rounded-full bg-cover bg-center ring-4 ${getRankStyle(3).ring} shadow-xl mb-3 scale-90 sm:scale-100 transition-transform`}
                                         style={{ backgroundImage: `url("${top3[2].avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(top3[2].full_name)}&background=random`}")` }}
                                     />
-                                    <p className="font-black text-sm text-center truncate max-w-[100px]">{top3[2].full_name?.split(' ')[0]}</p>
-                                    <p className={`text-xl font-black ${getRankStyle(3).text}`}>{top3[2].score}</p>
-                                    <div className={`w-full h-16 ${getRankStyle(3).bg} rounded-t-2xl mt-2 flex items-center justify-center border border-amber-600/20`}>
-                                        <span className="text-4xl font-black text-amber-600/20">3</span>
+                                    <p className="font-black text-[10px] sm:text-sm text-center truncate max-w-[80px] sm:max-w-[100px]">{top3[2].full_name?.split(' ')[0]}</p>
+                                    <p className={`text-lg sm:text-xl font-black ${getRankStyle(3).text}`}>{top3[2].score}</p>
+                                    <div className={`w-full h-12 sm:h-16 ${getRankStyle(3).bg} rounded-t-2xl mt-2 flex items-center justify-center border border-amber-600/20`}>
+                                        <span className="text-3xl sm:text-4xl font-black text-amber-600/20">3</span>
                                     </div>
                                 </div>
                             )}
@@ -238,7 +238,7 @@ const LeaderboardPage: React.FC = () => {
                                             {contributor.full_name || 'Anonymous'}
                                             {isCurrentUser && <span className="ml-1.5 text-[8px] font-black text-primary uppercase tracking-widest">(You)</span>}
                                         </p>
-                                        <div className="flex items-center gap-3 mt-0.5">
+                                        <div className="flex items-center gap-2 sm:gap-3 mt-0.5">
                                             <span className="text-[9px] text-slate-400 flex items-center gap-0.5">
                                                 <span className="material-symbols-outlined text-[11px]">upload_file</span>
                                                 {contributor.upload_count}

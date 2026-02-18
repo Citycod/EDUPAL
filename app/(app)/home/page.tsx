@@ -102,7 +102,7 @@ export default function Home() {
         <main className="max-w-5xl mx-auto w-full px-4 pt-10 pb-20">
           {/* Search-Centric Hero Section */}
           <div className="text-center mb-16">
-            <h1 className="text-slate-900 dark:text-white tracking-tighter text-4xl md:text-5xl font-black leading-tight mb-4">
+            <h1 className="text-slate-900 dark:text-white tracking-tighter text-3xl sm:text-4xl md:text-5xl font-black leading-tight mb-4">
               Find Past Questions for Your Course <span className="text-primary italic font-serif underline decoration-primary/30 underline-offset-8">Instantly</span>
             </h1>
             <p className="text-slate-500 dark:text-slate-400 text-lg">
@@ -119,7 +119,7 @@ export default function Home() {
               <input
                 type="text"
                 placeholder="Search by course code (e.g. CSC421)"
-                className="w-full h-20 pl-16 pr-8 bg-white dark:bg-slate-800/50 border-2 border-slate-200 dark:border-white/10 rounded-3xl focus:border-primary focus:ring-4 focus:ring-primary/10 text-xl shadow-2xl shadow-primary/5 transition-all text-slate-900 dark:text-white placeholder:text-slate-400"
+                className="w-full h-16 sm:h-20 pl-14 sm:pl-16 pr-8 bg-white dark:bg-slate-800/50 border-2 border-slate-200 dark:border-white/10 rounded-2xl sm:rounded-3xl focus:border-primary focus:ring-4 focus:ring-primary/10 text-lg sm:text-xl shadow-2xl shadow-primary/5 transition-all text-slate-900 dark:text-white placeholder:text-slate-400"
                 onFocus={() => router.push('/library')}
               />
               <div className="absolute inset-y-0 right-4 flex items-center">
@@ -200,19 +200,19 @@ export default function Home() {
             {/* Supply Engine / Contributor CTA */}
             <section className="relative">
               <div className="absolute inset-0 bg-primary rounded-[2.5rem] rotate-1 scale-105 opacity-10"></div>
-              <div className="bg-primary shadow-2xl shadow-primary/20 rounded-[2.5rem] p-10 flex flex-col md:flex-row items-center justify-between gap-8 relative z-10 border border-primary/20">
-                <div className="flex items-center gap-8">
-                  <div className="p-5 bg-background-dark rounded-3xl text-primary shadow-xl rotate-[-4deg]">
-                    <span className="material-symbols-outlined text-5xl">cloud_upload</span>
+              <div className="bg-primary shadow-2xl shadow-primary/20 rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-10 flex flex-col lg:flex-row items-center justify-between gap-8 relative z-10 border border-primary/20">
+                <div className="flex flex-col sm:flex-row items-center gap-6 sm:gap-8">
+                  <div className="p-4 sm:p-5 bg-background-dark rounded-2xl sm:rounded-3xl text-primary shadow-xl rotate-[-4deg]">
+                    <span className="material-symbols-outlined text-4xl sm:text-5xl">cloud_upload</span>
                   </div>
-                  <div>
-                    <h3 className="text-3xl font-black text-background-dark tracking-tighter mb-2">Build the Archive</h3>
-                    <p className="text-background-dark/70 font-bold max-w-sm leading-tight text-left">Your contributions make EduPal better for everyone. Upload past questions and earn community points.</p>
+                  <div className="text-center sm:text-left">
+                    <h3 className="text-2xl sm:text-3xl font-black text-background-dark tracking-tighter mb-2">Build the Archive</h3>
+                    <p className="text-background-dark/70 font-bold max-w-sm leading-tight">Your contributions make EduPal better for everyone. Upload past questions and earn points.</p>
                   </div>
                 </div>
                 <button
                   onClick={() => router.push('/library/upload')}
-                  className="w-full md:w-auto px-12 py-5 bg-background-dark text-primary font-black rounded-2xl hover:scale-[1.02] active:scale-[0.98] transition-all shadow-2xl shadow-black/30 text-lg"
+                  className="w-full lg:w-auto px-8 sm:px-12 py-4 sm:py-5 bg-background-dark text-primary font-black rounded-2xl hover:scale-[1.02] active:scale-[0.98] transition-all shadow-2xl shadow-black/30 text-lg"
                 >
                   Upload Now
                 </button>
@@ -229,7 +229,7 @@ export default function Home() {
               </div>
 
               {trendingResources.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-left">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 text-left">
                   {trendingResources.map((item, i) => (
                     <div
                       key={item.id}

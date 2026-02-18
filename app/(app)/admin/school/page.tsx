@@ -197,7 +197,7 @@ const SchoolAdminDashboard = () => {
 
             <main className="max-w-7xl mx-auto w-full p-4 space-y-6">
                 {/* Stats Grid */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div className="bg-white dark:bg-[#1c2720]/40 p-5 rounded-3xl border border-slate-200 dark:border-[#234832]/20 shadow-xl shadow-slate-200/50 dark:shadow-none">
                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Materials</p>
                         <p className="text-3xl font-black">{stats.total}</p>
@@ -242,7 +242,7 @@ const SchoolAdminDashboard = () => {
                                     onChange={e => setSearchQuery(e.target.value)}
                                 />
                             </div>
-                            <div className="flex gap-2 w-full md:w-auto">
+                            <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
                                 <select
                                     className="h-14 px-4 bg-white dark:bg-[#1c2720] border border-slate-200 dark:border-[#234832]/30 rounded-2xl font-bold text-sm outline-none"
                                     value={filterVerify}
@@ -267,7 +267,7 @@ const SchoolAdminDashboard = () => {
                         {/* List */}
                         <div className="grid grid-cols-1 gap-3">
                             {processedResources.map(res => (
-                                <div key={res.id} className="bg-white dark:bg-[#1c2720]/40 p-5 rounded-3xl border border-slate-200 dark:border-[#234832]/10 flex items-center justify-between group hover:shadow-xl transition-all shadow-sm">
+                                <div key={res.id} className="bg-white dark:bg-[#1c2720]/40 p-5 rounded-3xl border border-slate-200 dark:border-[#234832]/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4 group hover:shadow-xl transition-all shadow-sm">
                                     <div className="flex items-center gap-4">
                                         <div className="w-12 h-12 rounded-2xl bg-slate-50 dark:bg-[#102217] flex items-center justify-center border border-slate-100 dark:border-[#234832]/20">
                                             <span className="material-symbols-outlined text-[#13ec6a]/60">
@@ -296,7 +296,7 @@ const SchoolAdminDashboard = () => {
                                         </div>
                                     </div>
 
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
                                         <button
                                             onClick={() => toggleVerify(res.id, res.is_verified)}
                                             className={`p-2.5 rounded-xl border transition-all ${res.is_verified ? 'bg-[#13ec6a]/10 border-[#13ec6a] text-[#13ec6a]' : 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-400 hover:text-[#13ec6a] hover:border-[#13ec6a]/50'}`}
@@ -337,7 +337,7 @@ const SchoolAdminDashboard = () => {
                         </div>
                         {reports.map(rep => (
                             <div key={rep.id} className="bg-white dark:bg-[#1c2720]/40 p-6 rounded-3xl border-l-4 border-l-red-500 border border-slate-200 dark:border-[#234832]/10 shadow-sm transition-all hover:shadow-xl">
-                                <div className="flex justify-between items-start mb-4">
+                                <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-4">
                                     <div className="flex items-center gap-4">
                                         <div className="w-12 h-12 rounded-2xl bg-red-500/10 flex items-center justify-center text-red-500 border border-red-500/20">
                                             <span className="material-symbols-outlined font-black">flag</span>
@@ -357,7 +357,7 @@ const SchoolAdminDashboard = () => {
                                     <p className="text-sm font-bold text-slate-700 dark:text-slate-300">{rep.reason}</p>
                                 </div>
 
-                                <div className="flex gap-2">
+                                <div className="flex flex-col sm:flex-row gap-2">
                                     <button
                                         onClick={() => setShowResolveModal(rep)}
                                         className="h-12 flex-1 bg-[#13ec6a] text-[#102217] font-black uppercase tracking-widest text-[10px] rounded-xl shadow-lg shadow-[#13ec6a]/20 hover:scale-[1.02] active:scale-95 transition-all"
@@ -473,7 +473,7 @@ const SchoolAdminDashboard = () => {
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div className="bg-slate-50 dark:bg-white/5 p-4 rounded-3xl border border-slate-100 dark:border-white/5">
                                     <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Course</p>
                                     <p className="text-sm font-bold">{showDetailsModal.course_code}</p>
