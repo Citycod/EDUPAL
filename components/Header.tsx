@@ -1,5 +1,7 @@
 
 
+import React from 'react';
+
 interface HeaderProps {
   title: string;
   showBackButton?: boolean;
@@ -29,7 +31,7 @@ const Header: React.FC<HeaderProps> = ({
         {/* Left Section */}
         <div className="flex items-center size-12 shrink-0">
           {showBackButton && (
-            <button 
+            <button
               onClick={onBackClick}
               className="text-[#0d191c] flex size-12 shrink-0 items-center hover:bg-[#e7f1f4] rounded-xl transition-colors"
             >

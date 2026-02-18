@@ -254,7 +254,18 @@ const ResourceDetail: React.FC = () => {
     );
   }
 
-  const isPdf = resource.fileUrl?.toLowerCase().includes('.pdf');
+  const getFileType = () => {
+    if (!resource?.fileUrl) return 'unknown';
+    const url = resource.fileUrl.split('?')[0]; // Remove query params
+    const ext = url.split('.').pop()?.toLowerCase();
+
+    if (ext === 'pdf') return 'pdf';
+    if (['docx', 'doc', 'pptx', 'ppt', 'xlsx', 'xls'].includes(ext || '')) return 'office';
+    if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext || '')) return 'image';
+    return 'unknown';
+  };
+
+  const fileType = getFileType();
 
   return (
     <div className={`min-h-screen bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-white transition-colors duration-300 ${isPreviewMode ? 'overflow-hidden' : ''}`}>
@@ -299,25 +310,60 @@ const ResourceDetail: React.FC = () => {
 
           <div className={`relative w-full bg-slate-100 dark:bg-slate-900 rounded-[2rem] overflow-hidden border-2 border-primary/20 shadow-2xl transition-all duration-500 ${isPreviewMode ? 'fixed inset-4 z-50 !m-0 !w-[calc(100%-2rem)] !h-[calc(100%-2rem)]' : 'aspect-[3/4]'}`}>
             {resource.fileUrl ? (
-              isPdf ? (
-                <iframe
-                  src={`${resource.fileUrl}#toolbar=0&navpanes=0&scrollbar=0`}
-                  className="w-full h-full border-none"
-                  title="PDF Preview"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center p-4">
-                  <img
-                    src={resource.fileUrl}
-                    alt={resource.title}
-                    className="max-w-full max-h-full object-contain rounded-lg shadow-lg"
+              <>
+                {fileType === 'pdf' && (
+                  <iframe
+                    src={`${resource.fileUrl}#toolbar=0&navpanes=0&scrollbar=0`}
+                    className="w-full h-full border-none"
+                    title="PDF Preview"
                   />
-                </div>
-              )
+                )}
+
+                {fileType === 'office' && (
+                  <iframe
+                    src={`https://docs.google.com/viewer?url=${encodeURIComponent(resource.fileUrl)}&embedded=true`}
+                    className="w-full h-full border-none"
+                    title="Document Preview"
+                    allowFullScreen
+                    allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
+                  />
+                )}
+
+                {fileType === 'image' && (
+                  <div className="w-full h-full flex items-center justify-center p-4">
+                    <img
+                      src={resource.fileUrl}
+                      alt={resource.title}
+                      className="max-w-full max-h-full object-contain rounded-lg shadow-lg"
+                    />
+                  </div>
+                )}
+
+                {fileType === 'unknown' && (
+                  <div className="w-full h-full flex flex-col items-center justify-center gap-6 p-8 text-center bg-white dark:bg-slate-900">
+                    <div className="size-24 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-2">
+                      <span className="material-symbols-outlined text-5xl">description</span>
+                    </div>
+                    <div className="space-y-2">
+                      <h4 className="text-lg font-black uppercase tracking-tight text-slate-900 dark:text-white">Preview Restricted</h4>
+                      <p className="text-slate-500 dark:text-slate-400 text-sm font-medium max-w-xs mx-auto">
+                        This file format cannot be viewed directly in the browser. Please download to view on your device.
+                      </p>
+                    </div>
+                    <button
+                      onClick={handleDownload}
+                      className="inline-flex items-center gap-2 px-8 py-4 bg-primary text-background-dark rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">download</span>
+                      Download File
+                    </button>
+                  </div>
+                )}
+              </>
             ) : (
               <div className="w-full h-full flex flex-col items-center justify-center gap-4 text-slate-400">
                 <span className="material-symbols-outlined text-6xl">cloud_off</span>
-                <p className="text-xs font-black uppercase tracking-widest">Preview Unavailable</p>
+                <p className="text-xs font-black uppercase tracking-widest">Preview Link Expired</p>
               </div>
             )}
           </div>
@@ -391,7 +437,7 @@ const ResourceDetail: React.FC = () => {
                   className="flex-1 bg-primary text-background-dark h-16 rounded-[2rem] flex items-center justify-center gap-3 shadow-2xl shadow-primary/30 transition-all hover:scale-[1.02] active:scale-[0.98]"
                 >
                   <span className="material-symbols-outlined font-black">download</span>
-                  <span className="text-xs font-black uppercase tracking-[0.2em]">Authorize Access</span>
+                  <span className="text-xs font-black uppercase tracking-[0.2em]">Download</span>
                 </button>
                 <button className="size-16 rounded-[2rem] bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-500 transition-all hover:border-primary/30">
                   <span className="material-symbols-outlined">bookmark</span>

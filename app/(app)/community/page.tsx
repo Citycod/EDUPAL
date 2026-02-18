@@ -150,15 +150,14 @@ const CommunityContent: React.FC = () => {
     try {
       const { data, error } = await supabase
         .from('hub_posts')
-        .select(`
-          *,
-          profiles:author_id (full_name, avatar_url),
-          hub_courses!inner (course_code)
-        `)
+        .select('*')
         .eq('course_id', selectedCourseId)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Fetch posts error details:', error);
+        throw error;
+      }
 
       // Fetch reply counts
       const postIds = data?.map((p: any) => p.id) || [];
@@ -182,18 +181,18 @@ const CommunityContent: React.FC = () => {
         id: post.id,
         content: post.content,
         author_id: post.author_id,
-        author_name: post.profiles?.full_name || 'Anonymous',
-        author_avatar: post.profiles?.avatar_url || `https://ui-avatars.com/api/?name=User&background=random`,
+        author_name: post.author_name || 'Anonymous',
+        author_avatar: post.author_avatar || `https://ui-avatars.com/api/?name=User&background=random`,
         created_at: post.created_at,
         replies_count: replyCounts[post.id] || 0,
-        course_code: post.hub_courses?.course_code,
+        course_code: post.course_code,
         resource_id: post.resource_id,
         resource_title: post.resource_title
       }));
 
       setPosts(formattedPosts);
-    } catch (error) {
-      console.error('Error fetching posts:', error);
+    } catch (error: any) {
+      console.error('Error fetching posts:', error.message || error);
     } finally {
       setLoading(false);
     }
@@ -295,8 +294,8 @@ const CommunityContent: React.FC = () => {
       }
       fetchPosts();
     } catch (error: any) {
-      console.error('Error creating post:', error);
-      alert(`Failed to post: ${error.message}`);
+      console.error('Error creating post:', error.message || error);
+      alert(`Failed to post: ${error.message || 'Unknown error'}`);
     } finally {
       setIsPosting(false);
     }
