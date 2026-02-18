@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import BottomNav from '@/components/BottomNav';
+
 import { supabase } from '@/lib/supabase';
 
 interface Notification {
@@ -186,8 +186,8 @@ const Notifications: React.FC = () => {
                   key={notification.id}
                   onClick={() => handleNotificationClick(notification)}
                   className={`flex items-start gap-4 p-4 rounded-xl cursor-pointer transition-all ${notification.read
-                      ? 'bg-transparent hover:bg-slate-100 dark:hover:bg-white/5'
-                      : 'bg-white dark:bg-white/5 border-l-4 border-primary shadow-sm'
+                    ? 'bg-transparent hover:bg-slate-100 dark:hover:bg-white/5'
+                    : 'bg-white dark:bg-white/5 border-l-4 border-primary shadow-sm'
                     }`}
                 >
                   <div className={`shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${notification.read ? 'bg-slate-100 dark:bg-white/10 text-slate-500' : 'bg-primary/20 text-primary'
@@ -219,7 +219,7 @@ const Notifications: React.FC = () => {
         </div>
 
         {/* Bottom Navigation */}
-        <BottomNav />
+
       </div>
     </div>
   );

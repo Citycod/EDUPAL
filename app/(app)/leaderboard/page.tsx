@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { useInstitutionContext } from '@/lib/hooks/useInstitutionContext';
-import BottomNav from '@/components/BottomNav';
+
 
 interface Contributor {
     user_id: string;
@@ -283,7 +283,7 @@ const LeaderboardPage: React.FC = () => {
                     </div>
                 )}
 
-                <BottomNav />
+
             </div>
         </div>
     );

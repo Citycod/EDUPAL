@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import BottomNav from '@/components/BottomNav';
+
 
 interface ProfileStats {
   uploads: number;
@@ -460,7 +460,7 @@ const ProfilePage: React.FC = () => {
       </div>
 
       {/* Global Bottom Nav */}
-      <BottomNav />
+
     </div>
   );
 };

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import BottomNav from '@/components/BottomNav';
+
 import { useInstitutionContext } from '@/lib/hooks/useInstitutionContext';
 
 // Interface for Resource data
@@ -448,7 +448,7 @@ const LibraryPage = () => {
                 </button>
             </div>
 
-            <BottomNav />
+
         </div>
     );
 };

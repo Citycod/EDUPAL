@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import Header from "@/components/Header";
-import BottomNav from "@/components/BottomNav";
+
 
 interface Review {
   id: number;
@@ -478,7 +478,7 @@ const ResourceDetail: React.FC = () => {
         )}
       </main>
 
-      {!isPreviewMode && <BottomNav />}
+
     </div>
   );
 };

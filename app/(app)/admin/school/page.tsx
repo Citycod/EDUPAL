@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { useInstitutionContext } from '@/lib/hooks/useInstitutionContext';
-import BottomNav from '@/components/BottomNav';
+
 
 const SchoolAdminDashboard = () => {
     const router = useRouter();
@@ -538,7 +538,7 @@ const SchoolAdminDashboard = () => {
                 </div>
             )}
 
-            <BottomNav />
+
         </div>
     );
 };

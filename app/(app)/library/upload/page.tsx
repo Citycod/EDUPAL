@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import BottomNav from '@/components/BottomNav';
+
 import { useInstitutionContext } from '@/lib/hooks/useInstitutionContext';
 
 const UploadPage = () => {
@@ -421,7 +421,7 @@ const UploadPage = () => {
         )}
 
         <div className="h-8 bg-background-light dark:bg-background-dark"></div>
-        <BottomNav />
+
       </div>
     </div>
   );

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 import Header from '@/components/Header';
-import BottomNav from '@/components/BottomNav';
+
 import UploadMaterialModal, { UploadData } from '@/components/UploadMaterialModal';
 import { supabase } from '@/lib/supabase';
 import { getUserInstitutionId } from '@/lib/hooks/useInstitutionContext';
@@ -65,38 +65,7 @@ const StudyResources: React.FC = () => {
     fetchResources();
   }, []);
 
-  const navItems = [
-    {
-      icon: "House",
-      label: "Home",
-      active: false,
-      onClick: () => router.push('/home')
-    },
-    {
-      icon: "BookOpen",
-      label: "Study",
-      active: true,
-      onClick: () => router.push('/study')
-    },
-    {
-      icon: "UsersThree",
-      label: "Classes",
-      active: false,
-      onClick: () => router.push('/classes')
-    },
-    {
-      icon: "Users",
-      label: "Community",
-      active: false,
-      onClick: () => router.push('/community')
-    },
-    {
-      icon: "User",
-      label: "Profile",
-      active: false,
-      onClick: () => router.push('/profile')
-    }
-  ];
+
 
   const handleAddResource = () => {
     setIsUploadModalOpen(true);
@@ -384,7 +353,7 @@ const StudyResources: React.FC = () => {
       </div>
 
       {/* Fixed Bottom Navigation */}
-      <BottomNav navItems={navItems} />
+
 
       {/* Upload Material Modal */}
       <UploadMaterialModal

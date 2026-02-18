@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { useInstitutionContext } from '@/lib/hooks/useInstitutionContext';
-import BottomNav from '@/components/BottomNav';
+
 
 interface Course {
   id: string;
@@ -350,7 +350,7 @@ const CoursesPage: React.FC = () => {
         </div>
       )}
 
-      <BottomNav />
+
     </div>
   );
 };

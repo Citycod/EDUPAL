@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import BottomNav from '@/components/BottomNav';
+
 
 interface Course {
     id: string;
@@ -272,7 +272,7 @@ const CourseDetailPage: React.FC = () => {
                 )}
             </div>
 
-            <BottomNav />
+
         </div>
     );
 };

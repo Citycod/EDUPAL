@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import BottomNav from '@/components/BottomNav';
+
 import { supabase } from '@/lib/supabase';
 import { useInstitutionContext } from '@/lib/hooks/useInstitutionContext';
 
@@ -268,7 +268,7 @@ export default function Home() {
           </button>
         </div>
 
-        <BottomNav />
+
       </div>
     </div>
   );

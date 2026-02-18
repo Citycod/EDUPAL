@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { useInstitutionContext } from '@/lib/hooks/useInstitutionContext';
-import BottomNav from '@/components/BottomNav';
+
 import { Suspense } from 'react';
 
 const formatTimeAgo = (dateString: string) => {
@@ -564,7 +564,7 @@ const CommunityContent: React.FC = () => {
         </main>
 
         {/* Post Composer (Fixed Bottom) */}
-        <div className="fixed bottom-[56px] md:bottom-0 left-0 right-0 z-20 p-3 bg-background-light dark:bg-background-dark border-t border-slate-200 dark:border-slate-800 max-w-3xl mx-auto">
+        <div className="fixed bottom-[90px] md:bottom-0 left-0 right-0 z-20 p-3 bg-background-light dark:bg-background-dark border-t border-slate-200 dark:border-slate-800 max-w-3xl mx-auto">
           {linkedResourceInfo && (
             <div className="mb-2 px-3 py-2 bg-primary/10 border border-primary/20 rounded-xl flex items-center justify-between animate-in slide-in-from-bottom-2">
               <div className="flex items-center gap-2">
@@ -613,7 +613,7 @@ const CommunityContent: React.FC = () => {
         </div>
       </div>
 
-      <BottomNav />
+
     </div>
   );
 };
