@@ -63,10 +63,7 @@ const CoursesPage: React.FC = () => {
       }
 
       // 2. Fetch Refined Courses
-      let query = supabase.from('hub_courses').select(`
-        *,
-        hub_departments (name, institution_id)
-      `);
+      let query = supabase.from('hub_courses').select('*');
 
       // Filter by institution from context
       if (institution?.id) {
@@ -80,11 +77,13 @@ const CoursesPage: React.FC = () => {
           id: c.id,
           title: c.title,
           code: c.course_code,
+          department: c.department_name || 'General',
           instructor: 'Department Faculty',
           level: `${c.level}L`,
           image: `https://images.unsplash.com/photo-1546410531-bb4caa6b424d?q=80&w=2071&auto=format&fit=crop`,
           isEnrolled: false, // Simplified for now
-          department_id: c.department_id
+          department_id: c.department_id,
+          materialCount: 0 // We'd need a separate query or count for this
         }));
 
         const prioritizedCourses = formattedCourses.sort((a: any, b: any) => {

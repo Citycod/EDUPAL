@@ -67,10 +67,10 @@ const SchoolAdminDashboard = () => {
 
             setResources(resData || []);
 
-            // Fetch Reports
+            // Fetch Flattened Reports
             const { data: repData } = await supabase
-                .from('resource_reports')
-                .select('*, hub_resources(*)')
+                .from('hub_reports_view')
+                .select('*')
                 .order('created_at', { ascending: false });
 
             setReports(repData || []);
@@ -194,12 +194,17 @@ const SchoolAdminDashboard = () => {
 
     const resolveReport = async (status: 'resolved' | 'rejected') => {
         if (!showResolveModal) return;
+
+        // Use updated trigger logic on the view (handles ID mapping internally)
         const { error } = await supabase
-            .from('resource_reports')
+            .from('hub_reports_view')
             .update({ status })
-            .eq('id', showResolveModal.id);
+            .eq('report_id', showResolveModal.report_id);
 
         if (error) alert("Failed to update report");
+
+        // Optimistic update for flattened structure
+        setReports(prev => prev.map(r => r.report_id === showResolveModal.report_id ? { ...r, status } : r));
         setShowResolveModal(null);
     };
 
@@ -396,15 +401,15 @@ const SchoolAdminDashboard = () => {
                             <h2 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest">Pending Moderation Alerts</h2>
                         </div>
                         {reports.map(rep => (
-                            <div key={rep.id} className="bg-white dark:bg-[#1c2720]/40 p-6 rounded-3xl border-l-4 border-l-red-500 border border-slate-200 dark:border-[#234832]/10 shadow-sm transition-all hover:shadow-xl">
+                            <div key={rep.report_id} className="bg-white dark:bg-[#1c2720]/40 p-6 rounded-3xl border-l-4 border-l-red-500 border border-slate-200 dark:border-[#234832]/10 shadow-sm transition-all hover:shadow-xl">
                                 <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-4">
                                     <div className="flex items-center gap-4">
                                         <div className="w-12 h-12 rounded-2xl bg-red-500/10 flex items-center justify-center text-red-500 border border-red-500/20">
                                             <span className="material-symbols-outlined font-black">flag</span>
                                         </div>
                                         <div>
-                                            <h3 className="font-extrabold text-slate-900 dark:text-white leading-none mb-1">Reported: {rep.hub_resources?.title}</h3>
-                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Submitter: {rep.reporter_id?.substring(0, 8)} • {new Date(rep.created_at).toLocaleDateString()}</p>
+                                            <h3 className="font-extrabold text-slate-900 dark:text-white leading-none mb-1">Reported: {rep.resource_title}</h3>
+                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Submitter: {rep.reporter_name || 'Anonymous'} • {new Date(rep.created_at).toLocaleDateString()}</p>
                                         </div>
                                     </div>
                                     <span className={`px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-tighter ${rep.status === 'pending' ? 'bg-amber-100 text-amber-600 border border-amber-200' : 'bg-green-100 text-green-600 border border-green-200'}`}>
@@ -425,7 +430,16 @@ const SchoolAdminDashboard = () => {
                                         Resolve Action
                                     </button>
                                     <button
-                                        onClick={() => setShowDetailsModal(rep.hub_resources)}
+                                        onClick={() => {
+                                            // Construct a minimal resource object for the modal
+                                            setShowDetailsModal({
+                                                id: rep.resource_id,
+                                                title: rep.resource_title,
+                                                type: rep.resource_type,
+                                                is_verified: rep.resource_verified,
+                                                file_url: rep.resource_url
+                                            });
+                                        }}
                                         className="h-12 px-6 border border-slate-200 dark:border-[#234832]/30 rounded-xl hover:bg-slate-50 transition-all font-black text-[10px] uppercase tracking-widest"
                                     >
                                         Inspect

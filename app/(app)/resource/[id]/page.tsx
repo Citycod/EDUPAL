@@ -308,7 +308,7 @@ const ResourceDetail: React.FC = () => {
             </button>
           </div>
 
-          <div className={`relative w-full bg-slate-100 dark:bg-slate-900 rounded-[2rem] overflow-hidden border-2 border-primary/20 shadow-2xl transition-all duration-500 ${isPreviewMode ? 'fixed inset-4 z-50 !m-0 !w-[calc(100%-2rem)] !h-[calc(100%-2rem)]' : 'aspect-[3/4]'}`}>
+          <div className={`relative w-full bg-slate-100 dark:bg-slate-900 overflow-hidden shadow-2xl transition-all duration-500 ${isPreviewMode ? 'fixed inset-0 z-50 !m-0 w-screen h-screen rounded-none border-0' : 'aspect-[3/4] rounded-[2rem] border-2 border-primary/20'}`}>
             {resource.fileUrl ? (
               <>
                 {fileType === 'pdf' && (

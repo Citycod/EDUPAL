@@ -1,18 +1,20 @@
 -- Fix Hub Views for Institution Isolation
 -- Recreates bridge views and ensures proper permissions/RLS to avoid circular dependencies
 
--- 1. Fix hub_courses
+-- 1. Fix hub_courses (Include department name)
 DROP VIEW IF EXISTS public.hub_courses CASCADE;
 CREATE OR REPLACE VIEW public.hub_courses AS
 SELECT 
-    id,
-    title,
-    course_code,
-    department_id,
-    level,
-    created_at,
-    institution_id
-FROM academic.courses;
+    c.id,
+    c.title,
+    c.course_code,
+    c.department_id,
+    d.name as department_name,
+    c.level,
+    c.created_at,
+    c.institution_id
+FROM academic.courses c
+LEFT JOIN academic.departments d ON c.department_id = d.id;
 
 GRANT SELECT ON public.hub_courses TO authenticated;
 
@@ -103,4 +105,3 @@ CREATE POLICY "profiles_select_own_institution" ON public.profiles
     institution_id_permanent = public.get_user_institution_id()
     OR public.is_admin()
   );
-
