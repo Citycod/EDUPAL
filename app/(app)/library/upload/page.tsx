@@ -66,9 +66,14 @@ const UploadPage = () => {
     if (!activeInstId) return;
 
     const fetchDepts = async () => {
-      let query = supabase.from('hub_departments').select('*').eq('institution_id', activeInstId).order('name');
+      let query = supabase.from('hub_departments').select('*').order('name');
 
-      // If student, restrict to their department only
+      // Super Admins skip institutional scoping
+      if (userProfile?.role !== 'super_admin') {
+        query = query.eq('institution_id', activeInstId);
+      }
+
+      // If student, restrict further to their department only
       if (userProfile?.role === 'student' && userProfile?.department_id) {
         query = query.eq('id', userProfile.department_id);
       }

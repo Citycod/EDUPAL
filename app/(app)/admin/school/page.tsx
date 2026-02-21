@@ -107,7 +107,16 @@ const SchoolAdminDashboard = () => {
             .subscribe();
 
         // Fetch all departments for global actions
-        const { data: depts } = await supabase.from('hub_departments').select('*').eq('institution_id', instId).order('name');
+        // Super admins see all, regular admins stay scoped to institution
+        let query = supabase.from('hub_departments').select('*').order('name');
+
+        const { data: profile } = await supabase.from('hub_profiles').select('role').eq('id', (await supabase.auth.getUser()).data.user?.id).single();
+
+        if (profile?.role !== 'super_admin') {
+            query = query.eq('institution_id', instId);
+        }
+
+        const { data: depts } = await query;
         if (depts) setAllDepartments(depts);
     };
 

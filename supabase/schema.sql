@@ -88,6 +88,47 @@ CREATE TABLE IF NOT EXISTS academic.departments (
   UNIQUE(name, institution_id)
 );
 
+ALTER TABLE academic.departments ENABLE ROW LEVEL SECURITY;
+
+-- Helper to check if user is super_admin
+CREATE OR REPLACE FUNCTION public.is_super_admin()
+RETURNS BOOLEAN AS $$
+BEGIN
+  RETURN (
+    SELECT role = 'super_admin'
+    FROM public.profiles 
+    WHERE id = auth.uid()
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER STABLE;
+
+DROP POLICY IF EXISTS "view_departments_inst" ON academic.departments;
+CREATE POLICY "view_departments_inst" ON academic.departments FOR SELECT USING (
+  public.is_super_admin() OR
+  institution_id IN (
+    SELECT institution_id FROM academic.student_profiles WHERE id = auth.uid()
+    UNION
+    SELECT institution_id FROM public.profiles WHERE institution_id IS NOT NULL AND id = auth.uid()
+    UNION
+    SELECT institution_id_permanent FROM public.profiles WHERE institution_id_permanent IS NOT NULL AND id = auth.uid()
+  )
+);
+
+DROP POLICY IF EXISTS "academic_departments_select_inst" ON academic.departments;
+CREATE POLICY "academic_departments_select_inst" ON academic.departments FOR SELECT USING (
+  public.is_super_admin() OR
+  EXISTS (
+    SELECT 1 FROM academic.student_profiles sp 
+    WHERE sp.institution_id = academic.departments.institution_id AND sp.id = auth.uid()
+  )
+);
+
+-- Hub View for Departments
+CREATE OR REPLACE VIEW public.hub_departments AS
+SELECT * FROM academic.departments;
+GRANT SELECT ON public.hub_departments TO authenticated;
+
+
 -- Academic Context for Students
 CREATE TABLE IF NOT EXISTS academic.student_profiles (
   id uuid REFERENCES auth.users ON DELETE CASCADE PRIMARY KEY,
