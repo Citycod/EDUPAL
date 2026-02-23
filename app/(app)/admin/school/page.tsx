@@ -22,7 +22,8 @@ const SchoolAdminDashboard = () => {
     const [showResolveModal, setShowResolveModal] = useState<any>(null);
     const [isAddCourseModalOpen, setIsAddCourseModalOpen] = useState(false);
     const [allDepartments, setAllDepartments] = useState<any[]>([]);
-    const [newCourse, setNewCourse] = useState({ title: '', course_code: '', department_id: '' });
+    const [newCourse, setNewCourse] = useState({ title: '', course_code: '', department_id: '', new_dept_name: '' });
+    const [isNewDept, setIsNewDept] = useState(false);
     const [addingCourse, setAddingCourse] = useState(false);
     const [showDetailsModal, setShowDetailsModal] = useState<any | null>(null);
 
@@ -106,18 +107,25 @@ const SchoolAdminDashboard = () => {
             })
             .subscribe();
 
-        // Fetch all departments for global actions
-        // Super admins see all, regular admins stay scoped to institution
-        let query = supabase.from('hub_departments').select('*').order('name');
+        // Fetch institutional departments
+        const { data: instDepts } = await supabase
+            .from('hub_departments')
+            .select('*')
+            .eq('institution_id', instId)
+            .order('name');
 
-        const { data: profile } = await supabase.from('hub_profiles').select('role').eq('id', (await supabase.auth.getUser()).data.user?.id).single();
+        // Fetch global department suggestions
+        const { data: globalNames } = await supabase.rpc('get_global_department_names');
 
-        if (profile?.role !== 'super_admin') {
-            query = query.eq('institution_id', instId);
+        if (instDepts) {
+            // Combine them: institutional first, then global names that aren't already institutional
+            const institutionalNames = new Set(instDepts.map(d => d.name));
+            const globalDepts = (globalNames || [])
+                .filter((name: string) => !institutionalNames.has(name))
+                .map((name: string) => ({ name, id: `global:${name}` }));
+
+            setAllDepartments([...instDepts, ...globalDepts]);
         }
-
-        const { data: depts } = await query;
-        if (depts) setAllDepartments(depts);
     };
 
     // Stats Calculation
@@ -222,13 +230,46 @@ const SchoolAdminDashboard = () => {
         if (!institution?.id) return;
         setAddingCourse(true);
         try {
+            let deptId = newCourse.department_id;
+
+            // 1. Create department if it's new OR global suggestion
+            if (isNewDept && newCourse.new_dept_name) {
+                const { data: deptData, error: deptError } = await supabase
+                    .from('hub_departments')
+                    .insert({
+                        name: newCourse.new_dept_name.trim(),
+                        institution_id: institution.id
+                    })
+                    .select('id')
+                    .single();
+
+                if (deptError) throw new Error(`Department creation failed: ${deptError.message}`);
+                deptId = deptData.id;
+            } else if (deptId?.startsWith('global:')) {
+                const name = deptId.replace('global:', '');
+                const { data: deptData, error: deptError } = await supabase
+                    .from('hub_departments')
+                    .insert({
+                        name: name,
+                        institution_id: institution.id
+                    })
+                    .select('id')
+                    .single();
+
+                if (deptError) throw new Error(`Global department mapping failed: ${deptError.message}`);
+                deptId = deptData.id;
+            }
+
+            if (!deptId) throw new Error("Please select or enter a department");
+
+            // 2. Create course
             const levelMatch = newCourse.course_code.match(/\d+/);
             const level = levelMatch ? `${Math.floor(parseInt(levelMatch[0]) / 100) * 100}` : '100';
 
             const { error } = await supabase.from('hub_courses').insert({
                 title: newCourse.title,
                 course_code: newCourse.course_code.toUpperCase(),
-                department_id: newCourse.department_id,
+                department_id: deptId,
                 level: level,
                 institution_id: institution.id
             });
@@ -236,14 +277,17 @@ const SchoolAdminDashboard = () => {
             if (error) throw error;
 
             setIsAddCourseModalOpen(false);
-            setNewCourse({ title: '', course_code: '', department_id: '' });
+            setNewCourse({ title: '', course_code: '', department_id: '', new_dept_name: '' });
+            setIsNewDept(false);
             alert("Course board initialized!");
+            fetchInitialData(institution.id);
         } catch (error: any) {
-            alert(`Error adding course: ${error.message}`);
+            alert(`Error: ${error.message}`);
         } finally {
             setAddingCourse(false);
         }
     };
+
 
     return (
         <div className="bg-[#f6f8f7] dark:bg-[#102217] min-h-screen font-roboto text-slate-900 dark:text-slate-100 flex flex-col pb-24">
@@ -661,29 +705,61 @@ const SchoolAdminDashboard = () => {
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black text-[#13ec6a] uppercase tracking-widest ml-1">Department</label>
-                                <select
-                                    required
-                                    className="w-full bg-slate-50 dark:bg-black/20 border-2 border-slate-100 dark:border-white/5 text-slate-900 dark:text-white rounded-2xl py-4 px-5 focus:outline-none focus:border-[#13ec6a] transition-all font-bold"
-                                    value={newCourse.department_id}
-                                    onChange={(e) => setNewCourse(prev => ({ ...prev, department_id: e.target.value }))}
-                                >
-                                    <option value="">Select Department</option>
-                                    {allDepartments.map(dept => <option key={dept.id} value={dept.id}>{dept.name}</option>)}
-                                </select>
+                                <div className="flex justify-between items-center mb-1">
+                                    <label className="text-[10px] font-black text-[#13ec6a] uppercase tracking-widest ml-1">Department</label>
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsNewDept(!isNewDept)}
+                                        className="text-[9px] font-black text-slate-400 hover:text-[#13ec6a] uppercase tracking-tighter transition-colors"
+                                    >
+                                        {isNewDept ? 'Select Existing' : '+ Add New Name'}
+                                    </button>
+                                </div>
+                                {isNewDept ? (
+                                    <input
+                                        required
+                                        value={newCourse.new_dept_name}
+                                        onChange={(e) => setNewCourse(prev => ({ ...prev, new_dept_name: e.target.value }))}
+                                        className="w-full bg-slate-50 dark:bg-black/20 border-2 border-slate-100 dark:border-white/5 text-slate-900 dark:text-white rounded-2xl py-4 px-5 focus:outline-none focus:border-[#13ec6a] transition-all font-bold placeholder:font-normal"
+                                        placeholder="Enter Department Name"
+                                    />
+                                ) : (
+                                    <select
+                                        required
+                                        className="w-full bg-slate-50 dark:bg-black/20 border-2 border-slate-100 dark:border-white/5 text-slate-900 dark:text-white rounded-2xl py-4 px-5 focus:outline-none focus:border-[#13ec6a] transition-all font-bold"
+                                        value={newCourse.department_id}
+                                        onChange={(e) => setNewCourse(prev => ({ ...prev, department_id: e.target.value }))}
+                                    >
+                                        <option value="">Select Department</option>
+                                        <optgroup label="Local Departments">
+                                            {allDepartments.filter(d => !d.id.startsWith('global:')).map(dept => (
+                                                <option key={dept.id} value={dept.id}>{dept.name}</option>
+                                            ))}
+                                        </optgroup>
+                                        <optgroup label="Global Suggestions">
+                                            {allDepartments.filter(d => d.id.startsWith('global:')).map(dept => (
+                                                <option key={dept.id} value={dept.id}>{dept.name}</option>
+                                            ))}
+                                        </optgroup>
+                                    </select>
+                                )}
                             </div>
 
                             <div className="flex gap-4 pt-4">
                                 <button
                                     type="button"
-                                    onClick={() => setIsAddCourseModalOpen(false)}
+                                    onClick={() => {
+                                        setIsAddCourseModalOpen(false);
+                                        setIsNewDept(false);
+                                        setNewCourse({ title: '', course_code: '', department_id: '', new_dept_name: '' });
+                                    }}
                                     className="flex-1 py-4 text-slate-500 font-bold text-sm uppercase tracking-widest rounded-2xl hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     type="submit"
-                                    disabled={addingCourse || !newCourse.title || !newCourse.course_code || !newCourse.department_id}
+                                    disabled={addingCourse || !newCourse.title || !newCourse.course_code || (!isNewDept && !newCourse.department_id) || (isNewDept && !newCourse.new_dept_name)}
                                     className="flex-1 bg-[#13ec6a] text-[#102217] font-black py-4 rounded-2xl shadow-xl shadow-[#13ec6a]/20 transition-all active:scale-[0.95] disabled:opacity-50 uppercase text-xs tracking-widest"
                                 >
                                     {addingCourse ? 'Creating...' : 'Initialize'}

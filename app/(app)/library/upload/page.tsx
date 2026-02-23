@@ -20,6 +20,8 @@ const UploadPage = () => {
   // Structured Data
   const [departments, setDepartments] = useState<any[]>([]);
   const [sessions, setSessions] = useState<any[]>([]);
+  const [isNewDept, setIsNewDept] = useState(false);
+  const [newDeptName, setNewDeptName] = useState('');
 
   const [formData, setFormData] = useState({
     departmentId: '',
@@ -66,26 +68,37 @@ const UploadPage = () => {
     if (!activeInstId) return;
 
     const fetchDepts = async () => {
-      let query = supabase.from('hub_departments').select('*').order('name');
+      if (!activeInstId) return;
 
-      // Super Admins skip institutional scoping
-      if (userProfile?.role !== 'super_admin') {
-        query = query.eq('institution_id', activeInstId);
-      }
+      // Fetch institutional departments
+      const { data: instDepts } = await supabase
+        .from('hub_departments')
+        .select('*')
+        .eq('institution_id', activeInstId)
+        .order('name');
 
-      // If student, restrict further to their department only
-      if (userProfile?.role === 'student' && userProfile?.department_id) {
-        query = query.eq('id', userProfile.department_id);
-      }
+      // Fetch global department suggestions
+      const { data: globalNames } = await supabase.rpc('get_global_department_names');
 
-      const { data } = await query;
-      setDepartments(data || []);
+      if (instDepts) {
+        // Combine them: institutional first, then global names that aren't already institutional
+        const institutionalNames = new Set(instDepts.map(d => d.name));
+        const globalDepts = (globalNames || [])
+          .filter((name: string) => !institutionalNames.has(name))
+          .map((name: string) => ({ name, id: `global:${name}` }));
 
-      // Auto-select if only one option (for students)
-      if (data?.length === 1) {
-        setFormData(prev => ({ ...prev, departmentId: data[0].id }));
-      } else {
-        setFormData(prev => ({ ...prev, departmentId: '' }));
+        setDepartments([...instDepts, ...globalDepts]);
+
+        // Auto-select logic for students
+        if (userProfile?.role === 'student' && userProfile?.department_id) {
+          const studentDept = instDepts.find(d => d.id === userProfile.department_id);
+          if (studentDept) {
+            setFormData(prev => ({ ...prev, departmentId: studentDept.id }));
+          }
+        } else if (instDepts.length === 1 && departments.length === 0) {
+          // Only auto-select if we haven't already combined or if it's the very first load
+          // setFormData(prev => ({ ...prev, departmentId: instDepts[0].id }));
+        }
       }
     };
     fetchDepts();
@@ -126,14 +139,45 @@ const UploadPage = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('You must be logged in to upload.');
 
-      // Check if course exists, if not create it
+      // 1. Resolve Department
+      let deptId = formData.departmentId;
+      if (isNewDept && newDeptName) {
+        const { data: deptData, error: deptError } = await supabase
+          .from('hub_departments')
+          .insert({
+            name: newDeptName.trim(),
+            institution_id: targetInstId
+          })
+          .select('id')
+          .single();
+
+        if (deptError) throw new Error(`Department creation failed: ${deptError.message}`);
+        deptId = deptData.id;
+      } else if (deptId?.startsWith('global:')) {
+        const name = deptId.replace('global:', '');
+        const { data: deptData, error: deptError } = await supabase
+          .from('hub_departments')
+          .insert({
+            name: name,
+            institution_id: targetInstId
+          })
+          .select('id')
+          .single();
+
+        if (deptError) throw new Error(`Global department mapping failed: ${deptError.message}`);
+        deptId = deptData.id;
+      }
+
+      if (!deptId) throw new Error('Please select or enter a department.');
+
+      // 2. Check if course exists, if not create it
       let courseId: string | null = null;
 
       const { data: existingCourse, error: courseCheckError } = await supabase
         .from('hub_courses')
         .select('id')
-        .eq('course_code', formData.courseCode)
-        .eq('department_id', formData.departmentId)
+        .eq('course_code', formData.courseCode.toUpperCase())
+        .eq('department_id', deptId)
         .maybeSingle();
 
       if (courseCheckError) {
@@ -143,13 +187,18 @@ const UploadPage = () => {
       if (existingCourse) {
         courseId = existingCourse.id;
       } else {
+        // Auto-calculate level from course code (e.g., CS101 -> 100)
+        const levelMatch = formData.courseCode.match(/\d+/);
+        const calculatedLevel = levelMatch ? `${Math.floor(parseInt(levelMatch[0]) / 100) * 100}` : formData.level;
+
         // Create new course with institution_id auto-injected
         const { data: newCourse, error: courseCreateError } = await supabase
           .from('hub_courses')
           .insert({
             title: formData.courseTitle,
-            course_code: formData.courseCode,
-            department_id: formData.departmentId,
+            course_code: formData.courseCode.toUpperCase(),
+            department_id: deptId,
+            level: calculatedLevel,
             institution_id: targetInstId // Explicitly set if changed by super admin
           })
           .select('id')
@@ -199,6 +248,8 @@ const UploadPage = () => {
       if (insertError) throw insertError;
 
       setSuccess(true);
+      setNewDeptName('');
+      setIsNewDept(false);
       setTimeout(() => {
         router.push('/library');
       }, 2000);
@@ -273,18 +324,50 @@ const UploadPage = () => {
                 )}
 
                 <label className="flex flex-col w-full">
-                  <p className="text-slate-700 dark:text-white/80 text-sm font-medium pb-2 ml-1">Department</p>
-                  <select
-                    name="departmentId"
-                    value={formData.departmentId}
-                    onChange={handleInputChange}
-                    disabled={!institution}
-                    required
-                    className="form-select flex w-full rounded-xl text-black dark:text-white focus:outline-0 focus:ring-1 focus:ring-primary border border-slate-300 dark:border-white/10 bg-white dark:bg-[#1c2720] focus:border-primary h-14 p-4 text-base disabled:opacity-50"
-                  >
-                    <option value="">Select Department</option>
-                    {departments.map(dept => <option key={dept.id} value={dept.id}>{dept.name}</option>)}
-                  </select>
+                  <div className="flex justify-between items-center pb-2 ml-1">
+                    <p className="text-slate-700 dark:text-white/80 text-sm font-medium">Department</p>
+                    {(userProfile?.role === 'admin' || userProfile?.role === 'school_admin' || userProfile?.role === 'super_admin') && (
+                      <button
+                        type="button"
+                        onClick={() => setIsNewDept(!isNewDept)}
+                        className="text-[10px] font-black text-primary uppercase tracking-tighter"
+                      >
+                        {isNewDept ? 'Select Existing' : '+ Add New'}
+                      </button>
+                    )}
+                  </div>
+                  {isNewDept ? (
+                    <input
+                      type="text"
+                      name="newDeptName"
+                      value={newDeptName}
+                      onChange={(e) => setNewDeptName(e.target.value)}
+                      placeholder="Enter new department name"
+                      required
+                      className="form-input flex w-full rounded-xl text-black dark:text-white focus:outline-0 focus:ring-1 focus:ring-primary border border-slate-300 dark:border-white/10 bg-white dark:bg-[#1c2720] focus:border-primary h-14 px-4 text-base"
+                    />
+                  ) : (
+                    <select
+                      name="departmentId"
+                      value={formData.departmentId}
+                      onChange={handleInputChange}
+                      disabled={!institution}
+                      required
+                      className="form-select flex w-full rounded-xl text-black dark:text-white focus:outline-0 focus:ring-1 focus:ring-primary border border-slate-300 dark:border-white/10 bg-white dark:bg-[#1c2720] focus:border-primary h-14 p-4 text-base disabled:opacity-50"
+                    >
+                      <option value="">Select Department</option>
+                      <optgroup label="Local Departments">
+                        {departments.filter(d => !d.id.startsWith('global:')).map(dept => (
+                          <option key={dept.id} value={dept.id}>{dept.name}</option>
+                        ))}
+                      </optgroup>
+                      <optgroup label="Global Suggestions">
+                        {departments.filter(d => d.id.startsWith('global:')).map(dept => (
+                          <option key={dept.id} value={dept.id}>{dept.name}</option>
+                        ))}
+                      </optgroup>
+                    </select>
+                  )}
                 </label>
 
                 <label className="flex flex-col w-full">
