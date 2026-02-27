@@ -55,10 +55,9 @@ const LibraryPage = () => {
                     const { data: profile } = await supabase.from('hub_profiles').select('*').eq('id', user.id).single();
                     setUserProfile(profile);
 
-                    if (institution?.id) {
-                        fetchResources({ instId: institution.id, profile });
-                    } if (profile?.department && !selectedDept) setSelectedDept(profile.department);
-                    if (profile?.level && !selectedLevel) setSelectedLevel(profile.level);
+                    // Set default filter values from profile
+                    if (profile?.department_id && !selectedDept) setSelectedDept(profile.department_id);
+                    if (profile?.level && !selectedLevel) setSelectedLevel(String(profile.level));
 
                     // Fetch user's votes via bridge
                     const { data: votes } = await supabase.from('hub_resource_votes').select('resource_id').eq('user_id', user.id);
@@ -66,39 +65,44 @@ const LibraryPage = () => {
                         setUserVotes(new Set(votes.map(v => v.resource_id)));
                     }
 
-                    // Proceed with filtered fetch if context available
+                    // 2. Fetch Sessions via Bridge
+                    const { data: sess } = await supabase.from('hub_sessions').select('*').order('name', { ascending: false });
+                    if (sess) setSessions(sess);
+
+                    // 3. Handle External Search Params (e.g. from Courses page)
+                    const params = new URLSearchParams(window.location.search);
+                    const courseIdParam = params.get('course');
+
+                    if (courseIdParam && institution?.id) {
+                        const { data: courseRef } = await supabase
+                            .from('hub_courses')
+                            .select('*, hub_departments (*)')
+                            .eq('id', courseIdParam)
+                            .single();
+
+                        if (courseRef) {
+                            setSelectedDept(courseRef.department_id);
+                            setSelectedLevel(String(courseRef.level || ''));
+                            fetchResources({ instId: institution.id, deptId: courseRef.department_id, level: String(courseRef.level || ''), profile });
+                            return;
+                        }
+                    }
+
+                    // 4. Single filtered fetch using profile defaults
                     if (institution?.id) {
                         fetchResources({
                             instId: institution.id,
-                            deptId: profile.department || '',
-                            level: profile.level || ''
+                            deptId: profile?.department_id || '',
+                            level: profile?.level ? String(profile.level) : '',
+                            profile
                         });
                         return;
                     }
                 }
 
-                // 2. Fetch Sessions via Bridge
+                // Fallback: no user, just fetch sessions
                 const { data: sess } = await supabase.from('hub_sessions').select('*').order('name', { ascending: false });
                 if (sess) setSessions(sess);
-
-                // 3. Handle External Search Params (e.g. from Courses page)
-                const params = new URLSearchParams(window.location.search);
-                const courseIdParam = params.get('course');
-
-                if (courseIdParam && institution?.id) {
-                    const { data: courseRef } = await supabase
-                        .from('hub_courses')
-                        .select('*, hub_departments (*)')
-                        .eq('id', courseIdParam)
-                        .single();
-
-                    if (courseRef) {
-                        setSelectedDept(courseRef.department_id);
-                        setSelectedLevel(courseRef.level);
-                        fetchResources({ instId: institution.id, deptId: courseRef.department_id, level: courseRef.level });
-                        return;
-                    }
-                }
 
                 if (institution?.id) {
                     fetchResources({ instId: institution.id });
@@ -132,7 +136,7 @@ const LibraryPage = () => {
             query = query.or(`department_id.eq.${filters.deptId},course_code.ilike.EDU%,course_code.ilike.GNS%,course_code.ilike.GST%`);
         }
 
-        if (filters.level) query = query.eq('level', filters.level);
+        if (filters.level) query = query.eq('level', String(filters.level));
         if (filters.sessionId) query = query.eq('session_id', filters.sessionId);
         if (filters.type) query = query.eq('type', filters.type);
 
