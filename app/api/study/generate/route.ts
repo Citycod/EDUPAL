@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { GoogleGenAI } from '@google/genai';
 import pdf from 'pdf-parse/lib/pdf-parse';
+import mammoth from 'mammoth';
 
 const supabaseAdmin = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -85,8 +86,10 @@ export async function POST(req: NextRequest) {
         // 4. Extract Text
         let extractedText = "";
 
-        // For now, we only support PDFs safely. If it's an image or docx, we'd need different parsers.
-        if (filePath.toLowerCase().endsWith('.pdf')) {
+        // Depending on file extension, we use different parsers
+        const lowerCasePath = filePath.toLowerCase();
+
+        if (lowerCasePath.endsWith('.pdf')) {
             try {
                 const pdfData = await pdf(buffer);
                 extractedText = pdfData.text;
@@ -94,14 +97,22 @@ export async function POST(req: NextRequest) {
                 console.error("PDF Parsing error:", err);
                 return NextResponse.json({ error: 'Failed to parse PDF text' }, { status: 500 });
             }
+        } else if (lowerCasePath.endsWith('.docx')) {
+            try {
+                const docData = await mammoth.extractRawText({ buffer });
+                extractedText = docData.value;
+            } catch (err) {
+                console.error("DOCX Parsing error:", err);
+                return NextResponse.json({ error: 'Failed to parse DOCX text. Make sure it is a valid .docx file.' }, { status: 500 });
+            }
         } else {
-            // If it's a plain text file, we can just decode it.
-            // If it's a docx/ppt, we might need to tell the user it's unsupported for now.
+            // For other files, try parsing as UTF-8 plaintext
             extractedText = buffer.toString('utf-8');
 
-            // Quick sanity check if it's binary junk
-            if (extractedText.includes('')) {
-                return NextResponse.json({ error: 'AI generation currently only supports PDF and TXT files.' }, { status: 400 });
+            // Quick sanity check if it's binary junk (e.g. ppt, xls, images)
+            // A simple heuristic is looking for null bytes which are extremely rare in valid utf-8 text.
+            if (extractedText.includes('\x00')) {
+                return NextResponse.json({ error: 'AI generation currently only supports PDF, DOCX, and TXT files.' }, { status: 400 });
             }
         }
 
