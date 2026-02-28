@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import Header from "@/components/Header";
+import SubscriptionGate from '@/components/SubscriptionGate';
 
 
 interface Review {
@@ -431,13 +432,26 @@ const ResourceDetail: React.FC = () => {
                   <span className="material-symbols-outlined font-black">download</span>
                   <span className="text-xs font-black uppercase tracking-[0.2em]">Download</span>
                 </button>
-                <button
-                  onClick={() => router.push(`/study/${resource.id}`)}
-                  className="flex-1 bg-secondary text-white h-16 rounded-[2rem] flex items-center justify-center gap-3 shadow-2xl shadow-secondary/30 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                <SubscriptionGate
+                  featureKey="ai_study_tools"
+                  fallback={
+                    <button
+                      onClick={() => router.push('/subscription')}
+                      className="flex-1 bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400 h-16 rounded-[2rem] flex items-center justify-center gap-3 transition-all hover:scale-[1.02] active:scale-[0.98] border border-slate-300 dark:border-slate-700"
+                    >
+                      <span className="material-symbols-outlined font-black">lock</span>
+                      <span className="text-xs font-black uppercase tracking-[0.2em]">Study AI</span>
+                    </button>
+                  }
                 >
-                  <span className="material-symbols-outlined font-black">auto_awesome</span>
-                  <span className="text-xs font-black uppercase tracking-[0.2em]">Study AI</span>
-                </button>
+                  <button
+                    onClick={() => router.push(`/study/${resource.id}`)}
+                    className="flex-1 bg-secondary text-white h-16 rounded-[2rem] flex items-center justify-center gap-3 shadow-2xl shadow-secondary/30 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                  >
+                    <span className="material-symbols-outlined font-black">auto_awesome</span>
+                    <span className="text-xs font-black uppercase tracking-[0.2em]">Study AI</span>
+                  </button>
+                </SubscriptionGate>
                 <button className="size-16 w-16 min-w-16 rounded-[2rem] bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-500 transition-all hover:border-primary/30">
                   <span className="material-symbols-outlined">bookmark</span>
                 </button>

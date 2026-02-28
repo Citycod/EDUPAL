@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { useSubscription } from '@/lib/hooks/useSubscription';
 
-const SubscriptionPage = () => {
+const SubscriptionContent = () => {
     const router = useRouter();
     const searchParams = useSearchParams();
     const { isSubscribed, subscription, plan, loading: subLoading, daysRemaining } = useSubscription();
@@ -262,10 +262,10 @@ const SubscriptionPage = () => {
                                 onClick={() => isFeatureEnabled && handleSubscribe(premiumPlan.id)}
                                 disabled={processing || (subscription?.plan_id === premiumPlan.id) || !isFeatureEnabled}
                                 className={`w-full font-black px-6 py-4 rounded-xl transition-all uppercase tracking-widest text-xs flex items-center justify-center gap-2 ${!isFeatureEnabled
-                                        ? 'bg-green-500/20 text-green-600 dark:text-green-400 cursor-not-allowed border border-green-500/30'
-                                        : subscription?.plan_id === premiumPlan.id
-                                            ? 'bg-primary/20 text-primary cursor-not-allowed border border-primary/30'
-                                            : 'bg-primary text-background-dark hover:scale-105 active:scale-95 shadow-xl shadow-primary/30'
+                                    ? 'bg-green-500/20 text-green-600 dark:text-green-400 cursor-not-allowed border border-green-500/30'
+                                    : subscription?.plan_id === premiumPlan.id
+                                        ? 'bg-primary/20 text-primary cursor-not-allowed border border-primary/30'
+                                        : 'bg-primary text-background-dark hover:scale-105 active:scale-95 shadow-xl shadow-primary/30'
                                     }`}
                             >
                                 {processing ? (
@@ -303,4 +303,10 @@ const SubscriptionPage = () => {
     );
 };
 
-export default SubscriptionPage;
+export default function SubscriptionPage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[#f6f8f7] dark:bg-[#102217] text-slate-500">Loading Plans...</div>}>
+            <SubscriptionContent />
+        </Suspense>
+    );
+}

@@ -161,6 +161,27 @@ export default function LeaderboardPage() {
                     )}
                 </div>
 
+                {/* Personal Study Stats */}
+                {currentUserRank && (
+                    <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-none p-5 mb-6 border border-slate-100 dark:border-slate-800">
+                        <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4">Your Study Stats</h3>
+                        <div className="grid grid-cols-3 gap-3">
+                            <div className="text-center">
+                                <p className="text-2xl font-black text-amber-500">{currentUserRank.total_points}</p>
+                                <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400">Points</p>
+                            </div>
+                            <div className="text-center">
+                                <p className="text-2xl font-black text-primary">#{currentUserRank.institution_rank}</p>
+                                <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400">Rank</p>
+                            </div>
+                            <div className="text-center">
+                                <p className="text-2xl font-black text-slate-700 dark:text-white">🔥{currentUserRank.current_streak}</p>
+                                <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400">Streak</p>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {/* Info Card */}
                 <div className="bg-primary/10 rounded-3xl border border-primary/20 p-5 mb-8 flex items-start gap-4">
                     <div className="size-10 rounded-full bg-primary flex items-center justify-center shrink-0">
@@ -169,7 +190,7 @@ export default function LeaderboardPage() {
                     <div>
                         <h4 className="font-black text-sm text-slate-900 dark:text-white mb-1">How to earn points?</h4>
                         <p className="text-xs font-medium text-slate-600 dark:text-slate-400 leading-relaxed">
-                            Upload past questions, lecture notes, or course materials to the library. Every approved upload gives you <strong className="text-primary font-black">50 points</strong> and <strong className="text-primary font-black">1 Free Download Credit</strong>!
+                            Upload materials to earn <strong className="text-primary font-black">50 points + 1 Credit</strong>. Complete AI quizzes or flashcards to earn <strong className="text-primary font-black">20 points</strong> per session!
                         </p>
                     </div>
                 </div>

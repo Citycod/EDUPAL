@@ -20,7 +20,7 @@ const initAI = () => {
 
 export async function POST(req: NextRequest) {
     try {
-        const { resourceId, type } = await req.json();
+        const { resourceId, type, forceRegenerate } = await req.json();
 
         if (!resourceId || !type || !['flashcards', 'quiz'].includes(type)) {
             return NextResponse.json({ error: 'Invalid request payload' }, { status: 400 });
@@ -34,12 +34,12 @@ export async function POST(req: NextRequest) {
         // 1. Check if we already generated this (Cache Hit)
         const { data: existingQuiz } = await supabaseAdmin
             .from('hub_ai_quizzes')
-            .select('content')
+            .select('id, content') // select ID so we can update it later instead of insert
             .eq('resource_id', resourceId)
             .eq('type', type)
             .single();
 
-        if (existingQuiz) {
+        if (existingQuiz && !forceRegenerate) {
             return NextResponse.json({
                 cached: true,
                 content: existingQuiz.content
@@ -184,17 +184,31 @@ ${safeText}
         }
 
         // 7. Save to Database Cache
-        const { error: insertError } = await supabaseAdmin
-            .from('hub_ai_quizzes')
-            .insert({
-                resource_id: resourceId,
-                type: type,
-                content: generatedContent
-            });
+        let dbError = null;
+        if (existingQuiz) {
+            // Update the existing record instead of inserting a new one to prevent uniqueness violations
+            const { error: updateError } = await supabaseAdmin
+                .from('hub_ai_quizzes')
+                .update({
+                    content: generatedContent,
+                    generated_at: new Date().toISOString()
+                })
+                .eq('id', existingQuiz.id);
+            dbError = updateError;
+        } else {
+            const { error: insertError } = await supabaseAdmin
+                .from('hub_ai_quizzes')
+                .insert({
+                    resource_id: resourceId,
+                    type: type,
+                    content: generatedContent
+                });
+            dbError = insertError;
+        }
 
-        if (insertError) {
+        if (dbError) {
             // We don't strictly need to fail the request if the cache fails, but we should log it
-            console.error("Failed to cache AI quiz:", insertError);
+            console.error("Failed to cache AI quiz:", dbError);
         }
 
         // 8. Return to Frontend

@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import FlashcardGame, { Flashcard } from '@/components/study/FlashcardGame';
 import QuizGame, { QuizQuestion } from '@/components/study/QuizGame';
+import { useFeatureAccess } from '@/lib/hooks/useSubscription';
 
 type StudyMode = 'select' | 'generating' | 'flashcards' | 'quiz' | 'results';
 
@@ -21,8 +22,14 @@ export default function StudyPage() {
     const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
     const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[]>([]);
 
+    // Subscription & Access
+    const { hasAccess, loading: accessLoading } = useFeatureAccess('ai_study_tools');
+
     // Quiz Result State
     const [quizScore, setQuizScore] = useState(0);
+    const [pointsAwarded, setPointsAwarded] = useState<number | null>(null);
+    const [userRank, setUserRank] = useState<number | null>(null);
+    const [totalPoints, setTotalPoints] = useState<number | null>(null);
 
     useEffect(() => {
         const checkResource = async () => {
@@ -47,7 +54,7 @@ export default function StudyPage() {
         checkResource();
     }, [resourceId]);
 
-    const handleGenerate = async (type: 'flashcards' | 'quiz') => {
+    const handleGenerate = async (type: 'flashcards' | 'quiz', forceRegenerate = false) => {
         setMode('generating');
         setError(null);
 
@@ -55,7 +62,7 @@ export default function StudyPage() {
             const res = await fetch('/api/study/generate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ resourceId, type })
+                body: JSON.stringify({ resourceId, type, forceRegenerate })
             });
 
             const data = await res.json();
@@ -83,22 +90,107 @@ export default function StudyPage() {
         setQuizScore(score);
         setMode('results');
 
-        // Optional: Save score to database asynchronously
+        // Save score to backend and award points
         const saveScore = async () => {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) return;
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                if (!session?.access_token) return;
 
-            // First we'd need to fetch the quiz_id from ai_quizzes table 
-            // using the resourceId to link the result. 
-            // Skipping for this prototype as requested, but logic goes here.
+                const res = await fetch('/api/study/score', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${session.access_token}`,
+                    },
+                    body: JSON.stringify({
+                        resourceId,
+                        type: 'quiz',
+                        score,
+                        totalQuestions: total,
+                    }),
+                });
+
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    setPointsAwarded(data.pointsAwarded);
+                    setUserRank(data.rank);
+                    setTotalPoints(data.stats?.total_points || null);
+                }
+            } catch (err) {
+                console.error('Failed to save score:', err);
+            }
         };
         saveScore();
     };
 
-    if (loading) {
+    const handleFlashcardComplete = async () => {
+        setMode('results');
+
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session?.access_token) return;
+
+            const res = await fetch('/api/study/score', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.access_token}`,
+                },
+                body: JSON.stringify({
+                    resourceId,
+                    type: 'flashcards',
+                    score: 0,
+                    totalQuestions: flashcards.length,
+                }),
+            });
+
+            const data = await res.json();
+            if (res.ok && data.success) {
+                setPointsAwarded(data.pointsAwarded);
+                setUserRank(data.rank);
+                setTotalPoints(data.stats?.total_points || null);
+            }
+        } catch (err) {
+            console.error('Failed to save flashcard result:', err);
+        }
+    };
+
+    if (loading || accessLoading) {
         return (
             <div className="min-h-screen bg-background-light dark:bg-background-dark flex items-center justify-center">
                 <div className="size-12 rounded-full border-4 border-primary border-t-transparent animate-spin" />
+            </div>
+        );
+    }
+
+    if (!hasAccess) {
+        return (
+            <div className="min-h-screen bg-background-light dark:bg-background-dark flex flex-col items-center justify-center p-6 text-center">
+                <div className="relative mb-8 group">
+                    <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl group-hover:bg-primary/30 transition-colors"></div>
+                    <div className="size-24 rounded-full bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center relative z-10 shadow-xl">
+                        <span className="material-symbols-outlined text-4xl text-primary">lock</span>
+                    </div>
+                </div>
+                <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight mb-2">Premium Feature Locked</h2>
+                <p className="text-sm font-medium text-slate-500 max-w-sm mb-8">
+                    Generate instant AI flashcards and quizzes from your course materials. Upgrade to Premium to unlock full study tools.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4 w-full max-w-sm">
+                    <button
+                        onClick={() => router.back()}
+                        className="flex-1 h-14 rounded-2xl bg-slate-200 dark:bg-slate-800 text-slate-900 dark:text-white font-black text-sm uppercase tracking-widest hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors"
+                    >
+                        Go Back
+                    </button>
+                    <button
+                        onClick={() => router.push('/subscription')}
+                        className="flex-1 h-14 rounded-2xl bg-primary text-background-dark font-black text-sm uppercase tracking-widest shadow-xl shadow-primary/30 hover:bg-brand-light transition-all active:scale-95 flex items-center justify-center gap-2"
+                    >
+                        <span className="material-symbols-outlined">workspace_premium</span>
+                        Upgrade
+                    </button>
+                </div>
             </div>
         );
     }
@@ -144,39 +236,57 @@ export default function StudyPage() {
                         </div>
 
                         <div className="grid gap-4">
-                            <button
-                                onClick={() => handleGenerate('flashcards')}
-                                className="group relative flex items-center justify-between p-6 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-3xl hover:border-primary dark:hover:border-primary transition-all active:scale-[0.98] shadow-sm hover:shadow-xl hover:shadow-primary/10 text-left overflow-hidden"
-                            >
-                                <div className="absolute inset-0 bg-gradient-to-r from-primary/0 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                <div>
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <span className="material-symbols-outlined text-primary text-xl">style</span>
-                                        <h3 className="text-lg font-black text-slate-900 dark:text-white">Smart Flashcards</h3>
+                            <div className="flex flex-col gap-2">
+                                <button
+                                    onClick={() => handleGenerate('flashcards')}
+                                    className="group relative flex items-center justify-between p-6 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-3xl hover:border-primary dark:hover:border-primary transition-all active:scale-[0.98] shadow-sm hover:shadow-xl hover:shadow-primary/10 text-left overflow-hidden"
+                                >
+                                    <div className="absolute inset-0 bg-gradient-to-r from-primary/0 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                    <div>
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <span className="material-symbols-outlined text-primary text-xl">style</span>
+                                            <h3 className="text-lg font-black text-slate-900 dark:text-white">Smart Flashcards</h3>
+                                        </div>
+                                        <p className="text-xs font-medium text-slate-500 max-w-[200px]">15 generated flip-cards to drill key definitions and concepts.</p>
                                     </div>
-                                    <p className="text-xs font-medium text-slate-500 max-w-[200px]">15 generated flip-cards to drill key definitions and concepts.</p>
-                                </div>
-                                <div className="size-12 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center group-hover:bg-primary group-hover:text-background-dark transition-colors">
-                                    <span className="material-symbols-outlined">arrow_forward</span>
-                                </div>
-                            </button>
+                                    <div className="size-12 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center group-hover:bg-primary group-hover:text-background-dark transition-colors">
+                                        <span className="material-symbols-outlined">arrow_forward</span>
+                                    </div>
+                                </button>
+                                <button
+                                    onClick={() => handleGenerate('flashcards', true)}
+                                    className="text-[10px] font-bold text-slate-400 hover:text-primary uppercase tracking-widest flex items-center justify-center gap-1 py-2 w-full transition-colors"
+                                >
+                                    <span className="material-symbols-outlined text-[14px]">refresh</span>
+                                    Regenerate fresh flashcards
+                                </button>
+                            </div>
 
-                            <button
-                                onClick={() => handleGenerate('quiz')}
-                                className="group relative flex items-center justify-between p-6 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-3xl hover:border-primary dark:hover:border-primary transition-all active:scale-[0.98] shadow-sm hover:shadow-xl hover:shadow-primary/10 text-left overflow-hidden"
-                            >
-                                <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/0 to-indigo-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                <div>
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <span className="material-symbols-outlined text-primary text-xl">quiz</span>
-                                        <h3 className="text-lg font-black text-slate-900 dark:text-white">Interactive Quiz</h3>
+                            <div className="flex flex-col gap-2">
+                                <button
+                                    onClick={() => handleGenerate('quiz')}
+                                    className="group relative flex items-center justify-between p-6 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-3xl hover:border-primary dark:hover:border-primary transition-all active:scale-[0.98] shadow-sm hover:shadow-xl hover:shadow-primary/10 text-left overflow-hidden"
+                                >
+                                    <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/0 to-indigo-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                    <div>
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <span className="material-symbols-outlined text-primary text-xl">quiz</span>
+                                            <h3 className="text-lg font-black text-slate-900 dark:text-white">Interactive Quiz</h3>
+                                        </div>
+                                        <p className="text-xs font-medium text-slate-500 max-w-[200px]">10 multiple-choice questions to test your comprehension under pressure.</p>
                                     </div>
-                                    <p className="text-xs font-medium text-slate-500 max-w-[200px]">10 multiple-choice questions to test your comprehension under pressure.</p>
-                                </div>
-                                <div className="size-12 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center group-hover:bg-primary group-hover:text-background-dark transition-colors">
-                                    <span className="material-symbols-outlined">arrow_forward</span>
-                                </div>
-                            </button>
+                                    <div className="size-12 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center group-hover:bg-primary group-hover:text-background-dark transition-colors">
+                                        <span className="material-symbols-outlined">arrow_forward</span>
+                                    </div>
+                                </button>
+                                <button
+                                    onClick={() => handleGenerate('quiz', true)}
+                                    className="text-[10px] font-bold text-slate-400 hover:text-primary uppercase tracking-widest flex items-center justify-center gap-1 py-2 w-full transition-colors"
+                                >
+                                    <span className="material-symbols-outlined text-[14px]">refresh</span>
+                                    Regenerate fresh quiz
+                                </button>
+                            </div>
                         </div>
                     </div>
                 )}
@@ -202,7 +312,7 @@ export default function StudyPage() {
                 {mode === 'flashcards' && (
                     <FlashcardGame
                         cards={flashcards}
-                        onComplete={() => setMode('results')}
+                        onComplete={handleFlashcardComplete}
                     />
                 )}
 
@@ -222,8 +332,16 @@ export default function StudyPage() {
                         </div>
                         <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight mb-2">Session Complete!</h2>
 
+                        {/* Points Earned Badge */}
+                        {pointsAwarded && (
+                            <div className="flex items-center gap-2 bg-primary/10 text-primary px-5 py-2 rounded-full mb-6 border border-primary/20 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                                <span className="material-symbols-outlined text-[18px]">bolt</span>
+                                <span className="text-sm font-black">+{pointsAwarded} pts earned!</span>
+                            </div>
+                        )}
+
                         {quizQuestions.length > 0 && (
-                            <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-lg mb-8 w-full max-w-xs">
+                            <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-lg mb-4 w-full max-w-xs">
                                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Final Score</p>
                                 <div className="flex items-baseline justify-center gap-1">
                                     <span className="text-5xl font-black text-primary">{quizScore}</span>
@@ -232,9 +350,27 @@ export default function StudyPage() {
                             </div>
                         )}
 
+                        {/* Stats Card */}
+                        {(totalPoints !== null || userRank !== null) && (
+                            <div className="flex gap-3 w-full max-w-xs mb-8">
+                                {totalPoints !== null && (
+                                    <div className="flex-1 bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200 dark:border-slate-800 text-center">
+                                        <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">Total Points</p>
+                                        <p className="text-2xl font-black text-amber-500">{totalPoints}</p>
+                                    </div>
+                                )}
+                                {userRank !== null && (
+                                    <div className="flex-1 bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200 dark:border-slate-800 text-center">
+                                        <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">Your Rank</p>
+                                        <p className="text-2xl font-black text-primary">#{userRank}</p>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
                         <div className="flex gap-4 w-full max-w-xs">
                             <button
-                                onClick={() => setMode('select')}
+                                onClick={() => { setMode('select'); setPointsAwarded(null); }}
                                 className="flex-1 h-14 rounded-2xl bg-secondary dark:bg-secondary text-white font-black text-sm uppercase tracking-widest hover:bg-secondary-light dark:hover:bg-secondary-light transition-colors"
                             >
                                 Study Again
