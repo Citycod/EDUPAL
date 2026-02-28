@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 
 import { useInstitutionContext } from '@/lib/hooks/useInstitutionContext';
+import DownloadModal from '@/components/DownloadModal';
 
 // Interface for Resource data
 interface LibraryResource {
@@ -33,6 +34,10 @@ const LibraryPage = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [userProfile, setUserProfile] = useState<any>(null);
     const [userVotes, setUserVotes] = useState<Set<string>>(new Set());
+
+    // Modal State
+    const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
+    const [selectedResource, setSelectedResource] = useState<LibraryResource | null>(null);
 
     // Filter State
     const { institution, loading: contextLoading } = useInstitutionContext();
@@ -421,7 +426,11 @@ const LibraryPage = () => {
                                         </button>
 
                                         <button
-                                            onClick={(e) => { e.stopPropagation(); window.open(res.file_url, '_blank'); }}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setSelectedResource(res);
+                                                setIsDownloadModalOpen(true);
+                                            }}
                                             className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary text-background-dark font-black hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/10"
                                             title="Download file"
                                         >
@@ -469,6 +478,27 @@ const LibraryPage = () => {
                 </button>
             </div>
 
+            {/* Download Modal Component */}
+            {selectedResource && (
+                <DownloadModal
+                    isOpen={isDownloadModalOpen}
+                    onClose={() => {
+                        setIsDownloadModalOpen(false);
+                        setSelectedResource(null);
+                    }}
+                    resourceId={selectedResource.id}
+                    resourceTitle={selectedResource.title}
+                    filePath={
+                        // Extract just the file path from the public URL.
+                        // publicUrl usually looks like: https://[project].supabase.co/storage/v1/object/public/resources/userId/filename.ext
+                        selectedResource.file_url?.split('/resources/')[1] || ''
+                    }
+                    userId={userProfile?.id || ''}
+                    onDownloadSuccess={() => {
+                        // Optional: show a toast or message
+                    }}
+                />
+            )}
 
         </div>
     );

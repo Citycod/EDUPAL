@@ -8,7 +8,8 @@ import { supabase } from '@/lib/supabase';
 interface ProfileStats {
   uploads: number;
   downloads: number;
-  rating: number | string;
+  points: number;
+  credits: number;
 }
 
 interface UploadedResource {
@@ -23,11 +24,12 @@ interface UploadedResource {
 const ProfilePage: React.FC = () => {
   const router = useRouter();
   const [userProfile, setUserProfile] = useState<any>(null);
-  const [stats, setStats] = useState<ProfileStats>({ uploads: 0, downloads: 0, rating: 4.8 });
+  const [stats, setStats] = useState<ProfileStats>({ uploads: 0, downloads: 0, points: 0, credits: 0 });
   const [myUploads, setMyUploads] = useState<UploadedResource[]>([]);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
 
+  // ... (Other states remain the same)
   const [institutions, setInstitutions] = useState<any[]>([]);
   const [departments, setDepartments] = useState<any[]>([]);
 
@@ -46,6 +48,13 @@ const ProfilePage: React.FC = () => {
         const { data: { user } } = await supabase.auth.getUser();
 
         if (user) {
+          // 0. Fetch Gamification Stats
+          const { data: userStats } = await supabase
+            .from('hub_user_stats')
+            .select('*')
+            .eq('user_id', user.id)
+            .single();
+
           // 1. Fetch Profile Details via Consolidated View
           const { data: profile } = await supabase
             .from('hub_profiles')
@@ -91,7 +100,15 @@ const ProfilePage: React.FC = () => {
             setStats(prev => ({
               ...prev,
               uploads: resources.length,
-              downloads: resources.reduce((acc, curr) => acc + (curr.downloads_count || 0), 0)
+              downloads: resources.reduce((acc, curr) => acc + (curr.downloads_count || 0), 0),
+              points: userStats?.total_points || 0,
+              credits: userStats?.download_credits || 0
+            }));
+          } else {
+            setStats(prev => ({
+              ...prev,
+              points: userStats?.total_points || 0,
+              credits: userStats?.download_credits || 0
             }));
           }
         }
@@ -254,34 +271,48 @@ const ProfilePage: React.FC = () => {
                 </div>
               </div>
             </div>
-            <div className="flex gap-3 w-full max-w-[480px]">
+            <div className="flex flex-col gap-3 w-full max-w-[480px]">
+              <div className="flex gap-3 w-full">
+                <button
+                  onClick={() => setIsEditing(true)}
+                  className="flex-1 flex cursor-pointer items-center justify-center overflow-hidden rounded-xl h-11 px-4 bg-primary text-background-dark text-sm font-bold leading-normal tracking-wide transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-primary/20"
+                >
+                  <span className="material-symbols-outlined mr-2 text-[18px]">edit</span>
+                  <span className="truncate">Edit Profile</span>
+                </button>
+                <button className="flex cursor-pointer items-center justify-center overflow-hidden rounded-xl h-11 px-4 bg-slate-200 dark:bg-white/10 text-slate-700 dark:text-white text-sm font-bold leading-normal transition-colors hover:bg-slate-300 dark:hover:bg-white/20 border border-slate-300 dark:border-white/5">
+                  <span className="material-symbols-outlined">share</span>
+                </button>
+              </div>
+
               <button
-                onClick={() => setIsEditing(true)}
-                className="flex-1 flex cursor-pointer items-center justify-center overflow-hidden rounded-xl h-11 px-4 bg-primary text-background-dark text-sm font-bold leading-normal tracking-wide transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-primary/20"
+                onClick={() => router.push('/subscription')}
+                className="w-full flex cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-xl h-11 px-4 bg-black dark:bg-white text-white dark:text-black text-sm font-bold leading-normal tracking-wide transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg"
               >
-                <span className="material-symbols-outlined mr-2 text-[18px]">edit</span>
-                <span className="truncate">Edit Profile</span>
-              </button>
-              <button className="flex cursor-pointer items-center justify-center overflow-hidden rounded-xl h-11 px-4 bg-slate-200 dark:bg-white/10 text-slate-700 dark:text-white text-sm font-bold leading-normal transition-colors hover:bg-slate-300 dark:hover:bg-white/20 border border-slate-300 dark:border-white/5">
-                <span className="material-symbols-outlined">share</span>
+                <span className="material-symbols-outlined text-amber-500 text-[20px]">workspace_premium</span>
+                <span className="truncate">Manage Subscription</span>
               </button>
             </div>
           </div>
         </div>
 
         {/* Stats Section */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 px-4 py-6 border-y border-slate-200 dark:border-white/5 mt-4">
-          <div className="flex flex-col items-center p-3">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 px-4 py-6 border-y border-slate-200 dark:border-white/5 mt-4">
+          <div className="flex flex-col items-center p-3 border-b md:border-b-0 md:border-r border-slate-200 dark:border-white/5">
             <span className="text-primary text-xl font-bold">{stats.uploads}</span>
             <span className="text-slate-500 dark:text-slate-400 text-[10px] uppercase tracking-wider font-semibold">Uploads</span>
           </div>
-          <div className="flex flex-col items-center p-3 border-l sm:border-x border-slate-200 dark:border-white/5">
+          <div className="flex flex-col items-center p-3 border-b md:border-b-0 border-l sm:border-x md:border-l-0 md:border-r border-slate-200 dark:border-white/5">
             <span className="text-primary text-xl font-bold">{stats.downloads > 999 ? (stats.downloads / 1000).toFixed(1) + 'k' : stats.downloads}</span>
             <span className="text-slate-500 dark:text-slate-400 text-[10px] uppercase tracking-wider font-semibold">Downloads</span>
           </div>
-          <div className="flex flex-col items-center p-3 border-t md:border-t-0 col-span-2 md:col-span-1 border-slate-200 dark:border-white/5">
-            <span className="text-primary text-xl font-bold">{stats.rating}</span>
-            <span className="text-slate-500 dark:text-slate-400 text-[10px] uppercase tracking-wider font-semibold">Rating</span>
+          <div className="flex flex-col items-center p-3 border-slate-200 dark:border-white/5">
+            <span className="text-green-500 text-xl font-bold">{stats.credits}</span>
+            <span className="text-slate-500 dark:text-slate-400 text-[10px] uppercase tracking-wider font-semibold">Credits</span>
+          </div>
+          <div className="flex flex-col items-center p-3 border-l border-slate-200 dark:border-white/5">
+            <span className="text-amber-500 text-xl font-bold">{stats.points}</span>
+            <span className="text-slate-500 dark:text-slate-400 text-[10px] uppercase tracking-wider font-semibold">Total Pts</span>
           </div>
         </div>
 

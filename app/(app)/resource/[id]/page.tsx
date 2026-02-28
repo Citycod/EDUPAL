@@ -311,15 +311,7 @@ const ResourceDetail: React.FC = () => {
           <div className={`relative w-full bg-slate-100 dark:bg-slate-900 overflow-hidden shadow-2xl transition-all duration-500 ${isPreviewMode ? 'fixed inset-0 z-50 !m-0 w-screen h-screen rounded-none border-0' : 'aspect-[3/4] rounded-[2rem] border-2 border-primary/20'}`}>
             {resource.fileUrl ? (
               <>
-                {fileType === 'pdf' && (
-                  <iframe
-                    src={`${resource.fileUrl}#toolbar=0&navpanes=0&scrollbar=0`}
-                    className="w-full h-full border-none"
-                    title="PDF Preview"
-                  />
-                )}
-
-                {fileType === 'office' && (
+                {(fileType === 'pdf' || fileType === 'office') && (
                   <iframe
                     src={`https://docs.google.com/viewer?url=${encodeURIComponent(resource.fileUrl)}&embedded=true`}
                     className="w-full h-full border-none"
@@ -439,7 +431,14 @@ const ResourceDetail: React.FC = () => {
                   <span className="material-symbols-outlined font-black">download</span>
                   <span className="text-xs font-black uppercase tracking-[0.2em]">Download</span>
                 </button>
-                <button className="size-16 rounded-[2rem] bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-500 transition-all hover:border-primary/30">
+                <button
+                  onClick={() => router.push(`/study/${resource.id}`)}
+                  className="flex-1 bg-secondary text-white h-16 rounded-[2rem] flex items-center justify-center gap-3 shadow-2xl shadow-secondary/30 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  <span className="material-symbols-outlined font-black">auto_awesome</span>
+                  <span className="text-xs font-black uppercase tracking-[0.2em]">Study AI</span>
+                </button>
+                <button className="size-16 w-16 min-w-16 rounded-[2rem] bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-500 transition-all hover:border-primary/30">
                   <span className="material-symbols-outlined">bookmark</span>
                 </button>
               </div>

@@ -44,6 +44,7 @@ export default function BottomNav({ navItems: customNavItems }: BottomNavProps) 
       : []
     ),
     { icon: 'forum', label: 'Discuss', path: '/community' },
+    { icon: 'workspace_premium', label: 'Premium', path: '/subscription' },
     { icon: 'person', label: 'Profile', path: '/profile' },
   ];
 
