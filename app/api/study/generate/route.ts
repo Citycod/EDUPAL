@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { GoogleGenAI } from '@google/genai';
 import pdf from 'pdf-parse/lib/pdf-parse';
 import mammoth from 'mammoth';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 const supabaseAdmin = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -21,9 +22,26 @@ const initAI = () => {
 
 export async function POST(req: NextRequest) {
     try {
+        // --- Rate Limiting ---
+        const ip = req.headers.get('x-forwarded-for') || '127.0.0.1';
+        const { success, reset } = await checkRateLimit(ip, 'ai-generate', 10, 60 * 60 * 1000); // 10 generations per hour
+
+        if (!success) {
+            return NextResponse.json(
+                { error: `Too many generation requests. Please try again after ${reset.toLocaleTimeString()}.` },
+                {
+                    status: 429,
+                    headers: {
+                        'Retry-After': Math.ceil((reset.getTime() - Date.now()) / 1000).toString()
+                    }
+                }
+            );
+        }
+        // -----------------------
+
         const { resourceId, type, forceRegenerate } = await req.json();
 
-        if (!resourceId || !type || !['flashcards', 'quiz'].includes(type)) {
+        if (!resourceId || !type || !['flashcards', 'quiz', 'mock-exam'].includes(type)) {
             return NextResponse.json({ error: 'Invalid request payload' }, { status: 400 });
         }
 
@@ -157,6 +175,39 @@ It must exactly match this structure:
     "options": ["Option A", "Option B", "Option C", "Option D"],
     "correctAnswerIndex": 1,
     "explanation": "Option B is correct because the text states..."
+  }
+]
+
+TEXT CONTENT:
+${safeText}
+`;
+        } else if (type === 'mock-exam') {
+            prompt = `
+You are an expert academic tutor preparing a student for a high-stakes exam. 
+I will provide you with text extracted from their study material.
+Your task is to generate a "Mock Exam" that includes both Multiple Choice Questions (MCQs) and Short Answer Questions to test deep understanding.
+
+GENERATION RULES:
+1. Generate 5 challenging MCQs.
+2. Generate 3 Short Answer / Essay questions that require synthesizing information from the text.
+3. For Short Answer questions, provide a "modelAnswer" and "gradingCriteria" (key points the student must mention).
+
+OUTPUT FORMAT:
+You MUST return ONLY a raw JSON array. DO NOT wrap the JSON in markdown code blocks like \`\`\`json. DO NOT add any conversational text.
+It must exactly match this structure:
+[
+  {
+    "type": "mcq",
+    "question": "Exam question here?",
+    "options": ["A", "B", "C", "D"],
+    "correctAnswerIndex": 0,
+    "explanation": "Why A is correct..."
+  },
+  {
+    "type": "short-answer",
+    "question": "Describe the process of X as explained in the text.",
+    "modelAnswer": "The full correct explanation...",
+    "gradingCriteria": ["Point 1: Must mention Y", "Point 2: Must explain Z"]
   }
 ]
 

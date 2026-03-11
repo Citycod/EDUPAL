@@ -5,9 +5,13 @@ import { useParams, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import FlashcardGame, { Flashcard } from '@/components/study/FlashcardGame';
 import QuizGame, { QuizQuestion } from '@/components/study/QuizGame';
+import DocumentChat from '@/components/study/DocumentChat';
 import { useFeatureAccess } from '@/lib/hooks/useSubscription';
+import StudyRoadmap from '@/components/study/StudyRoadmap';
+import MockExamUI from '@/components/study/MockExamUI';
+import { subscribeToPush } from '@/lib/push';
 
-type StudyMode = 'select' | 'generating' | 'flashcards' | 'quiz' | 'results';
+type StudyMode = 'select' | 'generating' | 'flashcards' | 'quiz' | 'mock-exam' | 'roadmap' | 'results' | 'chat';
 
 export default function StudyPage() {
     const { resourceId } = useParams<{ resourceId: string }>();
@@ -21,6 +25,10 @@ export default function StudyPage() {
     // AI Content State
     const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
     const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[]>([]);
+    const [mockQuestions, setMockQuestions] = useState<any[]>([]);
+    const [roadmapData, setRoadmapData] = useState<any[]>([]);
+    const [examDate, setExamDate] = useState<string>(new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0]);
+    const [isRoadmapLoading, setIsRoadmapLoading] = useState(false);
 
     // Subscription & Access
     const { hasAccess, loading: accessLoading } = useFeatureAccess('ai_study_tools');
@@ -54,7 +62,7 @@ export default function StudyPage() {
         checkResource();
     }, [resourceId]);
 
-    const handleGenerate = async (type: 'flashcards' | 'quiz', forceRegenerate = false) => {
+    const handleGenerate = async (type: 'flashcards' | 'quiz' | 'mock-exam', forceRegenerate = false) => {
         setMode('generating');
         setError(null);
 
@@ -74,9 +82,12 @@ export default function StudyPage() {
             if (type === 'flashcards') {
                 setFlashcards(data.content as Flashcard[]);
                 setMode('flashcards');
-            } else {
+            } else if (type === 'quiz') {
                 setQuizQuestions(data.content as QuizQuestion[]);
                 setMode('quiz');
+            } else if (type === 'mock-exam') {
+                setMockQuestions(data.content);
+                setMode('mock-exam');
             }
 
         } catch (err: any) {
@@ -86,11 +97,43 @@ export default function StudyPage() {
         }
     };
 
+    const handleGenerateRoadmap = async () => {
+        setIsRoadmapLoading(true);
+        setError(null);
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error("Please login to generate a roadmap.");
+
+            const res = await fetch('/api/study/roadmap', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ resourceId, userId: user.id, examDate })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Failed to generate roadmap');
+            if (data.roadmap) {
+                setRoadmapData(data.roadmap);
+                setMode('roadmap');
+
+                // Prompt for notifications
+                if (user && typeof Notification !== 'undefined' && Notification.permission === 'default') {
+                    const granted = await Notification.requestPermission();
+                    if (granted === 'granted') {
+                        await subscribeToPush(user.id);
+                    }
+                }
+            }
+        } catch (err: any) {
+            setError(err.message);
+        } finally {
+            setIsRoadmapLoading(false);
+        }
+    };
+
     const handleQuizComplete = (score: number, total: number) => {
         setQuizScore(score);
         setMode('results');
 
-        // Save score to backend and award points
         const saveScore = async () => {
             try {
                 const { data: { session } } = await supabase.auth.getSession();
@@ -236,56 +279,94 @@ export default function StudyPage() {
                         </div>
 
                         <div className="grid gap-4">
-                            <div className="flex flex-col gap-2">
+                            {/* Standard Tools */}
+                            <div className="grid grid-cols-2 gap-3">
                                 <button
                                     onClick={() => handleGenerate('flashcards')}
-                                    className="group relative flex items-center justify-between p-6 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-3xl hover:border-primary dark:hover:border-primary transition-all active:scale-[0.98] shadow-sm hover:shadow-xl hover:shadow-primary/10 text-left overflow-hidden"
+                                    className="flex flex-col items-center gap-3 p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl hover:border-primary transition-all active:scale-95 text-center shadow-sm"
                                 >
-                                    <div className="absolute inset-0 bg-gradient-to-r from-primary/0 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                    <div>
-                                        <div className="flex items-center gap-2 mb-1">
-                                            <span className="material-symbols-outlined text-primary text-xl">style</span>
-                                            <h3 className="text-lg font-black text-slate-900 dark:text-white">Smart Flashcards</h3>
-                                        </div>
-                                        <p className="text-xs font-medium text-slate-500 max-w-[200px]">15 generated flip-cards to drill key definitions and concepts.</p>
+                                    <div className="size-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                                        <span className="material-symbols-outlined">style</span>
                                     </div>
-                                    <div className="size-12 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center group-hover:bg-primary group-hover:text-background-dark transition-colors">
-                                        <span className="material-symbols-outlined">arrow_forward</span>
-                                    </div>
+                                    <span className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">Flashcards</span>
                                 </button>
                                 <button
-                                    onClick={() => handleGenerate('flashcards', true)}
-                                    className="text-[10px] font-bold text-slate-400 hover:text-primary uppercase tracking-widest flex items-center justify-center gap-1 py-2 w-full transition-colors"
+                                    onClick={() => handleGenerate('quiz')}
+                                    className="flex flex-col items-center gap-3 p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl hover:border-primary transition-all active:scale-95 text-center shadow-sm"
                                 >
-                                    <span className="material-symbols-outlined text-[14px]">refresh</span>
-                                    Regenerate fresh flashcards
+                                    <div className="size-10 rounded-full bg-indigo-500/10 flex items-center justify-center text-indigo-500">
+                                        <span className="material-symbols-outlined">quiz</span>
+                                    </div>
+                                    <span className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">Quiz</span>
                                 </button>
                             </div>
 
-                            <div className="flex flex-col gap-2">
-                                <button
-                                    onClick={() => handleGenerate('quiz')}
-                                    className="group relative flex items-center justify-between p-6 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-3xl hover:border-primary dark:hover:border-primary transition-all active:scale-[0.98] shadow-sm hover:shadow-xl hover:shadow-primary/10 text-left overflow-hidden"
-                                >
-                                    <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/0 to-indigo-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <button
+                                onClick={() => setMode('chat')}
+                                className="group relative flex items-center justify-between p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl hover:border-primary transition-all active:scale-95 shadow-sm overflow-hidden"
+                            >
+                                <div className="flex items-center gap-3">
+                                    <div className="size-10 rounded-full bg-pink-500/10 flex items-center justify-center text-pink-500">
+                                        <span className="material-symbols-outlined">forum</span>
+                                    </div>
                                     <div>
-                                        <div className="flex items-center gap-2 mb-1">
-                                            <span className="material-symbols-outlined text-primary text-xl">quiz</span>
-                                            <h3 className="text-lg font-black text-slate-900 dark:text-white">Interactive Quiz</h3>
+                                        <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">Document Chat</h3>
+                                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-tight">Real-time AI Tutor</p>
+                                    </div>
+                                </div>
+                                <span className="material-symbols-outlined text-slate-300">chevron_right</span>
+                            </button>
+
+                            {/* ACE MODE SECTION */}
+                            <div className="mt-4 p-6 bg-secondary rounded-[2.5rem] shadow-2xl shadow-secondary/20 overflow-hidden relative group">
+                                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
+                                    <span className="material-symbols-outlined text-6xl text-primary">workspace_premium</span>
+                                </div>
+
+                                <div className="relative z-10">
+                                    <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/20 backdrop-blur-md rounded-full mb-4">
+                                        <span className="material-symbols-outlined text-[14px] text-primary">bolt</span>
+                                        <span className="text-[10px] font-black text-white uppercase tracking-widest">ACE Mode Enabled</span>
+                                    </div>
+                                    <h2 className="text-xl font-black text-white mb-2 tracking-tight">Exam Prep Coach</h2>
+                                    <p className="text-[11px] text-white/60 font-medium mb-6 leading-relaxed max-w-[200px]">Commit to success with advanced AI tools designed to help you ace your finals.</p>
+
+                                    <div className="space-y-3">
+                                        <button
+                                            onClick={() => handleGenerate('mock-exam')}
+                                            className="w-full flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl text-white transition-all active:scale-95 group"
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <span className="material-symbols-outlined text-primary">assignment_turned_in</span>
+                                                <span className="text-[11px] font-black uppercase tracking-wider">Mock Exam</span>
+                                            </div>
+                                            <span className="material-symbols-outlined text-xs group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                                        </button>
+
+                                        <div className="p-4 bg-white/5 border border-white/10 rounded-2xl text-white">
+                                            <div className="flex items-center gap-3 mb-3">
+                                                <span className="material-symbols-outlined text-primary">calendar_month</span>
+                                                <span className="text-[11px] font-black uppercase tracking-wider">Study Roadmap</span>
+                                            </div>
+                                            <div className="flex flex-col gap-2">
+                                                <label className="text-[9px] font-black text-white/40 uppercase tracking-widest px-1">Exam Date</label>
+                                                <input
+                                                    type="date"
+                                                    value={examDate}
+                                                    onChange={(e) => setExamDate(e.target.value)}
+                                                    className="w-full h-10 px-3 bg-white/5 border border-white/10 rounded-xl text-xs font-bold focus:outline-none focus:bg-white/10 focus:border-primary/50 transition-all cursor-pointer"
+                                                />
+                                                <button
+                                                    onClick={handleGenerateRoadmap}
+                                                    disabled={isRoadmapLoading}
+                                                    className="w-full h-10 mt-1 bg-primary text-background-dark rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary/20 hover:bg-brand-light active:scale-95 transition-all disabled:opacity-50"
+                                                >
+                                                    {isRoadmapLoading ? 'Planning...' : 'Generate Roadmap'}
+                                                </button>
+                                            </div>
                                         </div>
-                                        <p className="text-xs font-medium text-slate-500 max-w-[200px]">10 multiple-choice questions to test your comprehension under pressure.</p>
                                     </div>
-                                    <div className="size-12 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center group-hover:bg-primary group-hover:text-background-dark transition-colors">
-                                        <span className="material-symbols-outlined">arrow_forward</span>
-                                    </div>
-                                </button>
-                                <button
-                                    onClick={() => handleGenerate('quiz', true)}
-                                    className="text-[10px] font-bold text-slate-400 hover:text-primary uppercase tracking-widest flex items-center justify-center gap-1 py-2 w-full transition-colors"
-                                >
-                                    <span className="material-symbols-outlined text-[14px]">refresh</span>
-                                    Regenerate fresh quiz
-                                </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -324,10 +405,44 @@ export default function StudyPage() {
                     />
                 )}
 
+                {/* MODE: Document Chat Active */}
+                {mode === 'chat' && resourceId && (
+                    <DocumentChat
+                        resourceId={resourceId}
+                        onClose={() => setMode('select')}
+                    />
+                )}
+
+                {/* MODE: Mock Exam Active */}
+                {mode === 'mock-exam' && (
+                    <div className="p-4">
+                        <MockExamUI
+                            questions={mockQuestions}
+                            onComplete={(score) => handleQuizComplete(score, 100)} // Using normalized score
+                        />
+                    </div>
+                )}
+
+                {/* MODE: Roadmap Active */}
+                {mode === 'roadmap' && (
+                    <div className="p-4">
+                        <StudyRoadmap
+                            roadmap={roadmapData}
+                            resourceId={resourceId as string}
+                        />
+                        <button
+                            onClick={() => setMode('select')}
+                            className="mt-6 w-full h-14 rounded-2xl bg-white border-2 border-slate-200 text-slate-600 font-black text-sm uppercase tracking-widest"
+                        >
+                            Back to Tools
+                        </button>
+                    </div>
+                )}
+
                 {/* MODE: Results Screen */}
                 {mode === 'results' && (
                     <div className="flex flex-col items-center justify-center min-h-[60vh] p-4 text-center animate-in zoom-in-95 duration-500">
-                        <div className="size-24 rounded-[2rem] bg-green-500 shadow-2xl shadow-green-500/30 flex items-center justify-center mb-6 text-white rotate-12 transition-transform hover:rotate-0">
+                        <div className="size-24 rounded-[2rem] bg-primary shadow-2xl shadow-primary/30 flex items-center justify-center mb-6 text-white rotate-12 transition-transform hover:rotate-0">
                             <span className="material-symbols-outlined text-[48px]">emoji_events</span>
                         </div>
                         <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight mb-2">Session Complete!</h2>

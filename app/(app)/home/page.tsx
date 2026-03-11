@@ -5,6 +5,8 @@ import { useState, useEffect } from 'react';
 
 import { supabase } from '@/lib/supabase';
 import { useInstitutionContext } from '@/lib/hooks/useInstitutionContext';
+import ProjectTopicGenerator from '@/components/premium/ProjectTopicGenerator';
+import CoachWidget from '@/components/dashboard/CoachWidget';
 
 export default function Home() {
   const router = useRouter();
@@ -147,6 +149,11 @@ export default function Home() {
             </div>
           </div>
 
+          {/* AI Coach Section */}
+          <div className="max-w-3xl mx-auto mb-16">
+            <CoachWidget />
+          </div>
+
           <div className="space-y-20">
             {/* Recently Accessed Section */}
             <section>
@@ -254,6 +261,34 @@ export default function Home() {
                   <p className="text-slate-400 text-sm font-medium">Trending resources will appear here.</p>
                 </div>
               )}
+            </section>
+            {/* Final Year Project Topics (Premium CTA) */}
+            <section className="mt-20">
+              <div
+                onClick={() => router.push('/research')}
+                className="group relative bg-slate-900 border border-white/5 rounded-[2.5rem] p-8 sm:p-12 overflow-hidden cursor-pointer hover:border-primary/50 transition-all shadow-2xl shadow-primary/5"
+              >
+                <div className="absolute top-0 right-0 w-[40%] h-[150%] bg-primary/10 rounded-full blur-[100px] pointer-events-none group-hover:bg-primary/20 transition-all"></div>
+
+                <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between gap-8 text-center sm:text-left">
+                  <div className="flex flex-col sm:flex-row items-center gap-6 sm:gap-10">
+                    <div className="w-20 h-20 rounded-3xl bg-primary flex items-center justify-center text-slate-950 shadow-2xl shadow-primary/30 rotate-[-4deg] group-hover:rotate-0 transition-transform">
+                      <span className="material-symbols-outlined text-4xl font-bold">science</span>
+                    </div>
+                    <div>
+                      <h3 className="text-2xl sm:text-3xl font-black text-white italic tracking-tighter mb-2">
+                        Final Year <span className="text-primary italic font-serif">Research</span> Lab
+                      </h3>
+                      <p className="text-slate-400 font-bold text-sm max-w-sm">
+                        Get project topics, research methodology, and AI guidance for your final defense.
+                      </p>
+                    </div>
+                  </div>
+                  <button className="px-10 py-4 bg-white/5 text-primary border border-primary/20 font-black rounded-2xl hover:bg-primary hover:text-slate-950 transition-all uppercase tracking-widest text-xs">
+                    Open Lab
+                  </button>
+                </div>
+              </div>
             </section>
           </div>
         </main>

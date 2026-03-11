@@ -1,9 +1,27 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import nodemailer from 'nodemailer';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 export async function POST(request: Request) {
     try {
+        // --- Rate Limiting ---
+        const ip = request.headers.get('x-forwarded-for') || '127.0.0.1';
+        const { success, reset } = await checkRateLimit(ip, 'auth-signup', 3, 60 * 60 * 1000); // 3 requests per hour
+
+        if (!success) {
+            return NextResponse.json(
+                { error: `Too many signup attempts. Please try again after ${reset.toLocaleTimeString()}.` },
+                {
+                    status: 429,
+                    headers: {
+                        'Retry-After': Math.ceil((reset.getTime() - Date.now()) / 1000).toString()
+                    }
+                }
+            );
+        }
+        // -----------------------
+
         const { email, password, options } = await request.json();
 
         if (!email || !password) {

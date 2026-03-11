@@ -364,6 +364,33 @@ const LibraryPage = () => {
                     </div>
                 </section>
 
+                {/* Research Lab CTA (For Library Integration) */}
+                <section className="px-4 mb-12">
+                    <div
+                        onClick={() => router.push('/research')}
+                        className="group relative bg-[#0a120d] border border-white/5 rounded-[2rem] p-6 overflow-hidden cursor-pointer hover:border-primary/50 transition-all shadow-2xl shadow-primary/5"
+                    >
+                        <div className="absolute top-0 right-0 w-[30%] h-[150%] bg-primary/10 rounded-full blur-[80px] pointer-events-none"></div>
+
+                        <div className="relative z-10 flex items-center justify-between gap-6">
+                            <div className="flex items-center gap-5">
+                                <div className="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center text-slate-950 shadow-xl shadow-primary/20 rotate-[-4deg] group-hover:rotate-0 transition-transform">
+                                    <span className="material-symbols-outlined text-3xl font-bold">science</span>
+                                </div>
+                                <div>
+                                    <h3 className="text-xl font-black text-white italic tracking-tighter">
+                                        Final Year <span className="text-primary italic font-serif">Research</span> Lab
+                                    </h3>
+                                    <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-1">
+                                        Premium Project Topics & Guidance
+                                    </p>
+                                </div>
+                            </div>
+                            <span className="material-symbols-outlined text-primary group-hover:translate-x-2 transition-transform">arrow_forward_ios</span>
+                        </div>
+                    </div>
+                </section>
+
                 {/* Unified Archive Section */}
                 <section className="px-4 py-8">
                     <div className="flex items-center justify-between mb-8">
@@ -489,17 +516,12 @@ const LibraryPage = () => {
                     resourceId={selectedResource.id}
                     resourceTitle={selectedResource.title}
                     filePath={
-                        // Extract just the file path from the public URL.
-                        // publicUrl usually looks like: https://[project].supabase.co/storage/v1/object/public/resources/userId/filename.ext
                         selectedResource.file_url?.split('/resources/')[1] || ''
                     }
                     userId={userProfile?.id || ''}
-                    onDownloadSuccess={() => {
-                        // Optional: show a toast or message
-                    }}
+                    onDownloadSuccess={() => { }}
                 />
             )}
-
         </div>
     );
 };

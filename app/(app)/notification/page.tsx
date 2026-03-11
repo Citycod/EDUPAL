@@ -7,7 +7,7 @@ import { supabase } from '@/lib/supabase';
 
 interface Notification {
   id: number;
-  type: 'course' | 'class' | 'community' | 'system';
+  type: 'course' | 'class' | 'community' | 'system' | 'subscription';
   title: string;
   message: string;
   timestamp: Date;
@@ -64,6 +64,8 @@ const Notifications: React.FC = () => {
         return 'class';
       case 'community':
         return 'forum';
+      case 'subscription':
+        return 'card_membership';
       case 'system':
       default:
         return 'notifications';

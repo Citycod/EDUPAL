@@ -96,7 +96,7 @@ GRANT SELECT ON public.hub_subscription_plans TO authenticated;
 INSERT INTO academic.subscription_plans (name, description, price_ngn, duration_days, features)
 VALUES
   ('Free', 'Basic access to EduPal', 0, 0, '["browse_library", "upload_materials", "community", "profile", "notifications"]'::jsonb),
-  ('Premium', 'Full access - ₦1,000/semester', 1000, 120, '["browse_library", "upload_materials", "community", "profile", "notifications", "download_files", "ai_study_tools", "leaderboard", "advanced_search", "priority_notifications", "study_analytics"]'::jsonb)
+  ('Premium', 'Full access - ₦1,000/semester', 1000, 120, '["browse_library", "upload_materials", "community", "profile", "notifications", "download_files", "ai_study_tools", "document_chat", "project_topics", "leaderboard", "advanced_search", "priority_notifications", "study_analytics", "ai_study_roadmaps", "push_notifications", "advanced_research_tools", "study_progress_tracking"]'::jsonb)
 ON CONFLICT (name) DO UPDATE SET
   description = EXCLUDED.description,
   price_ngn = EXCLUDED.price_ngn,

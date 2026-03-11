@@ -63,6 +63,20 @@ export async function GET(req: NextRequest) {
             return NextResponse.json({ error: 'Activation failed' }, { status: 500 });
         }
 
+        // 5. Send In-App Notification
+        const { data: { user } } = await supabaseAdmin.auth.admin.getUserById(metadata.user_id);
+        if (user) {
+            await supabaseAdmin
+                .from('notifications')
+                .insert({
+                    user_id: user.id,
+                    type: 'subscription',
+                    title: 'Premium Activated! 💎',
+                    message: `Your subscription has been verified and activated until ${expiresAt.toLocaleDateString()}. Welcome!`,
+                    action_url: '/subscription'
+                });
+        }
+
         return NextResponse.json({ success: true, message: 'Subscription activated via verification' });
     } catch (error: any) {
         console.error('Verify API error:', error);
