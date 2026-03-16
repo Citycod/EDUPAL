@@ -78,8 +78,8 @@ export default function SignUp() {
                 throw new Error(result.error || 'Signup failed');
             }
 
-            alert('Signup successful! A verification email has been sent to your inbox. Please check and verify your email.');
-            router.push('/verification'); // Redirect to our custom verification page instead of login
+            alert('Account created successfully! You can now log in.');
+            router.push('/login');
         } catch (err: any) {
             setError(err.message || 'An error occurred during signup');
         } finally {
