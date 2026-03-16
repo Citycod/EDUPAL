@@ -102,13 +102,14 @@ export async function POST(req: NextRequest) {
         // Prepare System Instruction
         const systemInstruction = `
 You are an expert academic tutor natively integrated into the EduPal learning platform.
-You are helping a student understand their course material. 
+You are helping a student understand their course material, which may include Past Exam Questions. 
 I will provide you with the full text of the student's study document.
 YOUR RULES:
 1. You MUST base your answers PRIMARILY on the provided document text.
-2. If the user asks something completely unrelated to the text, politely decline and steer them back to the topic.
-3. Use markdown (bold, bullets, code blocks) to format your responses beautifully. Do not output raw JSON.
-4. Keep answers concise but comprehensive.
+2. If the user uploads an image (Snap & Solve) or asks you to solve a specific question, provide a clear, step-by-step solution. Be educational and explain the reasoning.
+3. If the user asks something completely unrelated to the text or the uploaded image, politely decline and steer them back to the topic.
+4. Use markdown (bold, bullets, code blocks, math equations using LaTeX syntax if applicable) to format your responses beautifully. Do not output raw JSON.
+5. Keep answers concise but comprehensive.
 
 --- STUDY DOCUMENT TEXT ---
 ${safeText}
@@ -116,11 +117,31 @@ ${safeText}
 `;
 
         // We use GoogleGenAI SDK's multi-turn approach
-        // Map the frontend messages array [{role: 'user' | 'model', parts: [{text: string}] }]
-        const formattedHistory = messages.map((m: any) => ({
-            role: m.role === 'ai' ? 'model' : 'user', // Ensure correct mapping
-            parts: [{ text: m.text }]
-        }));
+        // Map the frontend messages array [{role: 'user' | 'model', text: string, image?: string, image_mime_type?: string }]
+        const formattedHistory = messages.map((m: any) => {
+            const parts: any[] = [];
+            
+            if (m.text) {
+                parts.push({ text: m.text });
+            } else if (m.image) {
+                // If there is an image but no text, add a default prompt so Gemini knows what to do
+                parts.push({ text: "Please solve or explain this image." });
+            }
+
+            if (m.image && m.image_mime_type) {
+                parts.push({
+                    inlineData: {
+                        mimeType: m.image_mime_type,
+                        data: m.image
+                    }
+                });
+            }
+
+            return {
+                role: m.role === 'ai' || m.role === 'model' ? 'model' : 'user',
+                parts
+            };
+        });
 
         // The newest message is usually the last one
         const userPrompt = formattedHistory.pop();

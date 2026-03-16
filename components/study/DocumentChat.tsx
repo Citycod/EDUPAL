@@ -2,15 +2,18 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { Send, Bot, User, Loader2 } from 'lucide-react';
+import { Send, Bot, User, Loader2, Image as ImageIcon, X } from 'lucide-react';
 
 export interface ChatMessage {
     id: string;
     role: 'user' | 'model';
     text: string;
+    image?: string;
+    imageMimeType?: string;
 }
 
 interface DocumentChatProps {
+
     resourceId: string;
     onClose: () => void;
 }
@@ -22,8 +25,11 @@ export default function DocumentChat({ resourceId, onClose }: DocumentChatProps)
         text: 'Hi! I am your AI Study Tutor. Ask me anything about this document!'
     }]);
     const [input, setInput] = useState('');
+    const [selectedImage, setSelectedImage] = useState<string | null>(null);
+    const [imageMimeType, setImageMimeType] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -33,20 +39,58 @@ export default function DocumentChat({ resourceId, onClose }: DocumentChatProps)
         scrollToBottom();
     }, [messages]);
 
-    const handleSend = async () => {
-        if (!input.trim() || isLoading) return;
+    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
 
-        const userMsg: ChatMessage = { id: Date.now().toString(), role: 'user', text: input.trim() };
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            const base64String = reader.result as string;
+            // The result includes the data URI scheme, e.g., 'data:image/png;base64,...'
+            setSelectedImage(base64String.split(',')[1]); // Store just the base64 part for API
+            setImageMimeType(file.type);
+        };
+        reader.readAsDataURL(file);
+    };
+
+    const removeImage = () => {
+        setSelectedImage(null);
+        setImageMimeType(null);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+    };
+
+    const handleSend = async () => {
+        if ((!input.trim() && !selectedImage) || isLoading) return;
+
+        const userMsg: ChatMessage = { 
+            id: Date.now().toString(), 
+            role: 'user', 
+            text: input.trim(),
+            image: selectedImage || undefined,
+            imageMimeType: imageMimeType || undefined
+        };
+        
         setMessages(prev => [...prev, userMsg]);
         setInput('');
+        setSelectedImage(null);
+        setImageMimeType(null);
         setIsLoading(true);
 
         try {
             // We only send the history formatted for the API
-            const historyForApi = messages.map(m => ({ role: m.role, text: m.text }));
-            // Exclude the welcome message if possible, but actually sending it is fine.
-            // Let's just send the whole thing + the new user message.
-            historyForApi.push({ role: 'user', text: userMsg.text });
+            const historyForApi = messages.map(m => ({ 
+                role: m.role, 
+                text: m.text,
+                image: m.image,
+                image_mime_type: m.imageMimeType
+            }));
+            
+            historyForApi.push({ 
+                role: 'user', 
+                text: userMsg.text,
+                image: userMsg.image,
+                image_mime_type: userMsg.imageMimeType
+            });
 
             const res = await fetch('/api/study/chat', {
                 method: 'POST',
@@ -124,7 +168,16 @@ export default function DocumentChat({ resourceId, onClose }: DocumentChatProps)
                                     <ReactMarkdown>{msg.text}</ReactMarkdown>
                                 </div>
                             ) : (
-                                <p>{msg.text}</p>
+                                <div className="flex flex-col gap-2">
+                                    {msg.image && (
+                                        <img 
+                                            src={`data:${msg.imageMimeType};base64,${msg.image}`} 
+                                            alt="Uploaded attachment" 
+                                            className="max-w-[200px] rounded-xl object-contain border border-white/20"
+                                        />
+                                    )}
+                                    {msg.text && <p>{msg.text}</p>}
+                                </div>
                             )}
                         </div>
                     </div>
@@ -145,8 +198,42 @@ export default function DocumentChat({ resourceId, onClose }: DocumentChatProps)
             </div>
 
             {/* Input Area */}
-            <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+            <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col gap-3">
+                
+                {/* Image Preview */}
+                {selectedImage && (
+                    <div className="relative self-start">
+                        <img 
+                            src={`data:${imageMimeType};base64,${selectedImage}`} 
+                            alt="Preview" 
+                            className="h-16 w-auto rounded-lg object-contain border border-slate-200 dark:border-slate-700"
+                        />
+                        <button 
+                            onClick={removeImage}
+                            className="absolute -top-2 -right-2 bg-slate-800 text-white rounded-full p-1 shadow-md hover:bg-slate-700 transition"
+                        >
+                            <X size={12} />
+                        </button>
+                    </div>
+                )}
+
                 <div className="relative flex items-end gap-2">
+                    <button
+                        onClick={() => fileInputRef.current?.click()}
+                        className="w-12 h-12 shrink-0 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-500 flex items-center justify-center hover:text-primary hover:bg-primary/10 transition-colors"
+                        title="Snap & Solve (Upload Image)"
+                    >
+                        <ImageIcon size={20} />
+                    </button>
+                    <input 
+                        type="file" 
+                        accept="image/*" 
+                        ref={fileInputRef} 
+                        onChange={handleImageUpload} 
+                        className="hidden" 
+                        capture="environment"
+                    />
+
                     <textarea
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
@@ -156,18 +243,19 @@ export default function DocumentChat({ resourceId, onClose }: DocumentChatProps)
                                 handleSend();
                             }
                         }}
-                        placeholder="Ask anything about the material..."
-                        className="w-full bg-slate-100 dark:bg-slate-800 border-none outline-none rounded-2xl py-4 pl-4 pr-14 text-md text-white resize-none max-h-32 min-h-[56px] focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-slate-400"
+                        placeholder={selectedImage ? "Add a message about this image..." : "Snap & Solve, or ask about the document..."}
+                        className="w-full bg-slate-100 dark:bg-slate-800 border-none outline-none rounded-2xl py-3.5 pl-4 pr-14 text-sm text-slate-900 dark:text-white resize-none max-h-32 min-h-[48px] focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-slate-400"
                         rows={1}
                     />
                     <button
                         onClick={handleSend}
-                        disabled={!input.trim() || isLoading}
-                        className="absolute right-2 bottom-2 w-10 h-10 rounded-xl bg-primary text-[#102217] flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed hover:bg-brand-light transition-colors shadow-lg shadow-primary/20"
+                        disabled={(!input.trim() && !selectedImage) || isLoading}
+                        className="absolute right-1 bottom-1 w-10 h-10 rounded-xl bg-primary text-[#102217] flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed hover:bg-brand-light transition-colors shadow-lg shadow-primary/20"
                     >
                         <Send size={18} className="translate-x-[1px] translate-y-[-1px]" />
                     </button>
                 </div>
+
                 <p className="text-center text-[9px] font-bold text-slate-400 mt-3 uppercase tracking-widest">
                     AI can make mistakes. Verify important facts found in your document.
                 </p>
