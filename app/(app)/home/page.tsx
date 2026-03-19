@@ -28,7 +28,19 @@ export default function Home() {
             .eq('id', authUser.id)
             .single();
 
-          setUser(profile);
+          const { data: stats } = await supabase
+            .from('hub_user_stats')
+            .select('current_streak, highest_streak')
+            .maybeSingle();
+
+          setUser({ ...profile, ...stats });
+
+          // Quietly update daily streak in the background
+          supabase.rpc('update_daily_streak').then(({ data }) => {
+            if (data?.status === 'updated' || data?.status === 'initialized') {
+              setUser((prev: any) => ({ ...prev, current_streak: data.streak, highest_streak: (data as any).highest_streak || data.streak }));
+            }
+          });
 
           if (profile?.institution_id) {
             // Fetch Recent Resources
@@ -95,6 +107,15 @@ export default function Home() {
             </h2>
           </div>
           <div className="flex items-center gap-2">
+            {user && (user.current_streak !== undefined) && (
+              <div
+                className="flex items-center gap-1.5 px-3 h-10 bg-orange-500/10 text-orange-500 rounded-full font-black text-sm cursor-help transition-all hover:bg-orange-500/20"
+                title={`You are on a ${user.current_streak} day study streak!`}
+              >
+                <span className="text-[16px] leading-none mb-0.5">🔥</span>
+                <span>{user.current_streak}</span>
+              </div>
+            )}
             <button className="flex items-center justify-center rounded-full h-10 w-10 bg-primary/10 text-primary transition-colors hover:bg-primary/20">
               <span className="material-symbols-outlined text-[20px]">notifications</span>
             </button>
