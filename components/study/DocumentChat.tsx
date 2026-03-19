@@ -3,6 +3,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Send, Bot, User, Loader2, Image as ImageIcon, X } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
+import { usePathname } from 'next/navigation';
 
 export interface ChatMessage {
     id: string;
@@ -13,12 +15,12 @@ export interface ChatMessage {
 }
 
 interface DocumentChatProps {
-
     resourceId: string;
     onClose: () => void;
 }
 
 export default function DocumentChat({ resourceId, onClose }: DocumentChatProps) {
+    const pathname = usePathname();
     const [messages, setMessages] = useState<ChatMessage[]>([{
         id: 'welcome',
         role: 'model',
@@ -28,6 +30,10 @@ export default function DocumentChat({ resourceId, onClose }: DocumentChatProps)
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const [imageMimeType, setImageMimeType] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
+    
+    // Store which messages have received feedback (map of messageId -> 'up' | 'down')
+    const [feedbackSubmitted, setFeedbackSubmitted] = useState<Record<string, 'up' | 'down'>>({});
+    
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -46,8 +52,7 @@ export default function DocumentChat({ resourceId, onClose }: DocumentChatProps)
         const reader = new FileReader();
         reader.onloadend = () => {
             const base64String = reader.result as string;
-            // The result includes the data URI scheme, e.g., 'data:image/png;base64,...'
-            setSelectedImage(base64String.split(',')[1]); // Store just the base64 part for API
+            setSelectedImage(base64String.split(',')[1]);
             setImageMimeType(file.type);
         };
         reader.readAsDataURL(file);
@@ -77,7 +82,6 @@ export default function DocumentChat({ resourceId, onClose }: DocumentChatProps)
         setIsLoading(true);
 
         try {
-            // We only send the history formatted for the API
             const historyForApi = messages.map(m => ({ 
                 role: m.role, 
                 text: m.text,
@@ -127,12 +131,45 @@ export default function DocumentChat({ resourceId, onClose }: DocumentChatProps)
         }
     };
 
+    const submitFeedback = async (messageId: string, isPositive: boolean, messageText: string) => {
+        if (feedbackSubmitted[messageId]) return;
+
+        setFeedbackSubmitted(prev => ({ ...prev, [messageId]: isPositive ? 'up' : 'down' }));
+
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
+
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('institution_id')
+                .eq('id', user.id)
+                .single();
+
+            await supabase.from('feedback').insert({
+                user_id: user.id,
+                institution_id: profile?.institution_id || null,
+                type: 'ai_response',
+                mood: isPositive ? 4 : 1, // 4 for good, 1 for bad
+                message: isPositive ? 'Helpful AI Response' : 'Unhelpful AI Response',
+                context: { 
+                    page: pathname, 
+                    resource_id: resourceId,
+                    message_preview: messageText.substring(0, 100) + (messageText.length > 100 ? '...' : '')
+                },
+            });
+        } catch (err) {
+            console.error("Failed to submit feedback", err);
+            // Optionally revert UI state on failure
+        }
+    };
+
     return (
         <div className="flex flex-col h-[75vh] bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden m-4 sm:m-0 animate-in zoom-in-95 duration-500">
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                    <div className="w-10 h-10 rounded-full bg-[#13ec6a]/10 flex items-center justify-center text-[#13ec6a]">
                         <Bot size={22} />
                     </div>
                     <div>
@@ -155,28 +192,59 @@ export default function DocumentChat({ resourceId, onClose }: DocumentChatProps)
             <div className="flex-1 overflow-y-auto p-6 space-y-6 scroll-smooth">
                 {messages.map((msg) => (
                     <div key={msg.id} className={`flex gap-4 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-1 ${msg.role === 'user' ? 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300' : 'bg-primary text-[#102217]'
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-1 ${msg.role === 'user' ? 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300' : 'bg-[#13ec6a] text-[#102217]'
                             }`}>
                             {msg.role === 'user' ? <User size={16} /> : <Bot size={16} />}
                         </div>
-                        <div className={`max-w-[75%] px-5 py-4 rounded-2xl text-sm leading-relaxed ${msg.role === 'user'
-                                ? 'bg-primary text-[#102217] rounded-tr-none'
-                                : 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-200 rounded-tl-none border border-slate-200 dark:border-slate-700'
-                            }`}>
-                            {msg.role === 'model' ? (
-                                <div className="prose max-w-none prose-sm dark:prose-invert prose-p:leading-relaxed prose-a:text-primary">
-                                    <ReactMarkdown>{msg.text}</ReactMarkdown>
-                                </div>
-                            ) : (
-                                <div className="flex flex-col gap-2">
-                                    {msg.image && (
-                                        <img 
-                                            src={`data:${msg.imageMimeType};base64,${msg.image}`} 
-                                            alt="Uploaded attachment" 
-                                            className="max-w-[200px] rounded-xl object-contain border border-white/20"
-                                        />
+                        <div className={`max-w-[75%] flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
+                            <div className={`px-5 py-4 rounded-2xl text-sm leading-relaxed ${msg.role === 'user'
+                                    ? 'bg-[#13ec6a] text-[#102217] rounded-tr-none'
+                                    : 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-200 rounded-tl-none border border-slate-200 dark:border-slate-700'
+                                }`}>
+                                {msg.role === 'model' ? (
+                                    <div className="prose max-w-none prose-sm dark:prose-invert prose-p:leading-relaxed prose-a:text-[#13ec6a]">
+                                        <ReactMarkdown>{msg.text}</ReactMarkdown>
+                                    </div>
+                                ) : (
+                                    <div className="flex flex-col gap-2">
+                                        {msg.image && (
+                                            <img 
+                                                src={`data:${msg.imageMimeType};base64,${msg.image}`} 
+                                                alt="Uploaded attachment" 
+                                                className="max-w-[200px] rounded-xl object-contain border border-[#102217]/10"
+                                            />
+                                        )}
+                                        {msg.text && <p>{msg.text}</p>}
+                                    </div>
+                                )}
+                            </div>
+                            
+                            {/* AI Response Feedback */}
+                            {msg.role === 'model' && msg.id !== 'welcome' && (
+                                <div className="mt-1.5 px-2 flex items-center gap-1">
+                                    {feedbackSubmitted[msg.id] ? (
+                                        <span className="text-[10px] font-bold text-slate-400 flex items-center gap-1 animate-in fade-in slide-in-from-left-2">
+                                            <span className="material-symbols-outlined text-[12px] text-[#13ec6a]">check_circle</span>
+                                            Thanks for the feedback!
+                                        </span>
+                                    ) : (
+                                        <>
+                                            <button 
+                                                onClick={() => submitFeedback(msg.id, true, msg.text)}
+                                                className="p-1 rounded-md text-slate-400 hover:text-[#13ec6a] hover:bg-[#13ec6a]/10 transition-colors"
+                                                title="Helpful"
+                                            >
+                                                <span className="material-symbols-outlined text-[14px]">thumb_up</span>
+                                            </button>
+                                            <button 
+                                                onClick={() => submitFeedback(msg.id, false, msg.text)}
+                                                className="p-1 rounded-md text-slate-400 hover:text-red-500 hover:bg-red-500/10 transition-colors"
+                                                title="Not Helpful"
+                                            >
+                                                <span className="material-symbols-outlined text-[14px]">thumb_down</span>
+                                            </button>
+                                        </>
                                     )}
-                                    {msg.text && <p>{msg.text}</p>}
                                 </div>
                             )}
                         </div>
@@ -185,11 +253,11 @@ export default function DocumentChat({ resourceId, onClose }: DocumentChatProps)
 
                 {isLoading && (
                     <div className="flex gap-4">
-                        <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-[#102217] flex-shrink-0 mt-1">
+                        <div className="w-8 h-8 rounded-full bg-[#13ec6a] flex items-center justify-center text-[#102217] flex-shrink-0 mt-1">
                             <Bot size={16} />
                         </div>
                         <div className="px-5 py-4 rounded-2xl bg-slate-100 dark:bg-slate-800 rounded-tl-none border border-slate-200 dark:border-slate-700">
-                            <Loader2 size={18} className="animate-spin text-primary" />
+                            <Loader2 size={18} className="animate-spin text-[#13ec6a]" />
                         </div>
                     </div>
                 )}
@@ -220,7 +288,7 @@ export default function DocumentChat({ resourceId, onClose }: DocumentChatProps)
                 <div className="relative flex items-end gap-2">
                     <button
                         onClick={() => fileInputRef.current?.click()}
-                        className="w-12 h-12 shrink-0 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-500 flex items-center justify-center hover:text-primary hover:bg-primary/10 transition-colors"
+                        className="w-12 h-12 shrink-0 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-500 flex items-center justify-center hover:text-[#13ec6a] hover:bg-[#13ec6a]/10 transition-colors"
                         title="Snap & Solve (Upload Image)"
                     >
                         <ImageIcon size={20} />
@@ -244,19 +312,19 @@ export default function DocumentChat({ resourceId, onClose }: DocumentChatProps)
                             }
                         }}
                         placeholder={selectedImage ? "Add a message about this image..." : "Snap & Solve, or ask about the document..."}
-                        className="w-full bg-slate-100 dark:bg-slate-800 border-none outline-none rounded-2xl py-3.5 pl-4 pr-14 text-sm text-slate-900 dark:text-white resize-none max-h-32 min-h-[48px] focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-slate-400"
+                        className="w-full bg-slate-100 dark:bg-slate-800 border-none outline-none rounded-2xl py-3.5 pl-4 pr-14 text-sm text-slate-900 dark:text-white resize-none max-h-32 min-h-[48px] focus:ring-2 focus:ring-[#13ec6a]/20 transition-all placeholder:text-slate-400"
                         rows={1}
                     />
                     <button
                         onClick={handleSend}
                         disabled={(!input.trim() && !selectedImage) || isLoading}
-                        className="absolute right-1 bottom-1 w-10 h-10 rounded-xl bg-primary text-[#102217] flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed hover:bg-brand-light transition-colors shadow-lg shadow-primary/20"
+                        className="absolute right-1 bottom-1 w-10 h-10 rounded-xl bg-[#13ec6a] text-[#102217] flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed hover:bg-green-400 transition-colors shadow-lg shadow-[#13ec6a]/20"
                     >
                         <Send size={18} className="translate-x-[1px] translate-y-[-1px]" />
                     </button>
                 </div>
 
-                <p className="text-center text-[9px] font-bold text-slate-400 mt-3 uppercase tracking-widest">
+                <p className="text-center text-[9px] font-bold text-slate-400 mt-1 uppercase tracking-widest">
                     AI can make mistakes. Verify important facts found in your document.
                 </p>
             </div>

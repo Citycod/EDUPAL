@@ -1,6 +1,7 @@
 'use client';
 
 import BottomNav from '@/components/BottomNav';
+import FeedbackWidget from '@/components/FeedbackWidget';
 
 export default function AppLayout({
     children,
@@ -13,6 +14,7 @@ export default function AppLayout({
                 {children}
             </main>
             <BottomNav />
+            <FeedbackWidget />
         </div>
     );
 }

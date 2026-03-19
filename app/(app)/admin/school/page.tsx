@@ -11,6 +11,7 @@ const SchoolAdminDashboard = () => {
     const { institution, loading: contextLoading } = useInstitutionContext();
     const [resources, setResources] = useState<any[]>([]);
     const [reports, setReports] = useState<any[]>([]);
+    const [feedback, setFeedback] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [filterVerify, setFilterVerify] = useState('all'); // all, verified, unverified
@@ -75,6 +76,15 @@ const SchoolAdminDashboard = () => {
                 .order('created_at', { ascending: false });
 
             setReports(repData || []);
+
+            // Fetch Feedback
+            const { data: fbData } = await supabase
+                .from('hub_feedback')
+                .select('*')
+                .eq('institution_id', instId)
+                .order('created_at', { ascending: false });
+
+            setFeedback(fbData || []);
         } catch (error) {
             console.error("Error fetching admin data:", error);
         } finally {
@@ -107,6 +117,18 @@ const SchoolAdminDashboard = () => {
             })
             .subscribe();
 
+        // Real-time Feedback
+        supabase
+            .channel('admin-feedback')
+            .on('postgres_changes', {
+                event: '*',
+                schema: 'public',
+                table: 'feedback'
+            }, () => {
+                fetchInitialData(instId);
+            })
+            .subscribe();
+
         // Fetch institutional departments
         const { data: instDepts } = await supabase
             .from('hub_departments')
@@ -134,9 +156,10 @@ const SchoolAdminDashboard = () => {
         const verified = resources.filter(r => r.is_verified).length;
         const pendingReports = reports.filter(r => r.status === 'pending').length;
         const trending = [...resources].sort((a, b) => (b.upvotes_count || 0) - (a.upvotes_count || 0)).slice(0, 3);
+        const newFeedback = feedback.filter(f => f.status === 'new').length;
 
-        return { total, verified, unverified: total - verified, pendingReports, trending };
-    }, [resources, reports]);
+        return { total, verified, unverified: total - verified, pendingReports, trending, newFeedback };
+    }, [resources, reports, feedback]);
 
     // Filtering & Sorting
     const processedResources = useMemo(() => {
@@ -160,6 +183,18 @@ const SchoolAdminDashboard = () => {
         }
         return filtered; // Default to date (fetched order)
     }, [resources, searchQuery, filterVerify, sortBy]);
+
+    const processedFeedback = useMemo(() => {
+        return feedback.filter(fb => {
+             const matchesSearch = !searchQuery ||
+                fb.message?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                fb.user_name?.toLowerCase().includes(searchQuery.toLowerCase());
+
+             const matchesStatus = filterVerify === 'all' || fb.status === filterVerify;
+
+             return matchesSearch && matchesStatus;
+        });
+    }, [feedback, searchQuery, filterVerify]);
 
     // Handlers
     const toggleVerify = async (id: string, currentStatus: boolean) => {
@@ -223,6 +258,21 @@ const SchoolAdminDashboard = () => {
         // Optimistic update for flattened structure
         setReports(prev => prev.map(r => r.report_id === showResolveModal.report_id ? { ...r, status } : r));
         setShowResolveModal(null);
+    };
+
+    const updateFeedbackStatus = async (id: string, newStatus: 'reviewed' | 'archived') => {
+        // Optimistic update
+        setFeedback(prev => prev.map(f => f.id === id ? { ...f, status: newStatus } : f));
+        
+        const { error } = await supabase
+            .from('hub_feedback')
+            .update({ status: newStatus })
+            .eq('id', id);
+
+        if (error) {
+            alert("Failed to update feedback status");
+            fetchInitialData(institution?.id || '');
+        }
     };
 
     const handleAddCourse = async (e: React.FormEvent) => {
@@ -325,22 +375,26 @@ const SchoolAdminDashboard = () => {
                         <p className="text-3xl font-black text-amber-500">{stats.unverified}</p>
                     </div>
                     <div className="bg-white dark:bg-[#1c2720]/40 p-5 rounded-3xl border border-slate-200 dark:border-[#234832]/20">
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Verified</p>
-                        <p className="text-3xl font-black text-[#13ec6a]">{stats.verified}</p>
-                    </div>
-                    <div className="bg-white dark:bg-[#1c2720]/40 p-5 rounded-3xl border border-slate-200 dark:border-[#234832]/20">
                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Alerts</p>
                         <p className="text-3xl font-black text-red-500">{stats.pendingReports}</p>
+                    </div>
+                    <div className="bg-white dark:bg-[#1c2720]/40 p-5 rounded-3xl border border-slate-200 dark:border-[#234832]/20">
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">New Feedback</p>
+                        <p className="text-3xl font-black text-blue-500">{stats.newFeedback}</p>
                     </div>
                 </div>
 
                 {/* Tabs Toggle */}
                 <div className="flex bg-slate-200/50 dark:bg-[#1c2720] p-1.5 rounded-2xl w-fit">
-                    {['resources', 'reports'].map(tab => (
+                    {['resources', 'reports', 'feedback'].map(tab => (
                         <button
                             key={tab}
-                            onClick={() => setActiveTab(tab)}
-                            className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === tab ? 'bg-[#13ec6a] text-[#102217] shadow-lg shadow-[#13ec6a]/20' : 'text-slate-400'}`}
+                            onClick={() => {
+                                setActiveTab(tab);
+                                setSearchQuery('');
+                                setFilterVerify('all');
+                            }}
+                            className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === tab ? 'bg-[#13ec6a] text-[#102217] shadow-lg shadow-[#13ec6a]/20' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'}`}
                         >
                             {tab}
                         </button>
@@ -447,7 +501,7 @@ const SchoolAdminDashboard = () => {
                             )}
                         </div>
                     </div>
-                ) : (
+                ) : activeTab === 'reports' ? (
                     <div className="space-y-4">
                         <div className="flex items-center gap-2 mb-2 p-1">
                             <span className="material-symbols-outlined text-red-500">warning</span>
@@ -501,7 +555,96 @@ const SchoolAdminDashboard = () => {
                             </div>
                         ))}
                     </div>
-                )}
+                ) : activeTab === 'feedback' ? (
+                    <div className="space-y-4">
+                        <div className="flex flex-col md:flex-row gap-4 items-center">
+                            <div className="relative flex-1 w-full">
+                                <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+                                <input
+                                    className="w-full h-14 pl-12 pr-4 bg-white dark:bg-[#1c2720] border border-slate-200 dark:border-[#234832]/30 rounded-2xl outline-none focus:ring-2 focus:ring-[#13ec6a]/20 transition-all font-bold placeholder:text-slate-400"
+                                    placeholder="Search feedback..."
+                                    value={searchQuery}
+                                    onChange={e => setSearchQuery(e.target.value)}
+                                />
+                            </div>
+                            <select
+                                className="h-14 px-4 bg-white dark:bg-[#1c2720] border border-slate-200 dark:border-[#234832]/30 rounded-2xl font-bold text-sm outline-none w-full md:w-auto"
+                                value={filterVerify}
+                                onChange={e => setFilterVerify(e.target.value)}
+                            >
+                                <option value="all">All Status</option>
+                                <option value="new">New</option>
+                                <option value="reviewed">Reviewed</option>
+                            </select>
+                        </div>
+
+                        {processedFeedback.map(fb => (
+                            <div key={fb.id} className={`bg-white dark:bg-[#1c2720]/40 p-6 rounded-3xl border-l-4 border border-slate-200 dark:border-[#234832]/10 shadow-sm transition-all hover:shadow-xl ${
+                                fb.type === 'bug' ? 'border-l-red-500' :
+                                fb.type === 'feature' ? 'border-l-blue-500' :
+                                fb.type === 'ai_response' ? 'border-l-purple-500' :
+                                'border-l-[#13ec6a]'
+                            }`}>
+                                <div className="flex justify-between items-start gap-4 mb-4">
+                                    <div className="flex items-center gap-3">
+                                        <div className="text-3xl">
+                                            {fb.mood === 1 ? '😡' : fb.mood === 2 ? '😐' : fb.mood === 3 ? '😊' : '🤩'}
+                                        </div>
+                                        <div>
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest ${
+                                                    fb.type === 'bug' ? 'bg-red-100 text-red-600' :
+                                                    fb.type === 'feature' ? 'bg-blue-100 text-blue-600' :
+                                                    fb.type === 'ai_response' ? 'bg-purple-100 text-purple-600' :
+                                                    'bg-green-100 text-green-600'
+                                                }`}>
+                                                    {fb.type.replace('_', ' ')}
+                                                </span>
+                                                <span className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest ${
+                                                    fb.status === 'new' ? 'bg-amber-100 text-amber-600' : 'bg-slate-100 text-slate-500'
+                                                }`}>
+                                                    {fb.status}
+                                                </span>
+                                            </div>
+                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                                By: {fb.user_name || 'Anonymous'} • {new Date(fb.created_at).toLocaleDateString()}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="flex gap-2">
+                                        {fb.status === 'new' && (
+                                            <button
+                                                onClick={() => updateFeedbackStatus(fb.id, 'reviewed')}
+                                                className="p-2 rounded-xl bg-[#13ec6a]/10 text-[#13ec6a] hover:bg-[#13ec6a]/20 transition-colors"
+                                                title="Mark Reviewed"
+                                            >
+                                                <span className="material-symbols-outlined text-[18px]">done_all</span>
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="bg-slate-50 dark:bg-[#102217] p-4 rounded-2xl border border-slate-100 dark:border-[#234832]/20">
+                                    <p className="text-sm font-bold text-slate-700 dark:text-slate-300">{fb.message || 'No additional message provided.'}</p>
+                                    {fb.context?.page && (
+                                        <div className="mt-3 pt-3 border-t border-slate-200 dark:border-[#234832]/20">
+                                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                                                Context: <span className="font-mono bg-slate-200 dark:bg-black/40 px-1 py-0.5 rounded text-slate-600 dark:text-slate-300">{fb.context.page}</span>
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        ))}
+                        {processedFeedback.length === 0 && (
+                            <div className="py-20 text-center bg-slate-50 dark:bg-[#1c2720] border-2 border-dashed border-slate-200 dark:border-[#234832]/20 rounded-3xl">
+                                <span className="material-symbols-outlined text-4xl text-slate-300 mb-2">inbox</span>
+                                <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">No feedback matched</p>
+                            </div>
+                        )}
+                    </div>
+                ) : null}
             </main>
 
             {/* Modals */}

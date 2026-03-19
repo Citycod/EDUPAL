@@ -20,3 +20,10 @@ self.addEventListener('notificationclick', (event) => {
         clients.openWindow(event.notification.data.url)
     );
 });
+
+// Basic fetch listener for PWA installability criteria
+self.addEventListener('fetch', (event) => {
+    // Optionally precache or handle varying logic here.
+    // An empty fetch handler is enough to trigger the install prompt in some browsers,
+    // though passing it directly to fetch() ensures content loads actively.
+});
