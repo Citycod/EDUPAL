@@ -9,6 +9,7 @@ interface NavItem {
   label: string;
   path?: string;
   filled?: boolean;
+  id?: string;
 }
 
 interface BottomNavProps {
@@ -36,14 +37,14 @@ export default function BottomNav({ navItems: customNavItems }: BottomNavProps) 
   }, []);
 
   const navItems = customNavItems || [
-    { icon: 'home', label: 'Home', path: '/home', filled: true },
-    { icon: 'history_edu', label: 'Library', path: '/library' },
-    { icon: 'leaderboard', label: 'Ranks', path: '/leaderboard' },
+    { id: 'tour-nav-home', icon: 'home', label: 'Home', path: '/home', filled: true },
+    { id: 'tour-nav-library', icon: 'history_edu', label: 'Library', path: '/library' },
+    { id: 'tour-nav-ranks', icon: 'leaderboard', label: 'Ranks', path: '/leaderboard' },
     ...(['admin', 'school_admin', 'super_admin'].includes(role)
       ? [{ icon: 'admin_panel_settings', label: 'Admin', path: '/admin/school' }]
       : []
     ),
-    { icon: 'forum', label: 'Discuss', path: '/community' },
+    { id: 'tour-nav-community', icon: 'forum', label: 'Discuss', path: '/community' },
     { icon: 'workspace_premium', label: 'Premium', path: '/subscription' },
     { icon: 'person', label: 'Profile', path: '/profile' },
   ];
@@ -65,6 +66,7 @@ export default function BottomNav({ navItems: customNavItems }: BottomNavProps) 
           return (
             <button
               key={itemPath || item.label || index}
+              id={item.id}
               onClick={() => {
                 if (itemOnClick) {
                   itemOnClick();

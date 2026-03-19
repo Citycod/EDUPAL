@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase';
 import { useInstitutionContext } from '@/lib/hooks/useInstitutionContext';
 import ProjectTopicGenerator from '@/components/premium/ProjectTopicGenerator';
 import CoachWidget from '@/components/dashboard/CoachWidget';
+import OnboardingTour from '@/components/OnboardingTour';
 
 export default function Home() {
   const router = useRouter();
@@ -91,6 +92,7 @@ export default function Home() {
 
   return (
     <div className="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-white min-h-[100dvh]">
+      <OnboardingTour />
       <div className="relative flex h-auto min-h-[100dvh] w-full flex-col overflow-x-hidden pb-20">
         {/* Top Header */}
         <nav className="flex items-center bg-background-light dark:bg-background-dark p-4 justify-between sticky top-0 z-50 border-b border-white/5 backdrop-blur-md">
@@ -109,6 +111,7 @@ export default function Home() {
           <div className="flex items-center gap-2">
             {user && (user.current_streak !== undefined) && (
               <div
+                id="tour-streak"
                 className="flex items-center gap-1.5 px-3 h-10 bg-orange-500/10 text-orange-500 rounded-full font-black text-sm cursor-help transition-all hover:bg-orange-500/20"
                 title={`You are on a ${user.current_streak} day study streak!`}
               >
@@ -116,7 +119,10 @@ export default function Home() {
                 <span>{user.current_streak}</span>
               </div>
             )}
-            <button className="flex items-center justify-center rounded-full h-10 w-10 bg-primary/10 text-primary transition-colors hover:bg-primary/20">
+            <button 
+              onClick={() => router.push('/notification')}
+              className="flex items-center justify-center rounded-full h-10 w-10 bg-primary/10 text-primary transition-colors hover:bg-primary/20"
+            >
               <span className="material-symbols-outlined text-[20px]">notifications</span>
             </button>
           </div>
@@ -124,7 +130,7 @@ export default function Home() {
 
         <main className="max-w-5xl mx-auto w-full px-4 pt-10 pb-20">
           {/* Search-Centric Hero Section */}
-          <div className="text-center mb-16">
+          <div id="tour-welcome" className="text-center mb-16">
             <h1 className="text-slate-900 dark:text-white tracking-tighter text-3xl sm:text-4xl md:text-5xl font-black leading-tight mb-4">
               Find Past Questions for Your Course <span className="text-primary italic font-serif underline decoration-primary/30 underline-offset-8">Instantly</span>
             </h1>
@@ -134,7 +140,7 @@ export default function Home() {
           </div>
 
           {/* Prominent Search Engine */}
-          <div className="max-w-3xl mx-auto mb-16 px-2">
+          <div id="tour-search" className="max-w-3xl mx-auto mb-16 px-2">
             <div className="relative group">
               <div className="absolute inset-y-0 left-0 pl-6 flex items-center pointer-events-none text-primary">
                 <span className="material-symbols-outlined text-3xl">search</span>
@@ -171,7 +177,7 @@ export default function Home() {
           </div>
 
           {/* AI Coach Section */}
-          <div className="max-w-3xl mx-auto mb-16">
+          <div id="tour-coach" className="max-w-3xl mx-auto mb-16">
             <CoachWidget />
           </div>
 
@@ -315,7 +321,7 @@ export default function Home() {
         </main>
 
         {/* Floating Upload Button */}
-        <div className="fixed bottom-20 right-5 z-40">
+        <div id="tour-upload" className="fixed bottom-20 right-5 z-40">
           <button
             onClick={() => router.push('/library/upload')}
             className="bg-primary text-background-dark h-14 w-14 rounded-full shadow-2xl shadow-primary/30 flex items-center justify-center transition-all active:scale-90 hover:scale-110 hover:rotate-90"
