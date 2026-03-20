@@ -223,16 +223,26 @@ export default function SignUp() {
                                     required
                                 >
                                     <option value="" disabled>Select Dept</option>
-                                    <option>Computer Science</option>
+                                    <option>Agricultural Science</option>
                                     <option>Biology</option>
-                                    <option>Chemistry</option>
-                                    <option>Physics</option>
-                                    <option>Mathematics</option>
-                                    <option>English</option>
-                                    <option>Geography</option>
-                                    <option>Social Studies</option>
                                     <option>Business Education</option>
+                                    <option>Chemistry</option>
+                                    <option>Computer Science</option>
+                                    <option>Creative Arts</option>
                                     <option>Economic</option>
+                                    <option>Educational Technology</option>
+                                    <option>English</option>
+                                    <option>Entrepreneurship Education</option>
+                                    <option>Geography</option>
+                                    <option>Guidance and Counselling</option>
+                                    <option>Library and Information Science</option>
+                                    <option>Mathematics</option>
+                                    <option>Nursery and Primary Education</option>
+                                    <option>Physical and Health Education</option>
+                                    <option>Physics</option>
+                                    <option>Political Science</option>
+                                    <option>Social Studies</option>
+                                    <option>Transport Planning</option>
                                 </select>
                             </div>
                             <div className="flex flex-col gap-1.5 text-left">
