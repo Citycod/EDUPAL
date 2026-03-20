@@ -8,6 +8,7 @@ import { useInstitutionContext } from '@/lib/hooks/useInstitutionContext';
 import ProjectTopicGenerator from '@/components/premium/ProjectTopicGenerator';
 import CoachWidget from '@/components/dashboard/CoachWidget';
 import OnboardingTour from '@/components/OnboardingTour';
+import PwaInstallPrompt from '@/components/PwaInstallPrompt';
 
 export default function Home() {
   const router = useRouter();
@@ -94,6 +95,7 @@ export default function Home() {
     <div className="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-white min-h-[100dvh]">
       <OnboardingTour />
       <div className="relative flex h-auto min-h-[100dvh] w-full flex-col overflow-x-hidden pb-20">
+        <PwaInstallPrompt />
         {/* Top Header */}
         <nav className="flex items-center bg-background-light dark:bg-background-dark p-4 justify-between sticky top-0 z-50 border-b border-white/5 backdrop-blur-md">
           <div className="flex shrink-0 items-center">

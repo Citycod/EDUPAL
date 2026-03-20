@@ -129,9 +129,6 @@ export default function MockExamUI({ questions, onComplete }: MockExamUIProps) {
 
         setResults(graded);
         setIsGrading(false);
-
-        const percentage = Math.round((totalScore / maxScore) * 100);
-        onComplete(percentage);
     }, [answers, questions, onComplete]);
 
     // --- GRADING SCREEN ---
@@ -204,6 +201,16 @@ export default function MockExamUI({ questions, onComplete }: MockExamUIProps) {
                             )}
                         </div>
                     ))}
+                </div>
+
+                <div className="pt-4">
+                    <button
+                        onClick={() => onComplete(percentage)}
+                        className="w-full h-14 rounded-2xl bg-primary text-background-dark font-black text-sm uppercase tracking-widest shadow-xl shadow-primary/30 hover:bg-brand-light transition-all active:scale-95 flex items-center justify-center gap-2"
+                    >
+                        <span className="material-symbols-outlined">emoji_events</span>
+                        Claim Points & Finish
+                    </button>
                 </div>
             </div>
         );
