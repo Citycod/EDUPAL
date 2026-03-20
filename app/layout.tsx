@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import PwaInstallPrompt from '@/components/PwaInstallPrompt';
 
 export const metadata: Metadata = {
     title: 'EDUPAL',
@@ -34,8 +35,11 @@ export default function RootLayout({
             </head>
             <body>
                 <div className="mobile-app-container">
-                    <div className="mobile-viewport">
-                        {children}
+                    <div className="mobile-viewport flex flex-col min-h-[100dvh]">
+                        <PwaInstallPrompt />
+                        <div className="flex-1">
+                            {children}
+                        </div>
                     </div>
                 </div>
             </body>
