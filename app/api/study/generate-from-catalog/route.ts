@@ -148,6 +148,74 @@ Structure: [{ "question": "...", "options": ["...", "...", "...", "..."], "corre
         }
 
         // 4. Call Gemini
+        // --- STREAMING PATH for notes (much faster perceived speed) ---
+        if (type === 'notes') {
+            const encoder = new TextEncoder();
+            const stream = new ReadableStream({
+                async start(controller) {
+                    try {
+                        const streamResponse = await aiClient.models.generateContentStream({
+                            model: 'gemini-2.5-flash',
+                            contents: prompt,
+                            config: { temperature: 0.3 }
+                        });
+
+                        let fullText = '';
+                        for await (const chunk of streamResponse) {
+                            const text = chunk.text || '';
+                            if (text) {
+                                fullText += text;
+                                controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text })}\n\n`));
+                            }
+                        }
+
+                        // Signal completion
+                        controller.enqueue(encoder.encode(`data: [DONE]\n\n`));
+                        controller.close();
+
+                        // Save to cache in the background after stream finishes
+                        try {
+                            if (existingCache) {
+                                const { error: updateErr } = await supabaseAdmin
+                                    .from('hub_ai_quizzes')
+                                    .update({ content: fullText, generated_at: new Date().toISOString() })
+                                    .eq('catalog_course_code', courseCode)
+                                    .eq('type', type);
+                                if (updateErr) console.error("Cache Update Error:", updateErr);
+                                else console.log(`[Cache] Updated ${courseCode} (${type})`);
+                            } else {
+                                const { error: insertErr } = await supabaseAdmin
+                                    .from('hub_ai_quizzes')
+                                    .insert({
+                                        catalog_course_code: courseCode,
+                                        type,
+                                        content: fullText,
+                                        resource_id: null
+                                    });
+                                if (insertErr) console.error("Cache Insert Error:", insertErr);
+                                else console.log(`[Cache] Inserted ${courseCode} (${type})`);
+                            }
+                        } catch (saveError) {
+                            console.error("Failed to save to AI cache:", saveError);
+                        }
+                    } catch (err: any) {
+                        console.error("Streaming error:", err);
+                        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ error: err.message })}\n\n`));
+                        controller.close();
+                    }
+                }
+            });
+
+            return new Response(stream, {
+                headers: {
+                    'Content-Type': 'text/event-stream',
+                    'Cache-Control': 'no-cache',
+                    'Connection': 'keep-alive',
+                }
+            });
+        }
+
+        // --- NON-STREAMING PATH for flashcards, quiz, mock-exam ---
         const response = await aiClient.models.generateContent({
             model: 'gemini-2.5-flash',
             contents: prompt,
@@ -167,18 +235,15 @@ Structure: [{ "question": "...", "options": ["...", "...", "...", "..."], "corre
             rawResponseText = rawResponseText.trim().replace(/```json\n?/, '').replace(/```\n?$/, '');
         }
 
-        // For "notes" type, we don't parse JSON
-        let content = rawResponseText;
-        if (type !== 'notes') {
-            try {
-                content = JSON.parse(rawResponseText.trim());
-            } catch (pErr) {
-                console.error("AI JSON Parse Error:", rawResponseText);
-                return NextResponse.json({ error: 'AI generated invalid format. Try again.' }, { status: 500 });
-            }
+        let content;
+        try {
+            content = JSON.parse(rawResponseText.trim());
+        } catch (pErr) {
+            console.error("AI JSON Parse Error:", rawResponseText);
+            return NextResponse.json({ error: 'AI generated invalid format. Try again.' }, { status: 500 });
         }
 
-        // 5. Save to Cache
+        // Save to Cache
         try {
             if (existingCache) {
                  const { error: updateErr } = await supabaseAdmin

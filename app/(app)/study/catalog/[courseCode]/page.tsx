@@ -30,6 +30,7 @@ export default function CatalogStudyPage() {
     const [roadmapData, setRoadmapData] = useState<any[]>([]);
     const [examDate, setExamDate] = useState<string>(new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0]);
     const [isRoadmapLoading, setIsRoadmapLoading] = useState(false);
+    const [isStreaming, setIsStreaming] = useState(false);
 
     // Subscription & Access
     const { hasAccess, loading: accessLoading } = useFeatureAccess('ai_study_tools');
@@ -64,10 +65,73 @@ export default function CatalogStudyPage() {
     }, [courseCode]);
 
     const handleGenerate = async (type: 'flashcards' | 'quiz' | 'notes' | 'mock-exam', forceRegenerate = false) => {
-        setMode('generating');
         setError(null);
         setIsCached(false);
 
+        // --- STREAMING PATH for notes ---
+        if (type === 'notes') {
+            setStudyNotes('');
+            setIsStreaming(true);
+            setMode('notes'); // Show notes view immediately so text streams in live
+
+            try {
+                const res = await fetch('/api/study/generate-from-catalog', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ courseCode, type, forceRegenerate })
+                });
+
+                // If it's a cached JSON response (not a stream)
+                const contentType = res.headers.get('content-type') || '';
+                if (contentType.includes('application/json')) {
+                    const data = await res.json();
+                    if (!res.ok) throw new Error(data.error || 'Failed to generate');
+                    setStudyNotes(data.content);
+                    setIsCached(data.cached);
+                    return;
+                }
+
+                // Stream SSE response
+                if (!res.body) throw new Error('No response body');
+                const reader = res.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = '';
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    buffer += decoder.decode(value, { stream: true });
+                    const lines = buffer.split('\n');
+                    buffer = lines.pop() || ''; // Keep incomplete line in buffer
+
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            const payload = line.slice(6);
+                            if (payload === '[DONE]') break;
+                            try {
+                                const parsed = JSON.parse(payload);
+                                if (parsed.error) throw new Error(parsed.error);
+                                if (parsed.text) {
+                                    setStudyNotes(prev => prev + parsed.text);
+                                }
+                            } catch (e) {
+                                // Skip non-JSON lines
+                            }
+                        }
+                    }
+                }
+            } catch (err: any) {
+                setError(err.message || 'An error occurred during generation.');
+                setMode('select');
+            } finally {
+                setIsStreaming(false);
+            }
+            return;
+        }
+
+        // --- NON-STREAMING PATH for flashcards, quiz, mock-exam ---
+        setMode('generating');
         try {
             const res = await fetch('/api/study/generate-from-catalog', {
                 method: 'POST',
@@ -84,10 +148,6 @@ export default function CatalogStudyPage() {
             } else if (type === 'quiz') {
                 setQuizQuestions(data.content);
                 setMode('quiz');
-            } else if (type === 'notes') {
-                setStudyNotes(data.content);
-                setMode('notes');
-                setIsCached(data.cached);
             } else if (type === 'mock-exam') {
                 setMockQuestions(data.content);
                 setMode('mock-exam');
@@ -298,13 +358,31 @@ export default function CatalogStudyPage() {
                                     <span className="text-[10px] font-black uppercase tracking-widest">Official Guide</span>
                                 </div>
                             )}
-                            <ReactMarkdown>{studyNotes}</ReactMarkdown>
+                            {studyNotes ? (
+                                <ReactMarkdown>{studyNotes}</ReactMarkdown>
+                            ) : isStreaming ? (
+                                <div className="flex items-center gap-3 py-8 justify-center">
+                                    <div className="size-5 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+                                    <span className="text-sm font-bold text-slate-400 uppercase tracking-widest">Generating notes...</span>
+                                </div>
+                            ) : null}
+                            {isStreaming && studyNotes && (
+                                <div className="flex items-center gap-2 mt-6 pt-4 border-t border-slate-100 dark:border-slate-800">
+                                    <div className="flex gap-1">
+                                        <span className="size-1.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: '0ms' }} />
+                                        <span className="size-1.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: '150ms' }} />
+                                        <span className="size-1.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: '300ms' }} />
+                                    </div>
+                                    <span className="text-[10px] font-black text-primary uppercase tracking-widest">Writing...</span>
+                                </div>
+                            )}
                         </div>
                         <button
                             onClick={() => setMode('select')}
-                            className="w-full h-16 rounded-2xl bg-[#0a120d] text-white font-black text-sm uppercase tracking-widest shadow-xl"
+                            disabled={isStreaming}
+                            className="w-full h-16 rounded-2xl bg-[#0a120d] text-white font-black text-sm uppercase tracking-widest shadow-xl disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
                         >
-                            Back to Tools
+                            {isStreaming ? 'Generating...' : 'Back to Tools'}
                         </button>
                     </div>
                 )}
