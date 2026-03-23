@@ -162,4 +162,23 @@
 
 .rotate-y-180 {
   transform: rotateY(180deg);
-}
+}
+
+/* AI Content Readability */
+.ai-content-prose {
+  color: #0f172a; /* slate-900 */
+}
+
+.dark .ai-content-prose,
+.dark .ai-content-prose * {
+  color: #ffffff !important;
+}
+
+.dark .ai-content-prose table {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark .ai-content-prose strong {
+  color: #22c55e !important; /* accentuate key terms with primary-ish green */
+}
+

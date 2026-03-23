@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
 
         const { resourceId, type, forceRegenerate } = await req.json();
 
-        if (!resourceId || !type || !['flashcards', 'quiz', 'mock-exam'].includes(type)) {
+        if (!resourceId || !type || !['flashcards', 'quiz', 'mock-exam', 'notes'].includes(type)) {
             return NextResponse.json({ error: 'Invalid request payload' }, { status: 400 });
         }
 
@@ -144,7 +144,43 @@ export async function POST(req: NextRequest) {
 
         // 5. Build the AI Prompt based on type
         let prompt = "";
-        if (type === 'flashcards') {
+        if (type === 'notes') {
+            prompt = `
+You are a world-class university professor writing a comprehensive study guide for Nigerian university students.
+I will provide you with text extracted from a student's study material. Your task is to generate detailed, explanatory study notes based ONLY on the provided text.
+
+STRICT STRUCTURE — Follow this format exactly:
+
+# Study Notes
+
+## Introduction
+Write a 2-3 paragraph overview explaining what the material is about, why it matters, and how the topics connect to each other.
+
+## [Dedicated Section for Each Major Topic]
+For EVERY major topic or concept found in the text, create a dedicated section with:
+- **Heading**: A clear, descriptive H2 heading.
+- **Explanation**: A thorough, multi-paragraph explanation. Do NOT just define it — **teach it**. Explain the "why" and "how", not just the "what".
+- **Key Terms**: Bold and define important terminology inline.
+- **Examples**: Provide at least 1-2 concrete examples. Where appropriate, relate to Nigerian or African context.
+- **Common Misconceptions**: Address what students often get wrong.
+
+## Summary
+A numbered list recapping ALL key points.
+
+## Review Questions
+5 thought-provoking questions testing deep understanding.
+
+IMPORTANT RULES:
+- Be thorough — each section should be at least 3-4 paragraphs.
+- Use a warm, professional academic tone.
+- Format in clean Markdown (H1, H2, H3, bold, lists, code blocks where relevant).
+- Do NOT include any preamble or meta-commentary. Start directly with the H1.
+- Aim for the depth of a textbook chapter, not a Wikipedia summary.
+
+TEXT CONTENT:
+${safeText}
+`;
+        } else if (type === 'flashcards') {
             prompt = `
 You are an expert academic tutor. I will provide you with text extracted from a student's study material.
 Your task is to generate 15 highly effective flashcards based ONLY on the provided text.
@@ -236,13 +272,17 @@ ${safeText}
             throw new Error("Empty response from Gemini");
         }
 
-        // Parse JSON
-        let generatedContent;
-        try {
-            generatedContent = JSON.parse(rawResponseText.trim());
-        } catch (parseError) {
-            console.error("AI JSON Parse Error:", rawResponseText);
-            return NextResponse.json({ error: 'The AI generated an invalid format. Please try again.' }, { status: 500 });
+        // Parse response — notes are raw Markdown, everything else is JSON
+        let generatedContent: any;
+        if (type === 'notes') {
+            generatedContent = rawResponseText;
+        } else {
+            try {
+                generatedContent = JSON.parse(rawResponseText.trim());
+            } catch (parseError) {
+                console.error("AI JSON Parse Error:", rawResponseText);
+                return NextResponse.json({ error: 'The AI generated an invalid format. Please try again.' }, { status: 500 });
+            }
         }
 
         // 7. Save to Database Cache

@@ -1,0 +1,1046 @@
+Global Course Structure
+100-Level
+Course
+Code
+Course Title Unit(s) Status LH PH
+GST 111 Communication in English 2 C 15 45
+GST 112 Nigerian Peoples and Culture 2 C 30 -
+EDU 101 Introduction to Teaching Profession 2 C 30 -
+COS 101 Introduction to Computing Sciences 3 C 30 45
+COS 102 Problem Solving 3 C 30 45
+Education 271 New
+MTH 101 General Mathematics 2 C 30 -
+PHY 102 General Physics 2 C 30 -
+PHY 107 General Physics Laboratory 1 C - 45
+Total Unit 17
+
+200 Levels
+Course
+Code
+Course Title Units Status LH PH
+GST 211 Environment & Sustainable
+Development 2 C 30 -
+ENT 211 Entrepreneurship and Innovation 2 C 30
+-
+EDU 201 Curriculum, Curriculum Delivery and
+Teaching Methods
+2 C 30 -
+COS 201 Computer Programming I 3 C 30 45
+COS 202 Computer Programming II 3 C 30 45
+CSC 203 Discrete Structures 2 C 30 -
+IFT 211 Digital Logic Design 2 C 15 45
+IFT 212 Computer Architecture and
+Organization 2 C 15 45
+MTH 201 Mathematical Methods I 2 C 30 -
+MTH 202 Mathematical Methods II 2 C 30 -
+SEN 201 Introduction to Software
+Engineering 2 C 30 -
+CSC 299 SIWES I 3 C - 135
+ Total
+Unit
+27
+SIWES I now hold during the long vacation of 200L
+300-Level
+Course
+Code
+Course Title Units Status LH PH
+ENT
+312
+Venture Creation 2 C 15 45
+GST
+312
+Peace and Conflict Resolution 2 C 30 -
+EDU
+301
+Teaching Practice I 3 C - 135
+EDU
+302
+Educational Measurements, Tests,
+Research Methods and Statistics
+2 C 30 -
+:
+Education 272 New
+CSC 301 Data Structures 3 C 30 45
+CSC 308 Operating Systems 3 C 30 45
+CSC 309 Artificial Intelligence 2 C 30 -
+CSC 322 Computer Science Innovation and
+New Technologies 2 C 15 45
+CYB 201 Introduction to Cyber Security and
+Strategy 2 C 30 -
+DTS 304 Data Management 3 C 30 45
+ICT 305 Data Communication System &
+Network 3 C 30 45
+CSC 399 SIWES II 3 C - 135
+Total 30
+SIWES now holds during the long vacation of 300L
+
+Education 273 New
+400-Level
+Course
+Code
+Course Title Units Status LH PH
+EDU 400 Project
+3
+ C - 135
+EDU
+401
+Teaching Practice II 3 C - 135
+CSC
+401
+Algorithms and Complexity Analysis 2 C 30 -
+INS
+401
+Project Management 2 C 30 -
+CSC
+402
+Ethics and Legal Issues in Computer
+Science
+2 C 30 -
+
+Total Unit
+12Course Contents and Learning Outcomes
+GST 111: Communication I English (2 Units C: LH15; PH45)
+Leaning Outcomes
+At the end of this course, students should be able to:
+1. identify possible sound patterns in English Language;
+2. list notable Language skills;
+3. classify word formation processes;
+4. construct simple and fairly complex sentences in English;
+5. apply logical and critical reasoning skills for meaningful presentations;
+6. demonstrate an appreciable level of the art of public speaking and listening;
+7. write simple and technical reports;
+8. learn the major word formation process; 9. apply ICT in to modern language
+learning, and
+10. practice report writing.
+Course Contents
+Sound patterns in English Language (vowels and consonants, phonetics and
+phonology). English word classes (lexical and grammatical words, definitions,
+forms, functions, usages, collocations). Sentence in English (types: structural
+and functional, simple and complex). Grammar and Usage (tense, mood,
+modality and concord, aspects of language use in everyday life). Logical and
+Critical Thinking and Reasoning Methods (Logic and Syllogism, Inductive and
+Deductive Argument and Reasoning Methods, Analogy, Generalisation and
+Explanations). Ethical considerations, Copyright Rules and Infringements.
+Writing Activities: (Pre-writing, Writing, Post writing, Editing and Proofreading;
+Brainstorming, outlining, Paragraphing, Types of writing, Summary, Essays,
+Letter, Curriculum Vitae, Report writing and Note making. Mechanics of
+writing). Comprehension Strategies: (Reading and types of Reading,
+Comprehension Skills, 3RsQ). Information and Communication Technology in
+:
+Education 274 New
+modern Language Learning. Language skills for effective communication. Major
+word formation processes. Writing and reading comprehension strategies.
+Logical and critical reasoning for meaningful presentations. Art of public
+speaking and listening. Report writing.
+GST112: Nigerian Peoples and Culture (2 Units C: LH 30)
+Leaning Outcomes
+At the end of the course, students should be able to:
+1. analyse the historical foundation of the Nigerian culture and arts in pre-colonial
+times;
+2. list and identify the major linguistic groups in Nigeria;
+3. explain the gradual evolution of Nigeria as a political unit;
+4. analyse the concepts of Trade, Economic and Self-reliance status of the Nigerian
+peoples towards national development;
+5. enumerate the challenges of the Nigerian State towards Nation building
+6. analyse the role of the Judiciary in upholding people’s fundamental rights
+7. identify acceptable norms and values of the major ethnic groups in Nigeria;
+8. list and suggest possible solutions to identifiable Nigerian environmental, moral
+and value problems;
+9. demonstrate knowledge of the concepts of trade and economics of self-reliance,
+and
+10. identify with the current socio-political and cultural developments in Nigeria.
+Course Contents
+Nigerian history, culture and art up to 1800 (Yoruba, Hausa and Igbo peoples
+and culture; peoples and culture of the ethnic minority groups). Nigeria under
+colonial rule (advent of colonial rule in Nigeria; Colonial administration of
+Nigeria). Evolution of Nigeria as a political unit (amalgamation of Nigeria in
+1914; formation of political parties in Nigeria; Nationalist movement and
+struggle for independence). Nigeria and challenges of nation building (military
+intervention in Nigerian politics; Nigerian Civil War). Concept of trade and
+economics of selfreliance (indigenous trade and market system; indigenous
+apprenticeship system among Nigeria people; trade, skill acquisition and selfreliance). Social justices and national development (law definition and
+classification. Judiciary and fundamental rights. Individual, norms and values
+(basic Nigeria norms and values, patterns of citizenship acquisition; citizenship
+and civic responsibilities; indigenous languages, usage and development;
+negative attitudes and conducts. Cultism, kidnapping and other related social
+vices). Re-orientation, moral and national values (The 3R’s – Reconstruction,
+Rehabilitation and Re-orientation; Reorientation Strategies: Operation Feed the
+Nation (OFN), Green Revolution, Austerity Measures, War Against Indiscipline
+(WAI), War Against Indiscipline and Corruption (WAIC), Mass Mobilization for
+Self-Reliance, Social Justice and Economic Recovery (MAMSER), National
+Orientation Agency (NOA). Current socio-political and cultural developments in
+Nigeria.
+Education 275 New
+EDU 101: Introduction to Teaching and Foundations of Education
+(2 Units C: LH 30)
+Learning Outcomes
+At the end of the course, the students should be able to:
+1. state the important roles of teaching as a profession;
+2. raise and judge some ethical issues in education;
+3. list the intellectual and practical competencies required by the teacher;
+4. justify the need for education in the development of a nation;
+5. give an account of the history of education from ancient times to the present day
+modern education in Nigeria;
+6. present an overview of the National Policy on Education;
+7. identify the stages of child and adolescent development;
+8. state the behaviourist, cognitive and socio-cultural perspectives of learning;
+9. enumerate historical and current developments in sociology of education, and
+10. highlight the historical and current developments in philosophy of education.
+Course Contents
+Teaching as a profession. Ethics of the teaching profession. Intellectual and
+practical competencies required by the teacher. Link between education and
+development. Educational development from ancient times to the present with
+particular reference to the evolution of modern education in Nigeria. The
+National Policy on Education. Brief treatment of learning theories from the
+behaviourist, cognitive and socio cultural perspectives. Child and adolescent
+development. Historical and current developments in philosophy of education.
+Historical and current developments in sociology of education
+COS 101: Introduction to Computing Sciences (3 Units C: LH 30; PH 45)
+Learning Outcomes
+1. trace historical development of computing to the current programmes in the
+discipline;
+2. distinguish the salient characteristics of the different programmes of the
+computing discipline;
+3. identify the roles and applications of computers and computing in different areas
+of human endeavour;
+4. identify and explain the basic components of a computer system;
+5. develop basic literacy on the use of computer systems;
+6. develop competence on the use of common Office productivity applications; and
+7. make purposeful use of the Internet for information gathering, learning and
+continuous professional development.
+Course Contents
+History of computing sciences leading to the different programmes in the
+discipline. Characteristics of each programme in computing sciences. Hardware,
+Software; and human resources; Integration and application in business and
+other segments of society. Information processing and its roles in society;
+Students will be required to complete lab assignments using the PC’s operating
+system, and several commonly used applications, such as word processors,
+:
+Education 276 New
+spreadsheets, presentations, graphics and other applications. Internet and online resources, browsers, and search engines.
+Prerequisite: None
+COS 102: Problem Solving (3 Units C: LH 30, PH 45)
+Learning Outcomes
+At the end of this course, students should be able to
+1. explain concepts related to problem solving and identify problem types;
+2. identify and explain problem solving methods;
+3. exemplify solvable and unsolvable problems;
+4. interpret given problems and formulate solutions to them using flowchart,
+pseudocode and/or other formalisms;
+5. apply appropriate strategies and procedures to arrive at workable solutions to
+problems; and
+6. develop critical thinking and problem solving skills required throughout the
+computing career.
+Course Contents
+Introduction to the core concepts of computing, problems, and problemsolving. The identification of problems and types of problems (routine problems
+and non-routine problems). Method of solving computing problems
+(Introduction to Algorithms and heuristics).
+Solvable and unsolvable problems. Solution techniques of solving problems
+(abstraction, analogy, brainstorming, trial and error, hypothesis testing,
+reduction, literal thinking, meansend analysis, method of focal object,
+morphological analysis, research, root cause analysis, proof, divide and
+conquer). General Problem-solving process. Solution formulation and design:
+flowchart, pseudocode, decision table, decision tree. Implementation,
+evaluation and refinement.
+MTH 101: Elementary Mathematics I (Algebra and
+Trigonometry) (2 Units C: LH 30)
+Learning Outcomes
+At the end of the course students should be able to
+1. state basic definition of Set, Subset, Union, Intersection, Complements and use
+of Venn diagrams;
+2. solve quadratic equations;
+3. solve trigonometric functions;
+4. use various types of numbers; and
+5. solve some problems using Binomial theorem.
+Course Contents
+Elementary set theory, subsets, union, intersection, complements, venn
+diagrams. Real numbers; integers, rational and irrational numbers,
+mathematical induction, real sequences and series, theory of quadratic
+equations, binomial theorem. Complex numbers; algebra of complex numbers;
+Education 277 New
+the Argand diagram. De-Moivre’s theorem, nth roots of unity. Circular measure,
+trigonometric functions of angles of any magnitude, addition and factor
+formulae.
+PHY 102: General Physics II (Behaviour of Matter) (2 Units C: LH 30)
+Learning Outcomes
+At the end of the course students should be able to
+1. explain the concepts of heat and temperature and relate the temperature scales;
+2. define, derive, and apply the fundamental thermodynamic relations to thermal
+systems;
+3. describe and explain the first and second laws of thermodynamics, and the
+concept of entropy;
+4. state the assumptions of the kinetic theory and apply techniques of describing
+macroscopic behaviour;
+5. deduce the formalism of thermodynamics and apply it to simple systems in
+thermal equilibrium; and
+6. describe and determine the effect of forces and deformation of materials and
+surfaces.
+Course Contents
+Heat and Temperature. Temperature scales. Gas laws. General gas equation.
+Thermal conductivity. First Law of thermodynamics. Heat, work and internal
+energy, reversibility. Thermodynamic processes. Adiabatic, isothermal, isobaric.
+Second law of thermodynamics. heat engines and entropy, Zero’s law of
+thermodynamics. Kinetic theory of gases. Molecular collisions and mean free
+path. Elasticity. Hooke's law, Young's, shear and bulk moduli. Hydrostatics.
+Pressure, buoyancy, Archimedes' principles. Bernoulli’s equation and
+incompressible fluid flow. Surface tension. Adhesion, cohesion, viscosity,
+capillarity, drops and bubbles.
+
+PHY 107: General Practical Physics I (1 Unit C: PH 45)
+Learning Outcomes
+At the end of the course students should be able to:
+1. conduct measurements of some physical quantities;
+2. make observations of events, collect and tabulate data;
+3. identify and evaluate some common experimental errors;
+4. plot and analyse graphs; and
+5. draw conclusions from numerical and graphical analysis of data.
+Course Contents
+This introductory course emphasizes quantitative measurements, the treatment
+of measurement errors, and graphical analysis. A variety of experimental
+techniques should be employed. The experiments include studies of meters,
+the oscilloscope, mechanical systems, electrical and mechanical resonant
+systems, light, heat, viscosity and others, covered in PHY 101 and PHY 102.
+However, emphasis should be placed on the basic physical techniques for
+observation, measurements, data collection, analysis and deduction.
+:
+Education 278 New
+GST 212: Philosophy, Logic And Human Existence (2 Units C: LH 30)
+Learning Outcomes
+A student who has successfully gone through this course should be able to:
+1. explain the basic features of philosophy as an academic discipline;
+2. identify the main branches of philosophy & the centrality of logic in philosophical
+discourse;
+3. explain the elementary rules of reasoning;
+4. distinguish between valid and invalid arguments;
+5. think critically and assess arguments in texts, conversations and day-to-day
+discussions;
+6. critically asses the rationality or otherwise of human conduct under different
+existential conditions;
+7. develop the capacity to extrapolate and deploy expertise in logic to other areas
+of knowledge; and
+8. guide his or her actions, using the knowledge and expertise acquired in
+philosophy and logic.
+Course Contents
+Scope of philosophy; notions, meanings, branches and problems of philosophy.
+Logic as an indispensable tool of philosophy. Elements of syllogism, symbolic
+logic— the first nine rules of inference. Informal fallacies, laws of thought,
+nature of arguments. Valid and invalid arguments, logic of form and logic of
+content — deduction, induction and inferences. Creative and critical thinking.
+Impact of philosophy on human existence. Philosophy and politics, philosophy
+and human conduct, philosophy and religion, philosophy and human values,
+philosophy and character molding.
+Education 279 New
+ENT211: Entrepreneurship and Innovation (2 Units C: LH15; PH45)
+Leaning Outcomes
+At the end of this course, students should be able to:
+1. explain the concepts and theories of entrepreneurship, entrepreneurships
+opportunity seeking, new value creation, and risk taking;
+2. state the characteristics of an entrepreneur;
+3. analyse the importance of micro and small businesses in wealth creation,
+employment, and financial independence;
+4. engage in entrepreneurial thinking;
+5. identify key elements in innovation;
+6. describe stages in enterprise formation, partnership and networking including
+business planning;
+7. describe contemporary entrepreneurial issues in Nigeria, Africa and the rest of
+the world;
+8. state the basic principles of e-commerce;
+9. demonstrate ability to perform reflective and creative thinking; and 10. apply the
+basics of a business plan.
+Course Contents
+Concept of Entrepreneurship (Entrepreneurship, Entrepreneurships / Corporate
+Entrepreneurship,). Theories, Rationale and relevance of Entrepreneurship
+(Schumpeterian and other perspectives, Risk-Taking, Necessity and
+opportunity-based entrepreneurship and Creative destruction). Characteristics
+of Entrepreneurs (Opportunity seeker, Risk taker, Natural and Nurtured,
+Problem solver and change agent, Innovator and creative thinker).
+Entrepreneurial thinking (Critical thinking, Reflective thinking, and Creative
+thinking). Innovation (Concept of innovation, Dimensions of innovation,
+Change and innovation, Knowledge and innovation). Enterprise formation,
+partnership and networking (Basics of Business Plan, Forms of business
+ownership, Business registration and Forming alliances and join ventures).
+Contemporary Entrepreneurship Issues (Knowledge, Skills and Technology,
+Intellectual property, Virtual office, Networking). Entrepreneurship in Nigeria
+(Biography of inspirational Entrepreneurs, Youth and women entrepreneurship,
+Entrepreneurship support institutions, Youth enterprise networks and
+Environmental and cultural barriers to entrepreneurship). Basic principles of ecommerce.
+EDU 201: Curriculum, Curriculum Delivery and Teaching
+Methods (2 Units C: LH30)
+Learning Outcomes
+At the end of the course, the students should be able to:
+1. explain at an appropriate level of confidence the meaning and types of
+curriculum;
+2. describe the process of curriculum development; analyse and critique the
+Nigerian Core curricula as guide to curricula delivery;
+3. use different methods in the delivery of curriculum content;
+4. identify local epistemologies and context and the use of CTCA in the Nigerian
+context;
+:
+Education 280 New
+5. plan and schedule lessons as well as monitor and evaluate the outcome of each
+lesson; 6. identify and use learning resources and media and improvise, when
+necessary;
+7. manage classrooms under different conditions and address the
+needs of individual students, especially, those with special needs
+including the gifted;
+8. demonstrate skills in ICT, set up and manage online classes; 9.
+demonstrate the application of general classroom management;
+and
+10. skilfully attend to students with special needs.
+Course Contents
+Definition and types of curriculum. The curriculum development process. The
+Nigerian core curricula. Curriculum delivery to include general teaching
+methods and strategies: lecture, class discussion, demonstration, problemsolving, cooperative learning and guided-discovery, concept mapping,
+metacognition, argumentation, project-based learning, competency-based
+learning, culturo-techno-contextual approach (CTCA). Developing the lesson
+plan/note. Assessment of learning. Resources for teaching and improvisation.
+General classroom management. Teaching in a 21st century classroom. Setting
+up and managing online classes. Attending to students with special needs.
+COS 201: Computer Programming I (3 Units C: LH 30, PH 45)
+Learning Outcomes
+At the end of this course, students should be able to
+1. identify different programming paradigms and their approach to programming;
+2. write programs using basic data types and strings;
+3. design and implement programming problems using selection;
+4. design and implement programming problems using loops;
+5. use and implement classes as data abstractions in an object-oriented approach;
+6. implement simple exception handling in programs;
+7. develop programs with input/output from text files; and
+8. design and implement programming problems involving arrays.
+Course Contents
+Introduction to computer programming. Functional programming; Declarative
+programming; Logic programming; Scripting languages. Introduction to objectorientation as a technique for modeling computation. Introduction of a typical
+object-oriented language, such as Java; Basic data types, variables,
+expressions, assignment statements and operators; Basic objectoriented
+concepts: abstraction; objects; classes; methods; parameter passing;
+encapsulation. Introduction to Strings and string processing; Simple I/O;
+control structures; Arrays; Simple recursive algorithms; inheritance;
+polymorphism
+Lab work: Programming assignments involving hands-on practice in the
+design and implementation of simple algorithms such as finding the average,
+standard deviation, searching and sorting. Practice in developing and tracing
+simple recursive algorithms.
+Education 281 New
+Developing programs involving inheritance and polymorphism.
+Prerequisite: COS 102 Problem Solving
+CSC 203: Discrete Structures (2 Units C: LH 30)
+Learning Outcomes
+At the end of this course, the students will be able to
+1. convert logical statements from informal language to propositional and predicate
+logic expressions.
+2. describe the strengths and limitations of propositional and predicate logic.
+3. outline the basic structure of each proof technique (direct proof, proof by
+contradiction, and induction) described in this unit.
+4. apply each of the proof techniques (direct proof, proof by contradiction, and
+induction) correctly in the construction of a sound argument.
+5. apply the pigeonhole principle in the context of a formal proof.
+6. compute permutations and combinations of a set, and interpret the meaning in
+the context of the particular application.
+7. map real-world applications to appropriate counting formalisms, such as
+determining the number of ways to arrange people around a table, subject to
+constraints on the seating arrangement, or the number of ways to determine
+certain hands in cards (such as, a full house).
+8. solve a variety of basic recurrence relations.
+Course Contents
+Propositional Logic. Predicate Logic. Sets. Functions. Sequences and Summation. Proof
+Techniques. Mathematical induction. Inclusion-exclusion and Pigeonhole principles.
+Permutations and Combinations (with and without repetitions). The Binomial Theorem.
+Discrete Probability. Recurrence Relations.
+IFT 211: Digital Logic Design (2 Units C: LH 15: PH 45)
+Learning Outcomes
+At the end of this course, students will be able to:
+1. explain why everything is data, including instructions, in computers;
+2. describe how negative integers, fixed-length numbers, and non-numeric data are
+represented;
+3. convert numerical data from one format to another;
+4. describe computations as a system characterized by a known set of
+configurations with transitions from one unique configuration (state) to another
+(state);
+5. describe the distinction between systems whose output is only a function of their
+input
+(Combinational) and those with memory/history (Sequential);
+6. describe a computer as a state machine that interprets machine instructions;
+7. articulate that there are many equivalent representations of computer
+functionality, including logical expressions and gates, and be able to use
+mathematical expressions to describe the functions of simple combinational and
+sequential circuits; and
+:
+Education 282 New
+8. design the basic building blocks of a computer: arithmetic-logic unit (gate-level),
+registers (gate-level), central processing unit (register transfer-level), and
+memory (register transfer-level).
+Course Contents
+Fundamental constructs and concepts underlying computer hardware and software
+which includes:
+Number systems, binary arithmetic, codes, gates, Boolean expressions. Boolean
+algebra. Manipulation and minimization of completely and incompletely
+specified Boolean functions. Boolean switching function synthesis. Iterative
+arrays, sequential machines. Physical properties of gates: fan-in, fan-out,
+propagation delay. Timing diagrams and tri-state drivers. Combinational circuits
+design using multiplexers, decoders, comparators, and adders. Sequential
+circuit analysis and design, basic flip-flops, clocking, and timing diagrams.
+Registers, counters, RAMs, ROMs, PLAs, PLDs, and FPGA.s.
+IFT 212: Computer Architecture and Organization (2 Units C: LH 15,
+PH 45)
+Learning Outcomes
+At the end of this course, students should be able to
+1. explain different instruction formats, such as addresses per instruction and
+variable length vs. fixed length formats;
+2. explain the organization of the classical von Neumann machine and its major
+functional units;
+3. explain how subroutine calls are handled at the assembly level;
+4. explain the basic concepts of interrupts and I/O operations;
+5. write simple assembly language program segments;
+6. show how fundamental high-level programming constructs are implemented at
+the machine-language level;
+7. compare alternative implementation of datapaths;
+8. discuss the concept of control points and the generation of control signals using
+hardwired or microprogrammed implementations;
+9. describe how the use of memory hierarchy (cache, virtual memory) is used to
+reduce the effective memory latency; and
+10. explain how interrupts are used to implement I/O control and data transfers.
+Course Contents
+Instruction format and types, memory and I/O instructions, dataflow,
+arithmetic, and flow control instructions, addressing modes, stack operations,
+and interrupts. Datapath and control unit design. RTL, microprogramming, and
+hardwired control. Practice of assembly language programming. Memory
+hierarchy, cache memory, virtual memory. I/O fundamentals.
+Interrupt structures.
+Suggested Lab work
+Programming assignments to practice MS-DOS batch programming, Assembly
+Process, Debugging, Procedures, Keyboard input, Video Output, File and Disk
+I/O and Data Structure. Instruction and arithmetic pipelining, superscalar
+Education 283 New
+architecture. Reduced Instruction Set Computers. Parallel architectures and
+interconnection networks.
+Prerequisite: IFT 211 Digital Logic Design
+MTH 201: Mathematical Methods 1 (2 Units C: LH 30)
+Learning Outcomes
+At the end of the course students should be able to
+1. describe Real-valued functions of a real variable;
+2. solve some problems using Mean value Theorem and Taylor Series expansion;
+and
+3. evaluate Line Integral, Surface Integral and Volume Integrals.
+Course Contents
+Real-valued functions of a real variable. Review of differentiation and
+integration and their applications. Mean value theorem. Taylor series. Realvalued functions of two and three variables. Partial derivatives chain rule,
+extrema, Lagrangian multipliers. Increments, differentials and linear
+approximations. Evaluation of line, integrals. Multiple integrals.
+MTH 202: Elementary Differential Equations (2 Units C: LH 30)
+Learning Outcomes
+At the end of the course, students should be able to
+1. define the following: order and degree of a differential equation;
+2. describe some techniques for solving first and second order linear and nonlinear
+equations; and
+3. solve some problems related to geometry and physics.
+Course Contents
+Derivation of differential equations from primitive, geometry and physics order
+and degree of differential equation. Techniques for solving first and second
+order linear and non-linear equations. Solutions of systems of first order linear
+equations. Finite linear difference equations. Application to geometry and
+physics.
+SEN 201: Introduction to Software Engineering (2 Units C: LH 30)
+Learning Outcomes
+At the end of this course, students should be able to
+1. explain the concept of the software life cycle and comprehend the phases of
+requirements analysis, design, development, testing and maintenance.
+2. differentiate amongst the various software development models.
+3. use UML for object-oriented analysis and design.
+4. describe different design architectures.
+5. undertake a group project involving requirements analysis, design, programming
+and testing.
+Course Contents
+:
+Education 284 New
+Software engineering concepts and principles; design, development and testing
+of software systems. Introduction to software life cycle. Requirements, design
+and testing. Review of principles of object orientation. Object oriented analysis
+using UML. Frameworks and APIs. Introduction to the client-server
+architecture. Analysis, design and programming of a teamproject including user
+interface considerations.
+CSC 299: SIWES I (3 Units C: PH 135)
+Learning Outcomes
+At the end of this training, students should be able to:
+1. explain how a typical computer firm/unit operates;
+2. describe the various assignments carried out and the skills acquired during the
+SIWES period; and
+3. submit a comprehensive report on the knowledge acquired and the experience
+gained during the exercise.
+Course Contents
+Students are attached to private and public organisations for a period of three
+months during the second year session long break with a view to making them
+acquire practical experience and to the extent possible, develop skills in all
+areas of Computer Science. Students are supervised during the training period
+and shall be expected to keep records designed for the purpose of monitoring
+their performance. They are also expected to submit a report on the experience
+gained and defend their reports.
+300 Level
+GST 312: Peace and Conflict Resolution (2 Units C: LH 30)
+Learning Outcomes
+At the end of the course, students should be able to:
+1. analyse the concepts of peace, conflict and security;
+2. list major forms, types and root causes of conflict and violence;
+3. differentiate between conflict and terrorism;
+4. enumerate security and peace building strategies; and
+5. describe roles of international organisations, media and traditional institutions in
+peace building.
+Course Contents
+Concepts of Peace, Conflict and Security in a multi-ethnic nation. Types and
+Theories of Conflicts: Ethnic, Religious, Economic, Geo-political Conflicts;
+Structural Conflict Theory, Realist Theory of Conflict, Frustration-Aggression
+Conflict Theory. Root causes of Conflict and Violence in Africa: Indigene and
+settlers Phenomenon; Boundaries/boarder disputes; Political disputes; Ethnic
+disputes and rivalries; Economic Inequalities; Social disputes; Nationalist
+Movements and Agitations; Selected Conflict Case Studies – Tiv-Junkun; Zango
+Kartaf, Chieftaincy and Land disputes. Peace Building, Management of Conflicts
+Education 285 New
+and Security: Peace & Human Development. Approaches to Peace & Conflict
+Management --- (Religious, Government, Community Leaders and others).
+Elements of Peace Studies and Conflict
+Resolution: Conflict dynamics assessment Scales: Constructive & Destructive. Justice
+and Legal framework: Concepts of Social Justice; The Nigeria Legal System. Insurgency
+and Terrorism. Peace Mediation and Peace Keeping. Peace & Security Council
+(International, National and Local levels) Agents of Conflict resolution – Conventions,
+Treaties Community Policing: Evolution and Imperatives. Alternative Dispute
+Resolution, ADR. Dialogue b). Arbitration, c). Negotiation d). Collaboration. Roles
+of International Organizations in Conflict Resolution. (a). The United Nations, UN and
+its Conflict Resolution Organs. (b). The African Union & Peace Security Council (c).
+ECOWAS in Peace Keeping. Media and Traditional Institutions in Peace Building.
+Managing Post-Conflict Situations/Crisis: Refugees. Internally Displaced Persons, IDPs.
+The role of NGOs in Post-Conflict Situations/Crisis.
+ENT 312: Venture Creation (2 Units C: LH 15; PH 45)
+Learning Outcomes
+At the end of this course, students, through case studies and practical approaches,
+should be able to:
+1. describe the key steps in venture creation;
+2. spot opportunities in problems and in high potential sectors regardless of
+geographical location;
+3. state how original products, ideas, and concepts are developed;
+4. develop business concept for further incubation or pitching for funding;
+5. identify key sources of entrepreneurial finance;
+6. implement the requirements for establishing and managing micro and small
+enterprises;
+7. conduct entrepreneurial marketing and e-commerce;
+8. apply a wide variety of emerging technological solutions to entrepreneurship; and
+9. appreciate why ventures fail due to lack of planning and poor implementation.
+Course Contents
+Opportunity Identification (Sources of business opportunities in Nigeria,
+Environmental scanning, Demand and supply gap/unmet needs/market
+gaps/Market Research, Unutilised resources, Social and climate conditions and
+Technology adoption gap). New business development (business planning,
+market research). Entrepreneurial Finance (Venture capital, Equity finance,
+Micro finance, Personal savings, Small business investment organizations and
+Business plan competition). Entrepreneurial marketing and e-commerce
+(Principles of marketing, Customer Acquisition & Retention, B2B, C2C and B2C
+models of e-commerce, First Mover Advantage, E-commerce business models
+and Successful E-Commerce Companies,). Small Business Management/Family
+Business: Leadership & Management, Basic book keeping, Nature of family
+business and Family Business Growth Model. Negotiation and Business
+communication (Strategy and tactics of negotiation/bargaining, Traditional and
+modern business communication methods). Opportunity Discovery
+Demonstrations (Business idea generation presentations, Business idea
+:
+Education 286 New
+Contest, Brainstorming sessions, Idea pitching). Technological Solutions (The
+Concept of Market/Customer Solution, Customer Solution and Emerging
+Technologies, Business Applications of New Technologies - Artificial Intelligence
+(AI), Virtual/Mixed Reality (VR), Internet of Things (IoTs), Blockchain, Cloud
+Computing, Renewable Energy and others. Digital Business and E-Commerce
+Strategies).
+EDU 301: Teaching Practice I (3 Units C: PH 135)
+Learning Outcomes
+At the end of the course, students should be able to demostrate:
+1. knowledge of the subject matter;
+2. the necessary Pedagogical skills;
+3. acquired understanding of child psychology;
+4. the needed attitude towards teaching;
+5. proper use of instructional facilities;
+6. knowledge of individual differences in actual classroom situations and how to use
+this knowledge to assist children in real time; and
+7. effective classroom management skills.
+Course Contents
+Effective and responsive teaching practices and interactions as key for all
+learning in professional teacher preparation. The importance of teaching
+practice in providing students with an opportunity to apply their pedagogical
+knowledge and skills in practice. Practical implementation of teaching and
+learning strategies in the classroom, as applied to the subject area. Microteaching prior to students embarking on the exercise.
+EDU 302: Educational Measurements, Tests, Research Methods and
+Statistics (2 Units C: LH 15; PH 45)
+Learning Outcomes
+At the end of the course, the students should be able to:
+1. measure and assess learning outcomes and use the results in decision making
+and judgments;
+2. identify the different domains of learning; develop and use appropriate
+instruments for measuring each;
+3. identify the different kinds of data that can be yielded in different contexts and
+the appropriate statistical tool for analyzing each type of data;
+4. explain the meaning, aim, types, role and processes of research in educational
+settings. 5. acquire communication skills and skills in reporting of research;
+6. carry out hypothesis testing, and employ the knowledge of critical values and
+error in interpretation of results and making of inferences;
+7. gain skills in the use of IBM-SPSS and other relevant packages in the analysis of
+data; and
+8. judge and address ethical issues in research.
+Course Contents
+Education 287 New
+Meaning of research, research designs. Problem identification, background and
+study justification. Theoretical/conceptual framework and review of literature.
+Sample and sampling techniques. Types of data, data gathering, data
+processing, data analysis and interpretation. Probability, critical values and
+error and their place in inferences. Reporting in educational context. Ethical
+considerations (political, economic religious and cultural) in research. The use
+of computers in educational research, use of SPSS in data analysis.
+Measurements and instrumentation. Development of tests, test blue prints,
+item analysis, reliability and validity of instruments. Domains of learning and
+taxonomy of cognitive outcomes.
+CSC 301: Data Structures (3 Units C: LH 30, PH 45)
+Learning Outcomes
+At the end of this course, students should be able to
+1. discuss the appropriate use of built-in data structures.
+2. apply object-oriented concepts (inheritance, polymorphism, design patterns and
+others) in software design;
+3. implement various data structures and their algorithms, and apply them in
+implementing simple applications;
+4. choose the appropriate data structure for modelling a given problem;
+5. analyze simple algorithms and determine their efficiency using big-O notation;
+and
+6. apply the knowledge of data structures to other application domains like data
+compression and memory management.
+Course Contents
+Primitive types, Arrays, Records Strings and String processing, Data
+representation in memory, Stack and Heap allocation, Queues, TREES.
+Implementation Strategies for stack, queues, trees. Run time Storage
+management; Pointers and References, linked structures.
+CSC 308: Operating System (3 Units C: LH 30, PH 45)
+Learning Outcomes
+At the end of this course, students should be able to
+1. recognize operating system types and structure;
+2. describe OS support for processes and threads;
+3. recognize CPU scheduling, synchronization, and deadlock;
+4. resolve OS issues related to synchronization and failure for distributed systems;
+5. explain OS support for virtual memory, disk scheduling, I/O, and file systems;
+6. identify security and protection issues in computer systems; and
+7. use C and Unix commands, examine behaviour and performance of Linux, and
+develop various system programs under Linux to make use of OS concepts related
+to process synchronization, shared memory, mailboxes, file systems and others.
+Course Contents
+Fundamentals of operating systems design and implementation. History and
+evolution of operating systems. Types of operating systems. Operating system
+:
+Education 288 New
+structures. Process management: processes, threads, CPU scheduling, process
+synchronization. Memory management and virtual memory. File systems; I/O
+systems; Security and protection; Distributed systems; Case studies.
+Suggested Lab Work:
+Practical hands-on engagement to facilitate understanding of the material
+taught in the course. All the process, memory, file and directory management
+issues will be demonstrated under the LINUX operating system. Also UNIX
+commands will be briefly discussed. Alternatively, hands-on exposure may be
+through the use of operating systems developed for teaching, like TempOS,
+Nachos, Xinu or MiniOS. Another possibility is through programming exercises
+that implement and simulate algorithms taught. Simulation of CPU scheduling
+algorithms, producer-consumer problem, memory allocation algorithms, file
+organization techniques, deadlock algorithms and disk scheduling algorithms.
+Prerequisite: CSC 301 Data Structures
+CSC 309: Artificial Intelligence (2 Units C: LH 30)
+Learning Outcomes
+At the end of this course, students should be able to:
+1. explain AI fundamentals, concepts, goals, types, techniques, branches,
+applications,
+2. understand AI technology and tools.
+3. discuss intelligent agents, their performance, examples, faculties, environment
+and architectures, and determine the characteristics of a given problem that
+an intelligent
+4. system must solve.
+5. describe the Turing test and the “Chinese Room” thought experiment, and
+differentiate between the concepts of optimal reasoning/behaviour and humanlike reasoning/behaviour.
+6. describe the role of heuristics and the trade-offs among completeness, optimality,
+time complexity, and space complexity.
+7. analyze the types of search and their applications in AI and describe the problem
+of combinatorial explosion of search space and its consequences.
+8. demonstrate knowledge representation, semantic network and frames along with
+their applicable uses.
+9. practice Natural Language Processing, translate a natural language (such as
+English) sentence into a predicate logic statement, convert a logic statement into
+clause form, apply resolution to a set of logic statements to answer a query.
+10. analyze programming languages for AI and expert systems technology, and
+employ application domains of AI.
+Course Contents
+Overview of Artificial Intelligence. History of AI. Goals of AI. AI Technique.
+Types of AI. Branches and applications of AI. Advantages and Disadvantages.
+Introduction to Intelligent Agents. Agent Performance, Examples of Agents,
+Agent Faculties, Rationality, Agent Environment. Agent Architectures. Search.
+General Classes of AI Search Algorithm Problems. Problem Solving by Search.
+Types of AI Search Techniques and Strategies. Introduction to the types of
+Education 289 New
+problems and techniques in AI. Problem-Solving methods. Major structures
+used in AI programs. Knowledge Representation. KR and Reasoning
+Challenges. KR Languages. Knowledge representation techniques such as
+predicate logic, non-monotonic logic, and probabilistic reasoning. Semantic
+Network - types of relationships, semantic network inheritance, types and
+components. Introduction to Frames. Natural Language Processing (NLP).
+Introduction to natural language understanding and various syntactic and
+semantic structures. Introduction to Expert Systems - characteristics,
+components, types, requirements, technology, development. Programming
+Languages for AI. Introduction to computer image recognition.
+CSC 322: Computer Science Innovation and New Technologies (2 Units C:
+LH 30)
+Learning Outcomes
+At the end of this course, students should be able to
+1. identify the key elements of the process of founding a start-up firm;
+2. state and explain the different aspects and challenges of entrepreneurship;
+3. list and explain the skills required for technology-driven innovation and
+entrepreneurship in the age of disruptive technologies;
+4. generate an innovative business and build a business plan around it;
+5. identify different strategies for raising capital to support an innovation;
+6. employ modern technologies to enhance or disrupt an existing business model;
+and
+7. assess and critique a given business proposal from different perspectives.
+Course Contents
+Aims to equip students with concepts and skills required for developing,
+planning and managing technology-based innovations. Topics covered include
+different aspects and challenges of entrepreneurship, idea development and
+validation, strategy, building a business plan, raising capital and growing a
+business.
+
+CYB 201: Introduction to Cyber Security and Strategy (2 Units C: LH 30)
+Learning Outcomes
+At the end of this course, students should be able to:
+1. explain cybersecurity concepts, its methods, elements, and terminologies of
+cyber security -cyber, security, threat, attack, defence, and operations;
+2. describe common cyber-attacks and threats, cyber security issues,
+challenges and proffered solutions, and build an enhanced view of main
+actors of cyberspace and cyber operations;
+3. apply the techniques for identifying, detecting, and defending against
+cybersecurity threats, attacks and protecting information assets;
+4. explain the impact of cybersecurity on civil and military institutions, privacy,
+business and government applications;
+5. identify the methods and motives of cybersecurity incident perpetrators,
+and the countermeasures employed by organizations and agencies to
+:
+Education 290 New
+prevent and detect those incidences and software application
+vulnerabilities; and
+6. state the ethical obligations of security professionals, evaluate cybersecurity
+and national security strategies to the typologies of cyber-attacks that
+require policy tools and domestic response, and define the cybersecurity
+requirements and strategies evolving in the face of big risk.
+Course Contents
+Basic concepts: cyber, security, confidentiality, integrity, availability,
+authentication, access control, non-repudiation and fault-tolerant
+methodologies for implementing security. Security policies, best current
+practices, testing security, and incident response, Risk management, disaster
+recovery and access control. Basic cryptography and software application
+vulnerabilities. Evolution of cyber-attacks. Operating system protection
+mechanisms, intrusion detection systems, basic formal models of security,
+cryptography, steganography, network and distributed system security, denial
+of service (and other) attack strategies, worms, viruses, transfer of funds/value
+across networks, electronic voting, secure applications. Cybersecurity policy
+and guidelines. Government regulation of information technology. Main actors
+of cyberspace and cyber operations. Impact of cybersecurity on civil and
+military institutions, privacy, business and government applications;
+examination of the dimensions of networks, protocols, operating systems, and
+associated applications. Methods and motives of cybersecurity incident
+perpetrators, and the countermeasures employed by organizations and
+agencies to prevent and detect those incidences. Ethical obligations of security
+professionals. Trends and development in cybersecurity. Software application
+vulnerabilities. Evolution of cybersecurity and national security strategies,
+requirements to the typologies of cyber-attacks that require policy tools and
+domestic response. Cybersecurity strategies evolving in the face of big risk.
+Role of standards and frameworks.
+DTS 304: Data Management (3 Units C: LH 30; PH 45)
+Learning Outcomes
+At the end of the course, students should be able to
+1. identify the careers/roles associated with information management;
+2. explain the characteristics that distinguish the database approach from the
+approach of programming with data files;
+3. describe the components of a database system and give examples of their use.
+4. describe concepts in modeling notation;
+5. describe the differences between relational and semi-structured data models;
+6. apply the modeling concepts and notation of the relational data model;
+7. explain and demonstrate the concepts of entity integrity constraint and referential
+integrity constrain;
+8. apply queries, query optimizations and functional dependencies in relational
+databases;
+9. describe properties of normal forms and explain the impact of normalization on
+the efficiency of database operations;
+Education 291 New
+10. describe database security and integrity issues and their importance in database
+design; and
+11. explain the concepts of concurrency control and recovery mechanisms in
+databases.
+Course Contents
+Information Management Concepts: Information storage & retrieval,
+Information management applications, Information capture and
+representation, analysis & indexing, search, retrieval, information privacy;
+integrity, security; scalability, efficiency and effectiveness. Introduction to
+database systems: Components of database systems DBMS functions,
+Database architecture and data independence use of database query language.
+Conceptual models. Relational data models. Semi-structured data models.
+Relational theory and languages. Database Design. Database security and
+integrity. Introduction to query processing and optimization. Introduction to
+concurrency and recovery.
+Suggested Lab work
+Programming assignments to learn database design using CASE tools.
+Introduction to backend/Server-based Relational Database Management
+System (RDBMS). Learning Standard SQL (interactive/embedded).
+Introduction and programming assignments on Front-End tools. Programming
+team projects to design and develop real life database systems using the
+learned tools.
+Prerequisite: CSC 203 Discrete Structures I
+
+ICT 305: Data Communication Systems and Network (3 Units C: LH 30,
+PH 45)
+Learning outcomes
+At the end of this course, students should know
+1. data transmission over
+layered networks; 2. internet
+technologies and protocols; and
+3. network Operating System.
+Course Contents
+Types and sources of data, simple communications network, transmission
+definitions, one way transmission, half duplex transmission, transmission
+codes, transmission modes, parallel transmission, serial transmission, bit
+synchronization, character synchronization, character synchronization,
+synchronous transmission, asynchronous transmission, efficiency of
+transmission, error detection methods and data compression. Protocols:
+Introduction to network protocol. Seven Layer ISO-OSI standard protocols and
+network architecture.
+Transport protocols, session services protocols, and other protocols. Institute
+of Electrical and Electronics Engineering 802 standards. Error control and Data
+Compression: Forward Error Control; error detection methods; parity checking;
+linear block codes, cyclic redundancy checking; feedback error control, data
+compression, Huffman coding and dynamic Huffman coding. Local Area
+Networks: medium access control techniques – Ethernet, token bus and token
+:
+Education 292 New
+ring; LAN standards; fibre distributed data interface, metropolitan area
+network. Peerto-peer, Client Server. Client-Server Requirements: GUI design
+standards, interface independence, platform independence, transaction
+processing, connectivity, reliability, backup, and recovery mechanisms.
+Information Network Software; Features and benefits of major recovery
+mechanisms. Information Network Software: features and benefits of major
+Network Operating Systems. Network OS: (such as, Novell NetWare,
+UNIX/LINUX, OS/2 & Windows NT). TCP/IP and Network OS. INTERNET:
+Definition, architecture, services, Internet addressing. Internet protocol, IPv4,
+IPv6. Internet programming, Intranet. System administration, and security
+issues.
+CSC 399: SIWES II (3 Units C: PH 135)
+Learning Outcomes
+At the end of this training, students should be able to:
+1. explain how a typical computer firm/unit operates;
+2. describe the various assignments carried out and the skills acquired during the
+SIWES period; and
+3. submit a comprehensive report on the knowledge acquired and the experience
+gained during the exercise.
+Course Contents
+Students are attached to private and public organisations for a period of three
+months during the second year session long break with a view to making them
+acquire practical experience and to the extent possible, develop skills in all
+areas of Computer Science. Students are supervised during the training period
+and shall be expected to keep records designed for the purpose of monitoring
+their performance. They are also expected to submit a report on the experience
+gained and defend their reports.
+400 LEVEL
+EDU 400: Project (3 Units C: PH 135)
+Learning Outcomes
+At the end of the course, students should be able to:
+1. identify researchable project topics on contemporary problems in relevant subject
+specialization in education; and
+2. search and review literature pertinent to identified topical issues.
+Course Contents
+Application of knowledge and skills acquired in research methods, statistics and
+evaluation in identifying and proffering solutions to educational problems.
+Working independently under the guidance of a Project Supervisor. Planning
+and execution of a well-conceptualized research and presenting a written report
+on the study conducted.
+EDU 401: Teaching Practice II (3 Units C: PH 135)
+Learning Outcomes
+At the end of the course, students should be able to demonstrate:
+1. knowledge of the subject matter;
+2. the necessary Pedagogical skills;
+3. acquired understanding of child psychology;
+4. the needed attitude towards teaching;
+5. proper use of instructional facilities;
+6. knowledge of individual differences in actual classroom situations and how to use
+this knowledge to assist children in real time; and
+7. effective classroom management skills.
+Course Contents
+Effective and responsive teaching practices and interactions are key for all
+learning in professional teacher preparation. The importance of teaching
+practice in providing the students with an opportunity to apply their pedagogical
+knowledge and skills in practice. Practical implementation of teaching and
+learning strategies in the classroom, as applied to the subject area. Microteaching before students embark on the exercise.
+CSC 401: Algorithms and Complexity Analysis (2 Units C: LH 30)
+Learning Outcomes
+At the end of the course, students should be able to
+1. explain the use of big O, omega, and theta notation to describe the amount of
+work done by an algorithm;
+2. use big O, omega, and theta notation to give asymptotic upper, lower, and tight
+bounds on time and space complexity of algorithms;
+3. determine the time and space complexity of simple algorithms;
+4. deduce recurrence relations that describe the time complexity of recursively
+defined algorithms;
+5. solve elementary recurrence relations;
+6. for each of the strategies (brute-force, greedy, divide-and-conquer, recursive
+backtracking, and dynamic programming), identify a practical example to which
+it would apply;
+7. use pattern matching to analyze substrings; and
+8. use numerical approximation to solve mathematical problems, such as finding
+the roots of a polynomial.
+Course Contents
+Basic algorithmic analysis: Asymptotic analysis of Upper and average
+complexity bounds; standard Complexity Classes Time and space trade-offs in
+algorithms analysis recursive algorithms. Algorithmic Strategies: Fundamental
+computing algorithms: Numerical algorithms, sequential and binary search
+algorithms; sorting algorithms, Binary Search trees, Hash tables, graphs and
+its representation. Prerequisite: CSC 203 Discrete Structures I
+INS 401: Project Management (2 Units C: LH 30)
+Learning Outcomes
+At the end of this course, students should be able to
+1. describe project management planning;
+2. describe project scheduling;
+3. explain management of project resources;
+4. discuss project procurement, monitoring and execution; and
+5. explain project communication and time management.
+Course Contents
+Introduction to Project Management; The Project Management Lifecycle:
+Project management and systems development or acquisition, The project
+management context, Technology and techniques to support the project
+management lifecycle, and Project management processes; Managing Project
+Teams: Project team planning, Motivating team members, Leadership, power
+and conflict in project teams, and Managing global project teams; Managing
+Project Communication and enhancing team communication; Project Initiation
+and Planning; Managing Project Scope: Project initiation, How organizations
+choose projects, Activities, and Developing the project charter; Managing
+Project Scheduling: Common problems in project scheduling, and Techniques
+for project scheduling; Managing Project Resources: Types of resources
+(human, capital, time), and Techniques for managing resources; Project quality
+and tools to manage project quality; Managing project risk and tools for
+managing project risk; Managing Project Procurement: Alternatives to systems
+development, External acquisition, Outsourcing-domestic and offshore, Steps
+in the procurement process, and Managing the procurement process; Project
+Execution, Control and Closure: Managing project execution, Monitoring
+progress and managing change, Documentation and communication, and
+Common problems in project execution; Managing Project Control and Closure:
+Obtaining information, Cost control, Change control, Administrative closure,
+Personnel closure, Contractual closure and Project auditing
+CSC 402: Ethics and Legal Issues in Computer Science (2 Units C: LH 30)
+Learning Outcomes
+At the end of the course, students should be able to
+1. understand laws and regulations related to ethics;
+2. identify and explain relevant codes of ethics for computing practice;
+3. identify social and ethical issues in different areas of computing practice;
+4. review real-life ethical cases and be able to develop ethical resolutions and
+policies;
+5. explain the consequences of ignoring and non-compliance with
+ethical provisions; and
+6. develop a sound methodology in resolving ethical conflicts and crisis.
+Course Contents
+Addresses social, ethical, legal and managerial issues in the application of
+Computer Science to the information technology industry. Through seminars
+and case studies, human issues confronting Computer Science graduates
+will be addressed. Topics include managerial and personal ethics, computer
+security, privacy, software reliability, personal responsibility for the quality of
+work, intellectual property, environment and health concerns, and fairness in
+the workplace.

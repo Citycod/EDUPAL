@@ -51,6 +51,11 @@ const LibraryPage = () => {
     const [selectedType, setSelectedType] = useState('');
     const [sortBy, setSortBy] = useState<'newest' | 'popular'>('newest');
 
+    // NUC Catalog State
+    const [viewMode, setViewMode] = useState<'archive' | 'catalog'>('archive');
+    const [catalogCourses, setCatalogCourses] = useState<any[]>([]);
+    const [catalogLoading, setCatalogLoading] = useState(false);
+
     useEffect(() => {
         const fetchInitialData = async () => {
             try {
@@ -122,8 +127,38 @@ const LibraryPage = () => {
 
         if (institution?.id) {
             fetchInitialData();
+            fetchCatalogCourses();
         }
-    }, [institution?.id]);
+    }, [institution?.id, selectedLevel, selectedDept]);
+
+    const fetchCatalogCourses = async () => {
+        try {
+            setCatalogLoading(true);
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session?.user) return;
+
+            // If selectedLevel is empty string (All Levels), we pass empty to API
+            const level = selectedLevel || '';
+            
+            // Map selectedDept to programCode if possible, otherwise use CSC as default
+            const programCode = 'CSC'; 
+
+            const headers: any = {};
+            if (session?.access_token) {
+                headers['Authorization'] = `Bearer ${session.access_token}`;
+            }
+
+            const res = await fetch(`/api/catalog/courses?departmentId=${selectedDept}&level=${level}`, { headers });
+            const data = await res.json();
+            if (data.courses) {
+                setCatalogCourses(data.courses);
+            }
+        } catch (err) {
+            console.error("Error fetching catalog courses:", err);
+        } finally {
+            setCatalogLoading(false);
+        }
+    };
 
     const fetchResources = async (filters: { instId?: string, deptId?: string, level?: string, sessionId?: string, type?: string, sort?: 'newest' | 'popular', profile?: any }) => {
         // Enforce strict institution scoping
@@ -295,19 +330,35 @@ const LibraryPage = () => {
                             />
                         </div>
 
-                        {/* Sort Toggle */}
+                        {/* View Mode Toggle */}
                         <div className="flex bg-white dark:bg-slate-800 p-1 rounded-2xl border border-slate-200 dark:border-slate-700 h-14 sm:h-16 shadow-lg">
                             <button
-                                onClick={() => { setSortBy('newest'); fetchResources({ instId: institution?.id, deptId: selectedDept, level: selectedLevel, sessionId: selectedSession, type: selectedType, sort: 'newest' }); }}
-                                className={`flex-1 sm:px-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${sortBy === 'newest' ? 'bg-primary text-background-dark shadow-md' : 'text-slate-400 hover:text-slate-600'}`}>
-                                Newest
+                                onClick={() => setViewMode('archive')}
+                                className={`flex-1 sm:px-6 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === 'archive' ? 'bg-primary text-background-dark shadow-md' : 'text-slate-400 hover:text-slate-600'}`}>
+                                Archive
                             </button>
                             <button
-                                onClick={() => { setSortBy('popular'); fetchResources({ instId: institution?.id, deptId: selectedDept, level: selectedLevel, sessionId: selectedSession, type: selectedType, sort: 'popular' }); }}
-                                className={`flex-1 sm:px-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${sortBy === 'popular' ? 'bg-primary text-background-dark shadow-md' : 'text-slate-400 hover:text-slate-600'}`}>
-                                Popular
+                                onClick={() => setViewMode('catalog')}
+                                className={`flex-1 sm:px-6 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === 'catalog' ? 'bg-primary text-background-dark shadow-md' : 'text-slate-400 hover:text-slate-600'}`}>
+                                NUC Catalog
                             </button>
                         </div>
+
+                        {/* Sort Toggle (Only for Archive) */}
+                        {viewMode === 'archive' && (
+                            <div className="flex bg-white dark:bg-slate-800 p-1 rounded-2xl border border-slate-200 dark:border-slate-700 h-14 sm:h-16 shadow-lg">
+                                <button
+                                    onClick={() => { setSortBy('newest'); fetchResources({ instId: institution?.id, deptId: selectedDept, level: selectedLevel, sessionId: selectedSession, type: selectedType, sort: 'newest' }); }}
+                                    className={`flex-1 sm:px-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${sortBy === 'newest' ? 'bg-primary text-background-dark shadow-md' : 'text-slate-400 hover:text-slate-600'}`}>
+                                    Newest
+                                </button>
+                                <button
+                                    onClick={() => { setSortBy('popular'); fetchResources({ instId: institution?.id, deptId: selectedDept, level: selectedLevel, sessionId: selectedSession, type: selectedType, sort: 'popular' }); }}
+                                    className={`flex-1 sm:px-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${sortBy === 'popular' ? 'bg-primary text-background-dark shadow-md' : 'text-slate-400 hover:text-slate-600'}`}>
+                                    Popular
+                                </button>
+                            </div>
+                        )}
                     </div>
 
                     {/* Hierarchical Filter Selects */}
@@ -391,92 +442,142 @@ const LibraryPage = () => {
                     </div>
                 </section>
 
-                {/* Unified Archive Section */}
+                {/* Unified Archive / Catalog Section */}
                 <section className="px-4 py-8">
                     <div className="flex items-center justify-between mb-8">
                         <div className="flex items-center gap-3">
                             <div className="p-2 bg-primary/10 rounded-lg">
-                                <span className="material-symbols-outlined text-primary">folder_open</span>
+                                <span className="material-symbols-outlined text-primary">{viewMode === 'archive' ? 'folder_open' : 'school'}</span>
                             </div>
-                            <h2 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">Academic Archive</h2>
+                            <h2 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
+                                {viewMode === 'archive' ? 'Academic Archive' : 'NUC Curriculum'}
+                            </h2>
                         </div>
-                        <span className="text-slate-400 text-xs font-black uppercase tracking-widest bg-slate-100 dark:bg-slate-800/50 px-3 py-1 rounded-full">{filteredResources.length} Materials Found</span>
+                        <span className="text-slate-400 text-xs font-black uppercase tracking-widest bg-slate-100 dark:bg-slate-800/50 px-3 py-1 rounded-full">
+                            {viewMode === 'archive' ? filteredResources.length : catalogCourses.length} {viewMode === 'archive' ? 'Materials' : 'Courses'} Found
+                        </span>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {filteredResources.map((res) => (
-                            <div key={res.id} onClick={() => router.push(`/resource/${res.id}`)} className="group relative flex flex-col justify-between overflow-hidden rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 hover:shadow-2xl hover:shadow-primary/10 hover:border-primary/50 transition-all text-left cursor-pointer">
-                                {/* Verified Badge Top Left */}
-                                {res.is_verified && (
-                                    <div className="absolute top-0 right-0 bg-green-500 text-white px-3 py-1 text-[9px] font-black uppercase tracking-tighter rounded-bl-xl flex items-center gap-1 shadow-lg z-10">
-                                        <span className="material-symbols-outlined text-[12px]">verified</span>
-                                        Verified
-                                    </div>
-                                )}
+                        {viewMode === 'archive' ? (
+                            filteredResources.map((res) => (
+                                <div key={res.id} onClick={() => router.push(`/resource/${res.id}`)} className="group relative flex flex-col justify-between overflow-hidden rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 hover:shadow-2xl hover:shadow-primary/10 hover:border-primary/50 transition-all text-left cursor-pointer">
+                                    {/* Verified Badge Top Left */}
+                                    {res.is_verified && (
+                                        <div className="absolute top-0 right-0 bg-green-500 text-white px-3 py-1 text-[9px] font-black uppercase tracking-tighter rounded-bl-xl flex items-center gap-1 shadow-lg z-10">
+                                            <span className="material-symbols-outlined text-[12px]">verified</span>
+                                            Verified
+                                        </div>
+                                    )}
 
-                                <div className="flex items-start justify-between mb-4">
-                                    <div className="space-y-1 pr-2">
-                                        <h3 className="font-extrabold text-slate-900 dark:text-white text-lg leading-tight line-clamp-2">{res.title}</h3>
-                                        <div className="flex flex-wrap items-center gap-2 mt-3">
-                                            <span className="bg-primary/20 text-primary text-[10px] font-black px-2.5 py-1 rounded-md uppercase tracking-widest border border-primary/20">{res.course_code}</span>
-                                            <span className="text-slate-400 dark:text-slate-500 text-[10px] font-bold uppercase tracking-widest">• {res.session_name}</span>
-                                            <span className="bg-slate-100 dark:bg-slate-800 text-[10px] text-slate-500 font-black px-2 py-0.5 rounded uppercase">{res.type}</span>
+                                    <div className="flex items-start justify-between mb-4">
+                                        <div className="space-y-1 pr-2">
+                                            <h3 className="font-extrabold text-slate-900 dark:text-white text-lg leading-tight line-clamp-2">{res.title}</h3>
+                                            <div className="flex flex-wrap items-center gap-2 mt-3">
+                                                <span className="bg-primary/20 text-primary text-[10px] font-black px-2.5 py-1 rounded-md uppercase tracking-widest border border-primary/20">{res.course_code}</span>
+                                                <span className="text-slate-400 dark:text-slate-500 text-[10px] font-bold uppercase tracking-widest">• {res.session_name}</span>
+                                                <span className="bg-slate-100 dark:bg-slate-800 text-[10px] text-slate-500 font-black px-2 py-0.5 rounded uppercase">{res.type}</span>
+                                            </div>
+                                        </div>
+
+                                        {/* Download Icon */}
+                                        <div className="w-12 h-12 rounded-xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center flex-shrink-0 border border-slate-100 dark:border-slate-700">
+                                            <span className="material-symbols-outlined text-primary/40 text-2xl">description</span>
                                         </div>
                                     </div>
 
-                                    {/* Download Icon */}
-                                    <div className="w-12 h-12 rounded-xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center flex-shrink-0 border border-slate-100 dark:border-slate-700">
-                                        <span className="material-symbols-outlined text-primary/40 text-2xl">description</span>
+                                    <div className="flex items-center justify-between mt-auto pt-5 border-t border-slate-100 dark:border-slate-800/50">
+                                        {/* Uploader Bio */}
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-[11px] font-black text-primary border border-primary/10">
+                                                {res.uploader_name?.split(' ').map((n: string) => n[0]).join('').substring(0, 2) || 'A'}
+                                            </div>
+                                            <div className="flex flex-col">
+                                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Uploader</span>
+                                                <span className="text-xs font-bold text-slate-700 dark:text-slate-300 line-clamp-1">{res.uploader_name || 'Admin'}</span>
+                                            </div>
+                                        </div>
+
+                                        {/* Interaction Buttons */}
+                                        <div className="flex items-center gap-2">
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); handleVote(res.id); }}
+                                                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl transition-all font-black text-[11px] border ${userVotes.has(res.id) ? 'bg-primary text-background-dark border-primary shadow-lg shadow-primary/20' : 'bg-transparent text-slate-400 border-slate-200 dark:border-slate-700 hover:border-primary/40 hover:text-primary'}`}
+                                            >
+                                                <span className="material-symbols-outlined text-[18px]">thumb_up</span>
+                                                {res.upvotes_count || 0}
+                                            </button>
+
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setSelectedResource(res);
+                                                    setIsDownloadModalOpen(true);
+                                                }}
+                                                className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary text-background-dark font-black hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/10"
+                                                title="Download file"
+                                            >
+                                                <span className="material-symbols-outlined text-[20px]">download</span>
+                                            </button>
+
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); handleReport(res.id); }}
+                                                className="flex items-center justify-center w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-all border border-transparent hover:border-red-200 dark:hover:border-red-900"
+                                                title="Report content"
+                                            >
+                                                <span className="material-symbols-outlined text-[20px]">flag</span>
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
+                            ))
+                        ) : (
+                            catalogCourses.map((course) => (
+                                <div key={course.id} onClick={() => router.push(`/study/catalog/${course.course_code_standard}`)} className="group relative flex flex-col justify-between overflow-hidden rounded-[2rem] bg-[#0a120d] border border-white/10 p-6 hover:shadow-2xl hover:shadow-primary/20 hover:border-primary/50 transition-all text-left cursor-pointer">
+                                    <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:scale-110 transition-transform">
+                                        <span className="material-symbols-outlined text-6xl text-primary">auto_awesome</span>
+                                    </div>
 
-                                <div className="flex items-center justify-between mt-auto pt-5 border-t border-slate-100 dark:border-slate-800/50">
-                                    {/* Uploader Bio */}
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-[11px] font-black text-primary border border-primary/10">
-                                            {res.uploader_name?.split(' ').map((n: string) => n[0]).join('').substring(0, 2) || 'A'}
+                                    <div className="space-y-4 relative z-10">
+                                        <div className="flex items-center gap-2">
+                                            <span className="bg-primary/20 text-primary text-[10px] font-black px-2.5 py-1 rounded-md uppercase tracking-[0.2em] border border-primary/30">{course.course_code_standard}</span>
+                                            <span className="text-white/40 text-[10px] font-bold uppercase tracking-widest">{course.credit_units} UNITS</span>
                                         </div>
-                                        <div className="flex flex-col">
-                                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Uploader</span>
-                                            <span className="text-xs font-bold text-slate-700 dark:text-slate-300 line-clamp-1">{res.uploader_name || 'Admin'}</span>
+
+                                        <div>
+                                            <h3 className="font-black text-white text-xl leading-tight tracking-tight mb-2 group-hover:text-primary transition-colors">{course.title_standard}</h3>
+                                            <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest line-clamp-1">NUC Standard Curriculum</p>
+                                        </div>
+
+                                        <div className="flex flex-wrap gap-2 pt-2">
+                                            {course.national_topics?.[0]?.learning_objectives?.slice(0, 2).map((obj: string, i: number) => (
+                                                <div key={i} className="flex items-center gap-2 text-[9px] text-white/60 font-medium bg-white/5 px-3 py-1.5 rounded-full border border-white/5">
+                                                    <span className="material-symbols-outlined text-[12px] text-primary">check_circle</span>
+                                                    <span className="truncate max-w-[120px]">{obj}</span>
+                                                </div>
+                                            ))}
+                                            {(course.national_topics?.[0]?.learning_objectives?.length || 0) > 2 && (
+                                                <div className="text-[9px] text-primary font-black uppercase tracking-widest px-2 py-1.5">
+                                                    +{(course.national_topics?.[0]?.learning_objectives?.length || 0) - 2} More
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
 
-                                    {/* Interaction Buttons */}
-                                    <div className="flex items-center gap-2">
-                                        <button
-                                            onClick={(e) => { e.stopPropagation(); handleVote(res.id); }}
-                                            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl transition-all font-black text-[11px] border ${userVotes.has(res.id) ? 'bg-primary text-background-dark border-primary shadow-lg shadow-primary/20' : 'bg-transparent text-slate-400 border-slate-200 dark:border-slate-700 hover:border-primary/40 hover:text-primary'}`}
-                                        >
-                                            <span className="material-symbols-outlined text-[18px]">thumb_up</span>
-                                            {res.upvotes_count || 0}
-                                        </button>
-
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                setSelectedResource(res);
-                                                setIsDownloadModalOpen(true);
-                                            }}
-                                            className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary text-background-dark font-black hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/10"
-                                            title="Download file"
-                                        >
-                                            <span className="material-symbols-outlined text-[20px]">download</span>
-                                        </button>
-
-                                        <button
-                                            onClick={(e) => { e.stopPropagation(); handleReport(res.id); }}
-                                            className="flex items-center justify-center w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-all border border-transparent hover:border-red-200 dark:hover:border-red-900"
-                                            title="Report content"
-                                        >
-                                            <span className="material-symbols-outlined text-[20px]">flag</span>
-                                        </button>
+                                    <div className="mt-8 flex items-center justify-between pt-4 border-t border-white/5">
+                                        <div className="flex items-center gap-2">
+                                            <div className="size-8 rounded-full bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
+                                                <span className="material-symbols-outlined text-sm">bolt</span>
+                                            </div>
+                                            <span className="text-[10px] font-black text-white uppercase tracking-widest">AI Study Ready</span>
+                                        </div>
+                                        <span className="material-symbols-outlined text-white/20 group-hover:text-primary group-hover:translate-x-1 transition-all">arrow_forward</span>
                                     </div>
                                 </div>
-                            </div>
-                        ))}
+                            ))
+                        )}
 
-                        {filteredResources.length === 0 && (
+                        {viewMode === 'archive' && filteredResources.length === 0 && (
                             <div className="col-span-full py-20 text-center">
                                 <div className="w-20 h-20 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300">
                                     <span className="material-symbols-outlined text-4xl">search_off</span>
@@ -489,6 +590,23 @@ const LibraryPage = () => {
                                 >
                                     Upload Material
                                 </button>
+                            </div>
+                        )}
+
+                        {viewMode === 'catalog' && catalogCourses.length === 0 && !catalogLoading && (
+                            <div className="col-span-full py-20 text-center">
+                                <div className="w-20 h-20 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300">
+                                    <span className="material-symbols-outlined text-4xl">school</span>
+                                </div>
+                                <h3 className="text-xl font-black text-slate-900 dark:text-white mb-2 uppercase tracking-tight">Catalog Empty</h3>
+                                <p className="text-slate-500 max-w-xs mx-auto text-sm font-medium">No official curriculum data found for this level yet.</p>
+                            </div>
+                        )}
+
+                        {viewMode === 'catalog' && catalogLoading && (
+                            <div className="col-span-full py-20 text-center">
+                                <div className="size-12 rounded-full border-4 border-primary border-t-transparent animate-spin mx-auto mb-4" />
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Unlocking Curriculum...</p>
                             </div>
                         )}
                     </div>

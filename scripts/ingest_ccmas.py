@@ -24,10 +24,18 @@ def parse_confidence(code: str, title: str, objectives: list) -> float:
         score -= 0.3
     return round(score, 2)
 
-def extract_courses_from_pdf(pdf_path: str) -> list:
+def extract_courses_from_pdf(pdf_path: str, page_range=None) -> list:
     courses = []
     with pdfplumber.open(pdf_path) as pdf:
-        for page in pdf.pages:
+        pages_to_scan = pdf.pages
+        if page_range:
+            start_p, end_p = page_range
+            start_idx = max(0, start_p - 1)
+            end_idx = min(len(pages_to_scan), end_p)
+            pages_to_scan = pages_to_scan[start_idx:end_idx]
+            print(f"Scanning subset: Pages {start_p} to {end_p}")
+
+        for page in pages_to_scan:
             text = page.extract_text()
             if not text:
                 continue
@@ -109,7 +117,7 @@ def seed_course(conn, program_id: str, course: dict, level: int, semester: str) 
 
     return {"skipped": False, "course_id": course_id, "confidence": confidence}
 
-def run_ingestion(pdf_path: str, nuc_code: str, program_name: str, level: int, semester: str):
+def run_ingestion(pdf_path: str, nuc_code: str, program_name: str, level: int, semester: str, page_range=None):
     if not DB_URL:
         print("❌ Error: SUPABASE_DB_URL not found in environment.")
         return
@@ -118,7 +126,7 @@ def run_ingestion(pdf_path: str, nuc_code: str, program_name: str, level: int, s
     conn.autocommit = False
     try:
         program_id = seed_program(conn, nuc_code, program_name)
-        courses = extract_courses_from_pdf(pdf_path)
+        courses = extract_courses_from_pdf(pdf_path, page_range)
         print(f"\n📄 Found {len(courses)} courses in PDF")
 
         results = []
@@ -151,8 +159,18 @@ if __name__ == "__main__":
     parser.add_argument("--name", required=True, help="Program Name (e.g., Computer Science)")
     parser.add_argument("--level", required=True, type=int, help="Student Level (e.g., 300)")
     parser.add_argument("--semester", required=True, choices=['first', 'second', 'both'], help="Semester")
+    parser.add_argument("--pages", help="Optional range of pages to scan (e.g., '120-135')", default=None)
 
     args = parser.parse_args()
 
-    run_ingestion(args.pdf, args.code, args.name, args.level, args.semester)
+    page_range = None
+    if args.pages:
+        try:
+            start, end = map(int, args.pages.split('-'))
+            page_range = (start, end)
+        except Exception:
+            print("Error: --pages must be in format 'start-end' (e.g., '10-25')")
+            exit(1)
+
+    run_ingestion(args.pdf, args.code, args.name, args.level, args.semester, page_range)
 
