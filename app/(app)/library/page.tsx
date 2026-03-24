@@ -589,7 +589,7 @@ const LibraryPage = () => {
                                         </div>
                                     </div>
                                 </div>
-                            })
+                            ))
                         ) : (
                             sortedCatalogCourses.map((course) => {
                                 const userDept = userProfile?.department_id;
