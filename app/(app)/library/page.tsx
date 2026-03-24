@@ -55,6 +55,7 @@ const LibraryPage = () => {
     const [viewMode, setViewMode] = useState<'archive' | 'catalog'>('archive');
     const [catalogCourses, setCatalogCourses] = useState<any[]>([]);
     const [catalogLoading, setCatalogLoading] = useState(false);
+    const [catalogSortBy, setCatalogSortBy] = useState<'code' | 'level'>('code');
 
     useEffect(() => {
         const fetchInitialData = async () => {
@@ -127,6 +128,12 @@ const LibraryPage = () => {
 
         if (institution?.id) {
             fetchInitialData();
+        }
+    }, [institution?.id]);
+
+    // Fetch catalog separately on filter changes
+    useEffect(() => {
+        if (institution?.id) {
             fetchCatalogCourses();
         }
     }, [institution?.id, selectedLevel, selectedDept]);
@@ -280,6 +287,38 @@ const LibraryPage = () => {
         return matchesSearch;
     });
 
+    // Filter AND Sort Catalog courses based on search
+    const filteredCatalogCourses = catalogCourses.filter(course => {
+        const matchesSearch = !searchQuery ||
+            course.course_code_standard?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            course.title_standard?.toLowerCase().includes(searchQuery.toLowerCase());
+        return matchesSearch;
+    });
+
+    const sortedCatalogCourses = [...filteredCatalogCourses].sort((a, b) => {
+        // A course is considered "core" if its code starts with its program's NUC code (e.g., CSC 101 in CSC program)
+        const nucCodeA = a.national_programs?.nuc_code || '';
+        const nucCodeB = b.national_programs?.nuc_code || '';
+        
+        // We check if it starts with at least the first two letters of the NUC code to catch slight variations like EES vs ESS
+        const isCoreA = nucCodeA && a.course_code_standard.startsWith(nucCodeA.substring(0, 2));
+        const isCoreB = nucCodeB && b.course_code_standard.startsWith(nucCodeB.substring(0, 2));
+
+        if (catalogSortBy === 'code') {
+            if (isCoreA && !isCoreB) return -1;
+            if (!isCoreA && isCoreB) return 1;
+            return a.course_code_standard.localeCompare(b.course_code_standard);
+        } else {
+            // sort by level then code
+            if (a.level === b.level) {
+                if (isCoreA && !isCoreB) return -1;
+                if (!isCoreA && isCoreB) return 1;
+                return a.course_code_standard.localeCompare(b.course_code_standard);
+            }
+            return a.level - b.level;
+        }
+    });
+
 
     if (loading) {
         return <div className="min-h-screen flex items-center justify-center bg-[#f6f8f7] dark:bg-[#102217] text-slate-500">Loading Library...</div>;
@@ -359,6 +398,22 @@ const LibraryPage = () => {
                                 </button>
                             </div>
                         )}
+
+                        {/* Sort Toggle (Only for Catalog) */}
+                        {viewMode === 'catalog' && (
+                            <div className="flex bg-white dark:bg-slate-800 p-1 rounded-2xl border border-slate-200 dark:border-slate-700 h-14 sm:h-16 shadow-lg">
+                                <button
+                                    onClick={() => setCatalogSortBy('code')}
+                                    className={`flex-1 sm:px-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${catalogSortBy === 'code' ? 'bg-primary text-background-dark shadow-md' : 'text-slate-400 hover:text-slate-600'}`}>
+                                    By Code
+                                </button>
+                                <button
+                                    onClick={() => setCatalogSortBy('level')}
+                                    className={`flex-1 sm:px-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${catalogSortBy === 'level' ? 'bg-primary text-background-dark shadow-md' : 'text-slate-400 hover:text-slate-600'}`}>
+                                    By Level
+                                </button>
+                            </div>
+                        )}
                     </div>
 
                     {/* Hierarchical Filter Selects */}
@@ -388,30 +443,34 @@ const LibraryPage = () => {
                             {['100', '200', '300', '400', '500'].map(lvl => <option key={lvl} value={lvl}>{lvl}L</option>)}
                         </select>
 
-                        <select
-                            value={selectedSession}
-                            onChange={(e) => {
-                                setSelectedSession(e.target.value);
-                                fetchResources({ instId: institution?.id, deptId: selectedDept, level: selectedLevel, sessionId: e.target.value, type: selectedType, sort: sortBy });
-                            }}
-                            className="flex shrink-0 items-center justify-center gap-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4 py-3 hover:border-primary transition-colors text-sm font-black text-slate-700 dark:text-slate-300 outline-none"
-                        >
-                            <option value="">All Sessions</option>
-                            {sessions.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                        </select>
+                        {viewMode === 'archive' && (
+                            <>
+                                <select
+                                    value={selectedSession}
+                                    onChange={(e) => {
+                                        setSelectedSession(e.target.value);
+                                        fetchResources({ instId: institution?.id, deptId: selectedDept, level: selectedLevel, sessionId: e.target.value, type: selectedType, sort: sortBy });
+                                    }}
+                                    className="flex shrink-0 items-center justify-center gap-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4 py-3 hover:border-primary transition-colors text-sm font-black text-slate-700 dark:text-slate-300 outline-none"
+                                >
+                                    <option value="">All Sessions</option>
+                                    {sessions.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                                </select>
 
-                        <select
-                            value={selectedType}
-                            onChange={(e) => {
-                                setSelectedType(e.target.value);
-                                fetchResources({ instId: institution?.id, deptId: selectedDept, level: selectedLevel, sessionId: selectedSession, type: e.target.value, sort: sortBy });
-                            }}
-                            className="flex shrink-0 items-center justify-center gap-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4 py-3 hover:border-primary transition-colors text-sm font-black text-slate-700 dark:text-slate-300 outline-none"
-                        >
-                            <option value="">All Types</option>
-                            <option value="Lecture Note">Lecture Notes</option>
-                            <option value="Past Question">Past Questions</option>
-                        </select>
+                                <select
+                                    value={selectedType}
+                                    onChange={(e) => {
+                                        setSelectedType(e.target.value);
+                                        fetchResources({ instId: institution?.id, deptId: selectedDept, level: selectedLevel, sessionId: selectedSession, type: e.target.value, sort: sortBy });
+                                    }}
+                                    className="flex shrink-0 items-center justify-center gap-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4 py-3 hover:border-primary transition-colors text-sm font-black text-slate-700 dark:text-slate-300 outline-none"
+                                >
+                                    <option value="">All Types</option>
+                                    <option value="Lecture Note">Lecture Notes</option>
+                                    <option value="Past Question">Past Questions</option>
+                                </select>
+                            </>
+                        )}
                     </div>
                 </section>
 
@@ -454,7 +513,7 @@ const LibraryPage = () => {
                             </h2>
                         </div>
                         <span className="text-slate-400 text-xs font-black uppercase tracking-widest bg-slate-100 dark:bg-slate-800/50 px-3 py-1 rounded-full">
-                            {viewMode === 'archive' ? filteredResources.length : catalogCourses.length} {viewMode === 'archive' ? 'Materials' : 'Courses'} Found
+                            {viewMode === 'archive' ? filteredResources.length : sortedCatalogCourses.length} {viewMode === 'archive' ? 'Materials' : 'Courses'} Found
                         </span>
                     </div>
 
@@ -532,7 +591,7 @@ const LibraryPage = () => {
                                 </div>
                             ))
                         ) : (
-                            catalogCourses.map((course) => (
+                            sortedCatalogCourses.map((course) => (
                                 <div key={course.id} onClick={() => router.push(`/study/catalog/${course.course_code_standard}`)} className="group relative flex flex-col justify-between overflow-hidden rounded-[2rem] bg-[#0a120d] border border-white/10 p-6 hover:shadow-2xl hover:shadow-primary/20 hover:border-primary/50 transition-all text-left cursor-pointer">
                                     <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:scale-110 transition-transform">
                                         <span className="material-symbols-outlined text-6xl text-primary">auto_awesome</span>
@@ -593,7 +652,7 @@ const LibraryPage = () => {
                             </div>
                         )}
 
-                        {viewMode === 'catalog' && catalogCourses.length === 0 && !catalogLoading && (
+                        {viewMode === 'catalog' && sortedCatalogCourses.length === 0 && !catalogLoading && (
                             <div className="col-span-full py-20 text-center">
                                 <div className="w-20 h-20 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300">
                                     <span className="material-symbols-outlined text-4xl">school</span>

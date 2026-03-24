@@ -14,7 +14,7 @@ export async function GET(req: Request) {
         let finalProgramCode = programCode;
 
         // If departmentId is provided and no programCode, lookup the NUC code
-        if (departmentId && departmentId !== '' && !finalProgramCode) {
+        if (departmentId && departmentId !== 'all' && departmentId !== '' && !finalProgramCode) {
             const supabaseAdmin = createClient(
                 process.env.NEXT_PUBLIC_SUPABASE_URL!,
                 process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -37,7 +37,14 @@ export async function GET(req: Request) {
                 
                 if (programData) {
                     finalProgramCode = programData.nuc_code;
+                } else {
+                    // Mapped to a non-existent explicit program, return empty
+                    return NextResponse.json({ courses: [] });
                 }
+            } else {
+                // Selected a specific department, but NO mapping exists in the curriculum database.
+                // Do NOT fall through and return all courses. Return empty array instead.
+                return NextResponse.json({ courses: [] });
             }
         }
         
