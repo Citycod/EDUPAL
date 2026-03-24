@@ -55,7 +55,6 @@ const LibraryPage = () => {
     const [viewMode, setViewMode] = useState<'archive' | 'catalog'>('archive');
     const [catalogCourses, setCatalogCourses] = useState<any[]>([]);
     const [catalogLoading, setCatalogLoading] = useState(false);
-    const [catalogSortBy, setCatalogSortBy] = useState<'code' | 'level'>('code');
 
     useEffect(() => {
         const fetchInitialData = async () => {
@@ -295,28 +294,40 @@ const LibraryPage = () => {
         return matchesSearch;
     });
 
+    // Sort catalog courses: prioritize student's department and level first
     const sortedCatalogCourses = [...filteredCatalogCourses].sort((a, b) => {
-        // A course is considered "core" if its code starts with its program's NUC code (e.g., CSC 101 in CSC program)
-        const nucCodeA = a.national_programs?.nuc_code || '';
-        const nucCodeB = b.national_programs?.nuc_code || '';
+        const userDept = userProfile?.department_id;
+        const userLevel = userProfile?.level ? String(userProfile.level) : '';
         
-        // We check if it starts with at least the first two letters of the NUC code to catch slight variations like EES vs ESS
-        const isCoreA = nucCodeA && a.course_code_standard.startsWith(nucCodeA.substring(0, 2));
-        const isCoreB = nucCodeB && b.course_code_standard.startsWith(nucCodeB.substring(0, 2));
-
-        if (catalogSortBy === 'code') {
-            if (isCoreA && !isCoreB) return -1;
-            if (!isCoreA && isCoreB) return 1;
-            return a.course_code_standard.localeCompare(b.course_code_standard);
-        } else {
-            // sort by level then code
-            if (a.level === b.level) {
-                if (isCoreA && !isCoreB) return -1;
-                if (!isCoreA && isCoreB) return 1;
-                return a.course_code_standard.localeCompare(b.course_code_standard);
-            }
-            return a.level - b.level;
+        // Check if course matches user's department (by NUC code prefix)
+        const userDeptPrefix = userDept ? userDept.substring(0, 3).toUpperCase() : '';
+        const aMatchesDept = userDeptPrefix && a.course_code_standard.startsWith(userDeptPrefix);
+        const bMatchesDept = userDeptPrefix && b.course_code_standard.startsWith(userDeptPrefix);
+        
+        // Check if course matches user's level
+        const aMatchesLevel = userLevel && String(a.level) === userLevel;
+        const bMatchesLevel = userLevel && String(b.level) === userLevel;
+        
+        // Priority 1: Exact match (user's dept + user's level)
+        if (aMatchesDept && aMatchesLevel && !(bMatchesDept && bMatchesLevel)) return -1;
+        if (!(aMatchesDept && aMatchesLevel) && bMatchesDept && bMatchesLevel) return 1;
+        
+        // Priority 2: User's department (any level)
+        if (aMatchesDept && !bMatchesDept) return -1;
+        if (!aMatchesDept && bMatchesDept) return 1;
+        
+        // Priority 3: User's level (any department)
+        if (aMatchesLevel && !bMatchesLevel) return -1;
+        if (!aMatchesLevel && bMatchesLevel) return 1;
+        
+        // Priority 4: Sort by level (ascending) then by course code
+        const levelA = parseInt(a.level) || 0;
+        const levelB = parseInt(b.level) || 0;
+        if (levelA !== levelB) {
+            return levelA - levelB;
         }
+        
+        return a.course_code_standard.localeCompare(b.course_code_standard);
     });
 
 
@@ -399,21 +410,6 @@ const LibraryPage = () => {
                             </div>
                         )}
 
-                        {/* Sort Toggle (Only for Catalog) */}
-                        {viewMode === 'catalog' && (
-                            <div className="flex bg-white dark:bg-slate-800 p-1 rounded-2xl border border-slate-200 dark:border-slate-700 h-14 sm:h-16 shadow-lg">
-                                <button
-                                    onClick={() => setCatalogSortBy('code')}
-                                    className={`flex-1 sm:px-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${catalogSortBy === 'code' ? 'bg-primary text-background-dark shadow-md' : 'text-slate-400 hover:text-slate-600'}`}>
-                                    By Code
-                                </button>
-                                <button
-                                    onClick={() => setCatalogSortBy('level')}
-                                    className={`flex-1 sm:px-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${catalogSortBy === 'level' ? 'bg-primary text-background-dark shadow-md' : 'text-slate-400 hover:text-slate-600'}`}>
-                                    By Level
-                                </button>
-                            </div>
-                        )}
                     </div>
 
                     {/* Hierarchical Filter Selects */}
@@ -422,7 +418,9 @@ const LibraryPage = () => {
                             value={selectedDept}
                             onChange={(e) => {
                                 setSelectedDept(e.target.value);
-                                fetchResources({ instId: institution?.id, deptId: e.target.value, level: selectedLevel, sessionId: selectedSession, type: selectedType, sort: sortBy });
+                                if (viewMode === 'archive') {
+                                    fetchResources({ instId: institution?.id, deptId: e.target.value, level: selectedLevel, sessionId: selectedSession, type: selectedType, sort: sortBy });
+                                }
                             }}
                             disabled={!institution?.id}
                             className="flex shrink-0 items-center justify-center gap-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4 py-3 hover:border-primary transition-colors text-sm font-black text-slate-700 dark:text-slate-300 outline-none disabled:opacity-50"
@@ -435,7 +433,9 @@ const LibraryPage = () => {
                             value={selectedLevel}
                             onChange={(e) => {
                                 setSelectedLevel(e.target.value);
-                                fetchResources({ instId: institution?.id, deptId: selectedDept, level: e.target.value, sessionId: selectedSession, type: selectedType, sort: sortBy });
+                                if (viewMode === 'archive') {
+                                    fetchResources({ instId: institution?.id, deptId: selectedDept, level: e.target.value, sessionId: selectedSession, type: selectedType, sort: sortBy });
+                                }
                             }}
                             className="flex shrink-0 items-center justify-center gap-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4 py-3 hover:border-primary transition-colors text-sm font-black text-slate-700 dark:text-slate-300 outline-none"
                         >
@@ -589,51 +589,69 @@ const LibraryPage = () => {
                                         </div>
                                     </div>
                                 </div>
-                            ))
+                            })
                         ) : (
-                            sortedCatalogCourses.map((course) => (
-                                <div key={course.id} onClick={() => router.push(`/study/catalog/${course.course_code_standard}`)} className="group relative flex flex-col justify-between overflow-hidden rounded-[2rem] bg-[#0a120d] border border-white/10 p-6 hover:shadow-2xl hover:shadow-primary/20 hover:border-primary/50 transition-all text-left cursor-pointer">
-                                    <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:scale-110 transition-transform">
-                                        <span className="material-symbols-outlined text-6xl text-primary">auto_awesome</span>
-                                    </div>
+                            sortedCatalogCourses.map((course) => {
+                                const userDept = userProfile?.department_id;
+                                const userLevel = userProfile?.level ? String(userProfile.level) : '';
+                                const userDeptPrefix = userDept ? userDept.substring(0, 3).toUpperCase() : '';
+                                const matchesDept = userDeptPrefix && course.course_code_standard.startsWith(userDeptPrefix);
+                                const matchesLevel = userLevel && String(course.level) === userLevel;
+                                const isMyCourse = matchesDept && matchesLevel;
 
-                                    <div className="space-y-4 relative z-10">
-                                        <div className="flex items-center gap-2">
-                                            <span className="bg-primary/20 text-primary text-[10px] font-black px-2.5 py-1 rounded-md uppercase tracking-[0.2em] border border-primary/30">{course.course_code_standard}</span>
-                                            <span className="text-white/40 text-[10px] font-bold uppercase tracking-widest">{course.credit_units} UNITS</span>
-                                        </div>
-
-                                        <div>
-                                            <h3 className="font-black text-white text-xl leading-tight tracking-tight mb-2 group-hover:text-primary transition-colors">{course.title_standard}</h3>
-                                            <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest line-clamp-1">NUC Standard Curriculum</p>
-                                        </div>
-
-                                        <div className="flex flex-wrap gap-2 pt-2">
-                                            {course.national_topics?.[0]?.learning_objectives?.slice(0, 2).map((obj: string, i: number) => (
-                                                <div key={i} className="flex items-center gap-2 text-[9px] text-white/60 font-medium bg-white/5 px-3 py-1.5 rounded-full border border-white/5">
-                                                    <span className="material-symbols-outlined text-[12px] text-primary">check_circle</span>
-                                                    <span className="truncate max-w-[120px]">{obj}</span>
-                                                </div>
-                                            ))}
-                                            {(course.national_topics?.[0]?.learning_objectives?.length || 0) > 2 && (
-                                                <div className="text-[9px] text-primary font-black uppercase tracking-widest px-2 py-1.5">
-                                                    +{(course.national_topics?.[0]?.learning_objectives?.length || 0) - 2} More
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    <div className="mt-8 flex items-center justify-between pt-4 border-t border-white/5">
-                                        <div className="flex items-center gap-2">
-                                            <div className="size-8 rounded-full bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
-                                                <span className="material-symbols-outlined text-sm">bolt</span>
+                                return (
+                                    <div key={course.id} onClick={() => router.push(`/study/catalog/${course.course_code_standard}`)} className={`group relative flex flex-col justify-between overflow-hidden rounded-[2rem] bg-[#0a120d] border ${isMyCourse ? 'border-primary/50 shadow-lg shadow-primary/20' : 'border-white/10'} p-6 hover:shadow-2xl hover:shadow-primary/20 hover:border-primary/50 transition-all text-left cursor-pointer`}>
+                                        {isMyCourse && (
+                                            <div className="absolute top-2 right-2 bg-primary text-background-dark text-[8px] font-black px-2 py-1 rounded-full uppercase tracking-widest z-10">
+                                                MY COURSE
                                             </div>
-                                            <span className="text-[10px] font-black text-white uppercase tracking-widest">AI Study Ready</span>
+                                        )}
+                                        <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:scale-110 transition-transform">
+                                            <span className="material-symbols-outlined text-6xl text-primary">auto_awesome</span>
                                         </div>
-                                        <span className="material-symbols-outlined text-white/20 group-hover:text-primary group-hover:translate-x-1 transition-all">arrow_forward</span>
+
+                                        <div className="space-y-4 relative z-10">
+                                            <div className="flex items-center gap-2">
+                                                <span className="bg-primary/20 text-primary text-[10px] font-black px-2.5 py-1 rounded-md uppercase tracking-[0.2em] border border-primary/30">{course.course_code_standard}</span>
+                                                <span className="text-white/40 text-[10px] font-bold uppercase tracking-widest">{course.credit_units} UNITS</span>
+                                            </div>
+
+                                            <div>
+                                                <h3 className="text-white font-black text-lg mb-3">
+                                                    {course.title_standard}
+                                                </h3>
+                                                <p className="text-white/60 text-[13px] leading-relaxed mb-4 line-clamp-3">
+                                                    NUC Standard Curriculum
+                                                </p>
+                                            </div>
+
+                                            <div className="space-y-2">
+                                                {(course.national_topics?.[0]?.learning_objectives || []).slice(0, 3).map((obj: any, idx: number) => (
+                                                    <div key={idx} className="flex items-start gap-2">
+                                                        <span className="material-symbols-outlined text-[12px] text-primary">check_circle</span>
+                                                        <span className="truncate max-w-[120px]">{obj}</span>
+                                                    </div>
+                                                ))}
+                                                {(course.national_topics?.[0]?.learning_objectives?.length || 0) > 2 && (
+                                                    <div className="text-[9px] text-primary font-black uppercase tracking-widest px-2 py-1.5">
+                                                        +{(course.national_topics?.[0]?.learning_objectives?.length || 0) - 2} More
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        <div className="mt-8 flex items-center justify-between pt-4 border-t border-white/5">
+                                            <div className="flex items-center gap-2">
+                                                <div className="size-8 rounded-full bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
+                                                    <span className="material-symbols-outlined text-sm">bolt</span>
+                                                </div>
+                                                <span className="text-[10px] font-black text-white uppercase tracking-widest">AI Study Ready</span>
+                                            </div>
+                                            <span className="material-symbols-outlined text-white/20 group-hover:text-primary group-hover:translate-x-1 transition-all">arrow_forward</span>
+                                        </div>
                                     </div>
-                                </div>
-                            ))
+                                );
+                            })
                         )}
 
                         {viewMode === 'archive' && filteredResources.length === 0 && (

@@ -1,0 +1,65 @@
+                                </div>
+                            })
+                        ) : (
+                            sortedCatalogCourses.map((course) => {
+                                const userDept = userProfile?.department_id;
+                                const userLevel = userProfile?.level ? String(userProfile.level) : '';
+                                const userDeptPrefix = userDept ? userDept.substring(0, 3).toUpperCase() : '';
+                                const matchesDept = userDeptPrefix && course.course_code_standard.startsWith(userDeptPrefix);
+                                const matchesLevel = userLevel && String(course.level) === userLevel;
+                                const isMyCourse = matchesDept && matchesLevel;
+
+                                return (
+                                    <div key={course.id} onClick={() => router.push(`/study/catalog/${course.course_code_standard}`)} className={`group relative flex flex-col justify-between overflow-hidden rounded-[2rem] bg-[#0a120d] border ${isMyCourse ? 'border-primary/50 shadow-lg shadow-primary/20' : 'border-white/10'} p-6 hover:shadow-2xl hover:shadow-primary/20 hover:border-primary/50 transition-all text-left cursor-pointer`}>
+                                        {isMyCourse && (
+                                            <div className="absolute top-2 right-2 bg-primary text-background-dark text-[8px] font-black px-2 py-1 rounded-full uppercase tracking-widest z-10">
+                                                MY COURSE
+                                            </div>
+                                        )}
+                                        <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:scale-110 transition-transform">
+                                            <span className="material-symbols-outlined text-6xl text-primary">auto_awesome</span>
+                                        </div>
+
+                                        <div className="space-y-4 relative z-10">
+                                            <div className="flex items-center gap-2">
+                                                <span className="bg-primary/20 text-primary text-[10px] font-black px-2.5 py-1 rounded-md uppercase tracking-[0.2em] border border-primary/30">{course.course_code_standard}</span>
+                                                <span className="text-white/40 text-[10px] font-bold uppercase tracking-widest">{course.credit_units} UNITS</span>
+                                            </div>
+
+                                            <div>
+                                                <h3 className="text-white font-black text-lg mb-3">
+                                                    {course.title_standard}
+                                                </h3>
+                                                <p className="text-white/60 text-[13px] leading-relaxed mb-4 line-clamp-3">
+                                                    NUC Standard Curriculum
+                                                </p>
+                                            </div>
+
+                                            <div className="space-y-2">
+                                                {(course.national_topics?.[0]?.learning_objectives || []).slice(0, 3).map((obj: any, idx: number) => (
+                                                    <div key={idx} className="flex items-start gap-2">
+                                                        <span className="material-symbols-outlined text-[12px] text-primary">check_circle</span>
+                                                        <span className="truncate max-w-[120px]">{obj}</span>
+                                                    </div>
+                                                ))}
+                                                {(course.national_topics?.[0]?.learning_objectives?.length || 0) > 2 && (
+                                                    <div className="text-[9px] text-primary font-black uppercase tracking-widest px-2 py-1.5">
+                                                        +{(course.national_topics?.[0]?.learning_objectives?.length || 0) - 2} More
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        <div className="mt-8 flex items-center justify-between pt-4 border-t border-white/5">
+                                            <div className="flex items-center gap-2">
+                                                <div className="size-8 rounded-full bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
+                                                    <span className="material-symbols-outlined text-sm">bolt</span>
+                                                </div>
+                                                <span className="text-[10px] font-black text-white uppercase tracking-widest">AI Study Ready</span>
+                                            </div>
+                                            <span className="material-symbols-outlined text-white/20 group-hover:text-primary group-hover:translate-x-1 transition-all">arrow_forward</span>
+                                        </div>
+                                    </div>
+                                );
+                            })
+                        )}

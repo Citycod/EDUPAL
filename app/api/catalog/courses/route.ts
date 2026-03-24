@@ -113,6 +113,12 @@ export async function GET(req: Request) {
             query = query.eq('level', parseInt(level));
         }
 
+        // Add sorting for consistent results
+        query = query
+            .order('level', { ascending: true })
+            .order('course_code_standard', { ascending: true })
+            .order('title_standard', { ascending: true });
+
         const { data, error } = await query;
 
         if (error) {
