@@ -26,18 +26,6 @@ export default function ResetPassword() {
             }
         }
 
-        // Detect if we landed here from a recovery link
-        const checkSession = async () => {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (session) {
-                // If there's an active session, it's likely a recovery flow
-                // Supabase sets the session automatically when clicking the link
-                setStep('update');
-            }
-        };
-
-        checkSession();
-
         // Listen for PASSWORD_RECOVERY event
         const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
             if (event === 'PASSWORD_RECOVERY') {
