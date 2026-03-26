@@ -54,6 +54,15 @@ export default function SignUp() {
         setLoading(true);
         setError(null);
 
+        // Client-side validation for restricted names
+        const fullName = formData.full_name.toLowerCase().trim();
+        const restrictedWords = ['anonymous', 'admin', 'administrator', 'root', 'system', 'moderator', 'support', 'edupal'];
+        if (restrictedWords.some(word => fullName.includes(word))) {
+            setError('Please use your real name. Names containing "Anonymous", "Admin", etc. are not permitted.');
+            setLoading(false);
+            return;
+        }
+
         try {
             const response = await fetch('/api/auth/signup', {
                 method: 'POST',

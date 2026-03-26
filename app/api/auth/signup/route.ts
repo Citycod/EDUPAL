@@ -30,6 +30,19 @@ export async function POST(request: Request) {
             );
         }
 
+        // Validate Full Name
+        const fullName = options?.data?.full_name?.toLowerCase().trim() || '';
+        const restrictedWords = ['anonymous', 'admin', 'administrator', 'root', 'system', 'moderator', 'support', 'edupal'];
+        
+        const isRestricted = restrictedWords.some(word => fullName.includes(word));
+
+        if (isRestricted) {
+            return NextResponse.json(
+                { error: 'Please use your real name. Names containing "Anonymous", "Admin", etc. are not permitted.' },
+                { status: 400 }
+            );
+        }
+
         // Create user directly with auto-confirmed email (no verification needed)
         const { data, error: createError } = await supabaseAdmin.auth.admin.createUser({
             email,
