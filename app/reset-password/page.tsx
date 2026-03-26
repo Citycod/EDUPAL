@@ -17,6 +17,15 @@ export default function ResetPassword() {
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
+        // Fallback: immediately check URL for recovery tokens
+        if (typeof window !== 'undefined') {
+            const hash = window.location.hash;
+            const search = window.location.search;
+            if (hash.includes('type=recovery') || search.includes('code=') || hash.includes('access_token=')) {
+                setStep('update');
+            }
+        }
+
         // Detect if we landed here from a recovery link
         const checkSession = async () => {
             const { data: { session } } = await supabase.auth.getSession();
@@ -80,6 +89,10 @@ export default function ResetPassword() {
             });
 
             if (updateError) throw updateError;
+
+            // Sign out the user strictly to clear the temporary recovery session 
+            // so they can log in cleanly with their new credentials
+            await supabase.auth.signOut();
 
             alert('Password updated successfully! Redirecting to login...');
             router.push('/login');
