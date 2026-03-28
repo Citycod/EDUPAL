@@ -66,6 +66,11 @@ EduPal-Web/
 └── next.config.js (if using Next.js)
 
 EduPal - Project Summary
+
+> **© Copyright 2026 - Edudje Wisdom Marvellous (Uplix). All Rights Reserved.**
+> 
+> *This project is proprietary software. Unauthorized copying, distribution, modification, or commercial use of this project, its code, designs, or assets, via any medium, is strictly prohibited.*
+
 📱 Project Overview
 EduPal is a peer-to-peer study and past question sharing platform designed to solve the problem of inaccessible, unorganized academic resources among university students. It creates a centralized, secure ecosystem where students can share, discover, and collaborate on study materials.
 
