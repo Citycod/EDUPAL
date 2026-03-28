@@ -52,7 +52,7 @@ const LibraryPage = () => {
     const [sortBy, setSortBy] = useState<'newest' | 'popular'>('newest');
 
     // NUC Catalog State
-    const [viewMode, setViewMode] = useState<'archive' | 'catalog'>('archive');
+    const [viewMode, setViewMode] = useState<'archive' | 'catalog' | 'nce_catalog'>('archive');
     const [catalogCourses, setCatalogCourses] = useState<any[]>([]);
     const [catalogLoading, setCatalogLoading] = useState(false);
 
@@ -286,8 +286,13 @@ const LibraryPage = () => {
         return matchesSearch;
     });
 
-    // Filter AND Sort Catalog courses based on search
+    // Filter AND Sort Catalog courses based on search and type
     const filteredCatalogCourses = catalogCourses.filter(course => {
+        const isNce = course.national_programs?.nuc_code?.startsWith('NCE_');
+        
+        if (viewMode === 'catalog' && isNce) return false;
+        if (viewMode === 'nce_catalog' && !isNce) return false;
+
         const matchesSearch = !searchQuery ||
             course.course_code_standard?.toLowerCase().includes(searchQuery.toLowerCase()) ||
             course.title_standard?.toLowerCase().includes(searchQuery.toLowerCase());
@@ -384,13 +389,18 @@ const LibraryPage = () => {
                         <div className="flex bg-white dark:bg-slate-800 p-1 rounded-2xl border border-slate-200 dark:border-slate-700 h-14 sm:h-16 shadow-lg">
                             <button
                                 onClick={() => setViewMode('archive')}
-                                className={`flex-1 sm:px-6 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === 'archive' ? 'bg-primary text-background-dark shadow-md' : 'text-slate-400 hover:text-slate-600'}`}>
+                                className={`flex-1 sm:px-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === 'archive' ? 'bg-primary text-background-dark shadow-md' : 'text-slate-400 hover:text-slate-600'}`}>
                                 Archive
                             </button>
                             <button
                                 onClick={() => setViewMode('catalog')}
-                                className={`flex-1 sm:px-6 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === 'catalog' ? 'bg-primary text-background-dark shadow-md' : 'text-slate-400 hover:text-slate-600'}`}>
-                                NUC Catalog
+                                className={`flex-1 sm:px-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === 'catalog' ? 'bg-primary text-background-dark shadow-md' : 'text-slate-400 hover:text-slate-600'}`}>
+                                Degree Catalog
+                            </button>
+                            <button
+                                onClick={() => setViewMode('nce_catalog')}
+                                className={`flex-1 sm:px-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === 'nce_catalog' ? 'bg-primary text-background-dark shadow-md' : 'text-slate-400 hover:text-slate-600'}`}>
+                                NCE Catalog
                             </button>
                         </div>
 
@@ -509,7 +519,7 @@ const LibraryPage = () => {
                                 <span className="material-symbols-outlined text-primary">{viewMode === 'archive' ? 'folder_open' : 'school'}</span>
                             </div>
                             <h2 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
-                                {viewMode === 'archive' ? 'Academic Archive' : 'NUC Curriculum'}
+                                {viewMode === 'archive' ? 'Academic Archive' : viewMode === 'catalog' ? 'Degree Curriculum' : 'NCE Curriculum'}
                             </h2>
                         </div>
                         <span className="text-slate-400 text-xs font-black uppercase tracking-widest bg-slate-100 dark:bg-slate-800/50 px-3 py-1 rounded-full">
@@ -670,7 +680,7 @@ const LibraryPage = () => {
                             </div>
                         )}
 
-                        {viewMode === 'catalog' && sortedCatalogCourses.length === 0 && !catalogLoading && (
+                        {viewMode !== 'archive' && sortedCatalogCourses.length === 0 && !catalogLoading && (
                             <div className="col-span-full py-20 text-center">
                                 <div className="w-20 h-20 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300">
                                     <span className="material-symbols-outlined text-4xl">school</span>
@@ -680,7 +690,7 @@ const LibraryPage = () => {
                             </div>
                         )}
 
-                        {viewMode === 'catalog' && catalogLoading && (
+                        {viewMode !== 'archive' && catalogLoading && (
                             <div className="col-span-full py-20 text-center">
                                 <div className="size-12 rounded-full border-4 border-primary border-t-transparent animate-spin mx-auto mb-4" />
                                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Unlocking Curriculum...</p>

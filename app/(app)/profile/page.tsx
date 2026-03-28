@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { displayLevel, getLevelOptions, ProgramType } from '@/lib/nce';
+import { getNceDepartmentLabel } from '@/lib/nce-departments';
 
 
 interface ProfileStats {
@@ -263,9 +265,18 @@ const ProfilePage: React.FC = () => {
               <div className="flex flex-col items-center justify-center text-center">
                 <p className="text-slate-900 dark:text-white text-2xl font-bold leading-tight tracking-tight">{userProfile?.full_name || 'EduPal User'}</p>
                 <div className="mt-2 space-y-1">
-                  <p className="text-slate-600 dark:text-primary/80 text-base font-medium leading-normal flex items-center justify-center gap-2">
-                    <span className="material-symbols-outlined text-sm">school</span>
-                    {userProfile?.department_name || 'Academic'} | Level {userProfile?.level || '100'}
+                  <div className="flex items-center justify-center mb-1">
+                    <span className="bg-primary/10 text-primary border border-primary/20 rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
+                      <span className="material-symbols-outlined text-[12px]">school</span>
+                      {userProfile?.program_type === 'nce' ? 'NCE Programme' : 'Degree Programme'}
+                    </span>
+                  </div>
+                  <p className="text-slate-600 dark:text-primary/80 text-base font-medium leading-normal flex text-center items-center justify-center gap-2">
+                    <span className="material-symbols-outlined text-sm shrink-0">auto_stories</span>
+                    <span className="truncate max-w-[200px] md:max-w-[300px]">
+                      {userProfile?.program_type === 'nce' ? getNceDepartmentLabel(userProfile?.department_name || userProfile?.major || '') : (userProfile?.department_name || 'Academic')}
+                    </span>
+                    <span className="shrink-0">| {userProfile ? displayLevel(userProfile.level || 100, (userProfile.program_type || 'degree') as ProgramType) : '100 Level'}</span>
                   </p>
                   <p className="text-slate-500 dark:text-slate-400 text-sm font-normal leading-normal">{userProfile?.institution_name || 'Institution Name'}</p>
                 </div>
@@ -461,7 +472,7 @@ const ProfilePage: React.FC = () => {
                         disabled
                         className="w-full bg-slate-100 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-2xl py-4 px-3 text-sm font-bold cursor-not-allowed"
                       >
-                        {['100', '200', '300', '400', '500'].map(lvl => <option key={lvl} value={lvl}>{lvl}L</option>)}
+                        {getLevelOptions((userProfile?.program_type as ProgramType) || 'degree').map(lvl => <option key={lvl.value} value={lvl.value}>{lvl.label}</option>)}
                       </select>
                     </div>
                   </div>

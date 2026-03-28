@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import EduPalLogo from '@/assets/images/edupal.png';
 import { supabase } from '@/lib/supabase';
+import { getLevelOptions, ProgramType } from '@/lib/nce';
+import { NceDepartmentSelect } from '@/components/NceDepartmentSelect';
 
 export default function SignUp() {
     const router = useRouter();
@@ -15,7 +17,8 @@ export default function SignUp() {
         full_name: '',
         institution: '',
         department: '',
-        level: ''
+        level: '',
+        program_type: 'degree' as ProgramType
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -76,6 +79,7 @@ export default function SignUp() {
                             university: formData.institution,
                             major: formData.department,
                             year: formData.level,
+                            program_type: formData.program_type
                         }
                     }
                 })
@@ -220,39 +224,64 @@ export default function SignUp() {
                             </div>
                         </div>
 
+                        {/* Program Type */}
+                        <div className="flex flex-col gap-2 pt-1 pb-2">
+                            <label className="text-white/80 text-sm font-medium">Program</label>
+                            <div className="grid grid-cols-2 gap-3">
+                                <label className={`flex items-center justify-center gap-2 p-3 rounded-lg border cursor-pointer transition-all ${formData.program_type === 'degree' ? 'border-primary bg-primary/10 text-primary' : 'border-border-accent bg-input-bg text-white/50 hover:border-white/20'}`}>
+                                    <input type="radio" name="program_type" value="degree" checked={formData.program_type === 'degree'} onChange={() => setFormData(prev => ({ ...prev, program_type: 'degree', level: '' }))} className="hidden" />
+                                    <span className="material-symbols-outlined text-[18px]">school</span>
+                                    <span className="text-sm font-bold">Degree</span>
+                                </label>
+                                <label className={`flex items-center justify-center gap-2 p-3 rounded-lg border cursor-pointer transition-all ${formData.program_type === 'nce' ? 'border-primary bg-primary/10 text-primary' : 'border-border-accent bg-input-bg text-white/50 hover:border-white/20'}`}>
+                                    <input type="radio" name="program_type" value="nce" checked={formData.program_type === 'nce'} onChange={() => setFormData(prev => ({ ...prev, program_type: 'nce', level: '' }))} className="hidden" />
+                                    <span className="material-symbols-outlined text-[18px]">menu_book</span>
+                                    <span className="text-sm font-bold">NCE</span>
+                                </label>
+                            </div>
+                        </div>
+
                         {/* Department and Level */}
                         <div className="grid grid-cols-2 gap-4">
                             <div className="flex flex-col gap-1.5 text-left">
                                 <label className="text-white/80 text-sm font-medium">Department</label>
-                                <select
-                                    name="department"
-                                    value={formData.department}
-                                    onChange={handleInputChange}
-                                    className="w-full rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary/50 border border-border-accent bg-input-bg h-12 px-4 text-base font-normal appearance-none cursor-pointer"
-                                    required
-                                >
-                                    <option value="" disabled>Select Dept</option>
-                                    <option>Agricultural Science</option>
-                                    <option>Biology</option>
-                                    <option>Business Education</option>
-                                    <option>Chemistry</option>
-                                    <option>Computer Science</option>
-                                    <option>Creative Arts</option>
-                                    <option>Economic</option>
-                                    <option>Educational Technology</option>
-                                    <option>English</option>
-                                    <option>Entrepreneurship Education</option>
-                                    <option>Geography</option>
-                                    <option>Guidance and Counselling</option>
-                                    <option>Library and Information Science</option>
-                                    <option>Mathematics</option>
-                                    <option>Nursery and Primary Education</option>
-                                    <option>Physical and Health Education</option>
-                                    <option>Physics</option>
-                                    <option>Political Science</option>
-                                    <option>Social Studies</option>
-                                    <option>Transport Planning</option>
-                                </select>
+                                {formData.program_type === 'nce' ? (
+                                    <NceDepartmentSelect
+                                        value={formData.department}
+                                        onChange={(val) => setFormData(prev => ({ ...prev, department: val }))}
+                                        className="w-full rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary/50 border border-border-accent bg-input-bg h-12 px-4 text-base font-normal appearance-none cursor-pointer"
+                                    />
+                                ) : (
+                                    <select
+                                        name="department"
+                                        value={formData.department}
+                                        onChange={handleInputChange}
+                                        className="w-full rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary/50 border border-border-accent bg-input-bg h-12 px-4 text-base font-normal appearance-none cursor-pointer"
+                                        required
+                                    >
+                                        <option value="" disabled>Select Dept</option>
+                                        <option>Agricultural Science</option>
+                                        <option>Biology</option>
+                                        <option>Business Education</option>
+                                        <option>Chemistry</option>
+                                        <option>Computer Science</option>
+                                        <option>Creative Arts</option>
+                                        <option>Economic</option>
+                                        <option>Educational Technology</option>
+                                        <option>English</option>
+                                        <option>Entrepreneurship Education</option>
+                                        <option>Geography</option>
+                                        <option>Guidance and Counselling</option>
+                                        <option>Library and Information Science</option>
+                                        <option>Mathematics</option>
+                                        <option>Nursery and Primary Education</option>
+                                        <option>Physical and Health Education</option>
+                                        <option>Physics</option>
+                                        <option>Political Science</option>
+                                        <option>Social Studies</option>
+                                        <option>Transport Planning</option>
+                                    </select>
+                                )}
                             </div>
                             <div className="flex flex-col gap-1.5 text-left">
                                 <label className="text-white/80 text-sm font-medium">Level</label>
@@ -264,11 +293,9 @@ export default function SignUp() {
                                     required
                                 >
                                     <option value="" disabled>Select Level</option>
-                                    <option>100</option>
-                                    <option>200</option>
-                                    <option>300</option>
-                                    <option>400</option>
-                                    <option>500</option>
+                                    {getLevelOptions(formData.program_type).map(opt => (
+                                        <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                    ))}
                                 </select>
                             </div>
                         </div>

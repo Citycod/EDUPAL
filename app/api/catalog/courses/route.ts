@@ -20,12 +20,22 @@ export async function GET(req: Request) {
                 process.env.SUPABASE_SERVICE_ROLE_KEY!
             );
             
-            // 1. Get the catalog program ID from the mapping table
-            const { data: mapData } = await supabaseAdmin
-                .from('academic.department_program_map')
-                .select('catalog_program_id')
-                .eq('department_id', departmentId)
+            // First, see if the department name starts with NCE_
+            const { data: rawDept } = await supabaseAdmin
+                .from('academic.departments')
+                .select('name')
+                .eq('id', departmentId)
                 .maybeSingle();
+
+            if (rawDept?.name?.startsWith('NCE_')) {
+                finalProgramCode = rawDept.name;
+            } else {
+                // 1. Get the catalog program ID from the mapping table
+                const { data: mapData } = await supabaseAdmin
+                    .from('academic.department_program_map')
+                    .select('catalog_program_id')
+                    .eq('department_id', departmentId)
+                    .maybeSingle();
 
             if (mapData?.catalog_program_id) {
                 // 2. Get the NUC code from the catalog program view
@@ -46,7 +56,8 @@ export async function GET(req: Request) {
                 // Do NOT fall through and return all courses. Return empty array instead.
                 return NextResponse.json({ courses: [] });
             }
-        }
+                }
+            }
         
         const supabase = createServerClient(
             process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -111,6 +122,14 @@ export async function GET(req: Request) {
         // Optional Level Filter
         if (level && level !== 'all' && level !== '') {
             query = query.eq('level', parseInt(level));
+        }
+
+        // Optional Type filter to prevent NCE from showing up in degree catalog if no finalProgramCode
+        const typeFilter = searchParams.get('type');
+        if (typeFilter === 'degree') {
+            query = query.not('national_programs_view.nuc_code', 'like', 'NCE_%');
+        } else if (typeFilter === 'nce') {
+            query = query.like('national_programs_view.nuc_code', 'NCE_%');
         }
 
         // Add sorting for consistent results
