@@ -1,0 +1,349 @@
+BED 114: Financial Accounting for Business Educators I (2 Units C: LH 30)
+Learning Outcomes
+At the end of this course, students should be able to:
+1. explain the concept of accounting;
+2. explain the history and development of accounting;
+3. describe the structure of International Accounting Standard Board (IASB) and its
+conceptual framework;
+4. identify source documents;
+5. demonstrate knowledge of the principles of double entry book-keeping; and
+6. prepare cash books, and bank reconciliation statement and statement of a sale trader.
+Course Contents
+Introduction to business and accounting. IASB conceptual framework. Accounting Equation.
+Sales and Purchases. Non-Current assets and depreciation. Bad and doubtful debts. Accruals
+and Prepayments. Source document. Subsidiary books of accounts. Classification of accounts.
+Principles of double entry book-keeping. Cashbook. Bank reconciliation statement. End of year
+adjustment. Preparation of statement of a sale trader.
+BED 121: Office Administration and Management (2 Units C: LH 30)
+Learning Outcomes
+At the end of this course, students should be able to:
+1. demonstrate knowledge of the principles of office management;
+2. highlight types of office organization;
+3. state the advantages and disadvantages of each method of office organizations; 4.
+state the procedures for effective office management; and
+5. explain the theories of motivation and job specification.
+Course Contents
+The development of management thought. Management theories. Organization and
+managers. The mix of work and managers. Management principles. The manager and his
+environment. Principles of office management. Types of office organization. Approaches to
+organizational design. Method of office organizations. Procedures for effective office
+management. Leadership. Motivation. Organizational change.
+BED 122: Business Mathematics (2 Units C: LH 30)
+Learning Outcomes
+At the end of this course, students should be able to:
+1. apply symbolic logic in their reasoning;
+2. conduct deductive & Inductive reasoning in problem solving approach; 3.
+solve complex numbers; and 4. identify sets & subjects.
+Education 182 New
+Course Contents
+Mathematics and Symbolic Logic. Matrices and Determinants. Vectors and Complex Numbers.
+Introduction to Straight Lines. Introduction to Circle. Simple Sequence and Series. Limits.
+Differentiation and Integration. Maximum and Minimum Points and Value. Linear
+Programming (Inequalities and Constraints)
+BED 124: Principles of Marketing for Business Educators (2 Units; C) (LH 30)
+Learning Outcomes
+At the end of this course, students should be able to:
+1. demonstrate knowledge of marketing
+2. state why business and marketing are changing
+3. state functions and principles of marketing
+4. dse the marketing mix to satisfy consumer needs
+5. segment the market using different factors
+6. carry out retailing and wholesaling activities
+7. determine factors that influence consumer behavior.
+8. identify consumer rights and state how o protect the consumer
+Course Content
+Meaning of Market. Changes in business and market places. Marketing concept. Principles of
+Marketing. Functions of Marketing. The marketing process. Marketing Mix. Market
+segmentation. Retailing. Wholesaling. Consumer buying behaviour. Consumer protection.
+Impact of globalization on marketing. BED 211: Financial Accounting for Business Educators II (2 Units C: LH 30)
+Learning Outcomes
+By the end of this course, students should be able to prepare:
+1. a manufacturing accounts of a production outfit from a set of information;
+2. a bill of exchange account from a set of financial transactions of a business;
+3. an account of a non-for-profit organization from historical data;
+4. department accounts from a given set of financial transactions; 5. consignment
+accounts of a business entity; and 6. royalty accounts of a business concern.
+Course Contents
+Analysis of trade receivables. Analysis of trade payables. Preparation and presentation of
+manufacturing accounts. Bill of exchange. Partnership account. Incomplete records. Single
+entry system of account. Double entry system of account. Accounts of not-for-profit
+organization. Control account. Departmental accounts. Consignment account. Royalty
+accounts.
+
+BED 213: Principles of Business Finance (2 Units C: LH 30)
+Learning Outcomes
+By the end of this course, students should be able to:
+1. identify the types of funds available to an enterprise;
+2. identify the various sources of finance available to an organization;
+3. apply working capital management strategies,
+4. apply capital budgeting techniques in mapping project decisions; and 5.
+demonstrate acquired knowledge of risk and portfolio management.
+Course Contents
+Nature of finance. Types of funds. Source of capital formation. Working capital management.
+Credit management. Financial markets and stock exchange. Stock exchange dealing
+procedures. Financial analysis. Capital budgeting. Management of risks and portfolio. Problem
+based learning techniques.
+
+BED 214: Business Communication & Report Writing (2 Units C: LH 30)
+Learning Outcomes
+By the end of this course, students should be able to:
+1. explain the concept of business communication skills;
+Education 185 New
+2. discuss the process that takes place in communication;
+3. state the different types of communication;
+4. explain the steps in writing process;
+5. state the principles of interpersonal relationship;
+6. describe interview skills for recruitment purpose; and
+7. identify the necessary plans to make before negotiating communication.
+Course Contents
+Fundamentals of communication. Forms of communication. Introduction to business
+communication skills. Forms of business communication. Study skills. English grammar.
+Punctuation in english. Sentence formation. Oral communication. Writing process. Public
+speaking. Interpersonal communication. Negotiation skills. Corporate communication.
+Interview skills. Communication technology
+BED 222: Cost Accounting for Business Educators (2 Units C: LH 30)
+Learning Outcomes
+By the end of this course, students should be able to:
+1. state the attitudes of cost accounting information
+2. classify cost accounting information using various bases;
+3. prepare a job costs sheet for management decision making
+4. prepare labour costs of an operation of a business concern;
+5. identify and apportion costs of production to various costs centres;
+6. ascertain costs of production using marginal and absorption techniques; and
+7. prepare cost information
+Course Contents
+Definition of cost accounting. The purpose and scope of cost accounting. Role of cost
+accountants. Differentiate between cost accounting and financial accounting. The managerial
+processes of planning, control and decision making. The concepts of strategic, tactical and
+operational planning. Differentiate between data and information. Cost and Cost
+classifications. Cost codification. Cost segregation and estimation. Accounting for inventory.
+Accounting for Labour. Accounting for overheads. Marginal costing. Absorption costing. Cost
+Volume-Profit-Analysis. Budgeting
+BED 223: Office Information Technology (2 Units C: LH 15; PH 45)
+Learning Outcomes
+At the end of this course, students should be able to:
+1. demonstrate knowledge of information and communication handling procedure in the
+organization;
+2. describe skill for handling office information and communication procedure;
+3. elucidate understanding and practical knowledge of information security in the
+organization; and
+4. explain the basic concept of office automation.
+
+Education 186 New
+Course Contents
+Present day office arrangement. Office environment. Types and uses of office machines
+(manual and electronic gadgets). Information technology and information processing task.
+Management information system. Office automation. Computer security. Information system
+disaster recovery plan. Software types and their capabilities. Information Technology and
+ebusiness enabling environment. Management of people in organization. Information
+technology strategies. The future for information technologyBED 312: Financial Reporting for Business Educators (2 Units C: LH 30)
+Learning Outcomes
+By the end of this course, students should be able to:
+1. explain the sources of accounting regulation in Nigeria;
+2. outline the roadmap for conversion to IFRS in Nigeria;
+3. describe the rules on financial statement set out in Companies and Allied Matters Act
+Cap C 20 LFN 2020 (Amended);
+4. explain the objectives of financial statement;
+5. explain the measurement bases available under IFRS;
+6. state the components of a set of financial statements according to IAS 1;
+7. distinguish between accounting policy and accounting estimates;
+8. account for contract costs;
+9. measure inventory;
+10. measure Property, plant and equipment;
+11. account for investment property; and 12. account for impairment under IAS 36.
+Course Contents
+Education 189 New
+Regulatory Framework. Accounting and reporting frameworks and practices. Presentation of
+financial statements. Accounting policies, changes in accounting estimates and errors.
+Inventory. Revenue from contracts. Property, plant and equipment. Assets. Impairment of
+Assets. Leases. Provisions, contingent liabilities and contingent asset. Fair value. Financial
+instruments. Consolidated accounts. Joint venture. Statement of cashflow. Earnings per share.
+Analysis and interpretation of financial statement.
+BED 313: Nigerian Marketing System (2 Units C: LH 30)
+Learning Outcomes
+By the end of this course, students should be able to:
+1. appreciate the Nigerian marketing environment;
+2. segment the market according to consumer needs;
+3. forecast the market;
+4. develop new product and classify them;
+5. develop market strategies for the product;
+6. manage channels of distribution; and
+7. utilize promotion variables for marketing products and services.
+Course Contents
+Marketing definitions, concepts, evolution, role and importance of the marketing system.
+Marketing analysis; The marketing environment. Buyer behavior, market segmentation,
+market measurement and forecasting. Marketing research. Basic marketing and commercial
+policies in business. The product concept; product development and life cycle, product
+classification and market strategies. Pricing, Management of channels of distribution.
+Promotion: advertising, personal selling, publicity, public relations and sales promotion,
+marketing of professional services including services of business educators.
+BED 315: Theories of Entrepreneurship (2 Units C: LH 30)
+Learning Outcomes
+At the end of this course, students should be able to:
+1. identify the different schools of entrepreneurial thoughts;
+2. explain the different school of thoughts;
+3. differentiate between the macro view and the micro view;
+4. explain the effect of entrepreneurship theories on entrepreneurial education; and
+5. state the relevance of entrepreneurship theories to contemporary entrepreneurship
+education.
+Course Contents
+Schools of entrepreneurial thoughts. Macro view- the environmental school of thought. the
+financial capital school of thought, the micro view- the entrepreneurial trait school of thought.
+The venture opportunity school of taught, the strategic formulation school of thought. The
+Weber Thesis entrepreneurship, Schumpeterian theory and the achievement Motivation
+theory of entrepreneurship Effect of entrepreneurial theories on teaching and learning.
+Relevance of entrepreneuship theories on contemporary entrepreneurship control; concept of
+alertness in entrepreneurship environment. Linking theories to students business dreams
+Education 190 New
+BED 320: Marketing Management for Business Educators (2 Units C: LH 30)
+Learning Outcomes
+At the end of this course, students should be able to:
+1. apply fundamental principles and functions of management to marketing;
+2. apply marketing strategies to meet consumer needs;
+3. demonstrate knowledge of consumer rights and demonstrate commitment to
+consumerism; and
+4. demonstrate social responsibility in marketing.
+Course Contents
+Application of the fundamental principles of management to the marketing functions; analysis,
+planning, organizing, control and evaluation of marketing function; marketing strategy;
+product, price, promotion and distribution strategies; consumerism and social responsibility
+of marketing information system.
+BED 321: Management Accounting for Business Educators (2 Units C: LH 30)
+Learning Outcomes
+By the end of this course, students should be able to:
+1. compare job order with process costing;
+2. design and use activity based costing system;
+3. prepare managerial accounting statements;
+4. compute necessary managerial accounting information; 5. prepare simple budgets; and
+6. analyze variance.
+Course Contents
+General Principles of costing. Cost accounting systems. Determination of cost behaviour.
+Element of cost and cost estimation techniques. Activity based costing. Specific order costing.
+Contract costing. Process costing. Forecasting. Variance analysis. Relevant cost. Decision
+making techniques. Budget and Budgetary Control. Standard Costing. Sources of Finance.
+Payback Period. Accounting Rate of Return. Net Present Value. Internal Rate of Return.
+Profitability Index. Performance Measurement
+BED 322: Public Sector Accounting for Business Educators (2 Units C: LH 30)
+Learning Outcomes
+By the end of this course, students should be able to:
+1. explain at an appropriate level of confidence the nature and objectives of public sector
+accounting;
+2. identify the various users of public sector accounting and their information needs;
+3. identify and apply the various bases of public sector accounting;
+4. identify the various sources of government revenue and revenue officers of government;
+5. prepare and present monthly transcript from a set of information; and
+6. prepare and present the final accounts of government in line with applicable standards
+Course Contents
+Nature and objective of public sector accounting. Users of public sector accounting.
+Information and bases of public sector accounting. Sources of government revenue. Finance
+Education 191 New
+officers of government. Government expenditure. Preparation of vouchers. Functions of the
+cash office. Preparation of monthly transcripts. Budgets and government final accounts in line
+with applicable International Public Sector Accounting Standard (IPSAS).
+
+BED 323: Management Information System (2 Units C: LH 30)
+Learning Outcomes
+At the end of this course, students should be able to:
+1. differentiate between data and information;
+2. identify the components of a system;
+3. identify characteristics of a good management information system; 4. state the
+functions of Management Information System; and
+5. apply different information systems in business.
+Course Contents
+Nature of management information system, data and information, concept of a system,
+component of a system, open system, semi-closed system and closed system, control system,
+function of management information system, characteristics of a good management
+information system. Information systems in business: transaction processing system, decision
+support system, executive support system, export system.
+BED 324: Sales Management for Business Educators (2 Units C: LH 30)
+Learning Outcomes
+At the end of this course, students should be able to:
+1. demonstrate knowledge of sales management;
+2. state responsibilities of sales managers;
+3. identify factors that affect performance of sales persons;
+4. state how to boost sales person’s performance;
+5. describe the selling process; 6. plan and budget sales; and
+7. organize the sales force.
+Course Contents
+Relevance of sales management to Business Educators. Sales managers’ responsibilities. Sales
+persons, types and characteristics. Factors that affect performance of sales persons.
+Management actions to boost sales person performance. Selling functions and basic tasks.
+Personal selling functions. The selling process. Sales planning and budgeting. Managing sales
+operations. Market potential and sales forecasting. Organizing the sales force. The buying
+process. Sales organization structure. Sales promotion.
+BED 325: Creativity and Innovation in Business (2 Units C: LH 30)
+Learning Outcomes
+At the end of this course, students should be able to:
+1. demonstrate knowledge of innovation;
+2. apply creativity in the process of innovation;
+3. generate business ideas;
+4. demonstrate ability to carry out feasibility study and write a business plan; and
+Education 192 New
+5. demonstrate ability for new product creation, implementation, management and
+sustenance
+Course Contents
+Introduction to product innovation. Definition of innovation of a product. Definition of
+innovation roadmap. Types of product innovation. Elements of innovating a process.
+Objectives of innovating a product Creativity in the process of innovation. The role of existing
+community SME in innovation, The concept of idea generation, Concept phase, advancement,
+construction, launch and perfection of product. The need for collaboration, ideation,
+implementation, value creation, packaging of products and repackaging for value addition.
+BED 326: Nigeria Business Environment (2 Units C: LH 30)
+Learning Outcomes
+At the end of this course, students should be able to:
+1. explain a business environment;
+2. describe the trends in enterprise promotion;
+3. identify the fundamentals of community-institution partnership;
+4. identify emerging business platforms; and
+5. discuss the various Government interventions in business environments.
+Course Contents
+Overview of a business environment. Emerging trends in small business enterprise
+promotion. Community-institution partnership. Technological business
+platforms/environments. Government policy control measures and interventions. Emerging
+digital markets. The 21st century labour market
+BED 327: Digital Skills in Business Education (2 Units C: LH 30)
+Learning Outcomes
+At the end of this course, students should be able to:
+1. demonstrate knowledge of digital skills;
+2. identify types of digital skills needed in modern office;
+3. utilize digital skills to handle information and solve problems;
+4. manage digital information and content;
+5. utilize digital techniques to market products in the social media.
+Course Contents
+Definition of digital skills. Basic digital skills. Types of digital skills. Handling information and
+content. Problem solving. Functional use of digital devices. Funding, managing and storing
+digital information and content. Email marketing. Mobile design principles. Mobile
+optimization. Improving customers experience with digital technologies. Social media
+marketing.
+BED 328: Word Processing for Business Educators II (2 Units C: LH 15, PH
+45)
+Learning Outcomes
+By the end of this course, students should be able to:
+Education 193 New
+1. type simple letters using Microsoft word in block or indented styles;
+2. activate vertical and horizontal display of documents;
+3. type letters with continuation sheets, attention lines;
+4. prepare circular letters, agenda, manuscripts;
+5. type document with column and
+6. prepare itineraries, and travel information cards.
+Course Contents
+Simple block or centered display. Vertical or horizontal centering. Simple columnar materials
+or words or figures or money. Letters with continuation sheets, attention lines, heading,
+simple insert tabulation. Circular letters, agenda, manuscripts with interpolations and
+corrections. Alphabetical and numerical arrangement, terminal speed of 35 wpm with 90%
+accuracy is required. Communication forms, letters, manuscripts, tabulations, reports, tabular
+statement with statistical information, divided columns, itineraries and travel information
+cards. Attention is given to improved form and punctuation, terminal speed of 54 words a
+minute with 90% accuracy required.
+BED 329: SIWES (4 Units C: PH 180)
+Learning Outcomes
+At the end of this course, students should be able to:
+1. appreciate the opportunity to have practical work experience;
+2. demonstrate readiness to acquire practical skills available to work station;
+3. demonstrate ability to learn work habits; and
+4. cooperate with industry, based trainers and supervisors.
+Course Contents
+Students will be sent to the industry to have industrial experience at workplace. They are to
+be exposed to work situations that will enable them to acquire skills to complement what they
+learned in the classroom. They are to be supervised by both industrial and school based
+supervisors. 
