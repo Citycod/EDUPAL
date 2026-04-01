@@ -265,39 +265,44 @@ export default function SignUp() {
                             </div>
                         </div>
 
-                        {/* Department and Level */}
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="flex flex-col gap-1.5 text-left">
-                                <label className="text-white/80 text-sm font-medium">Department</label>
-                                {formData.program_type === 'nce' ? (
-                                    <NceDepartmentSelect
-                                        value={formData.department}
-                                        onChange={(val) => setFormData(prev => ({ ...prev, department: val }))}
-                                        className="w-full rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary/50 border border-border-accent bg-input-bg h-12 px-4 text-base font-normal appearance-none cursor-pointer"
-                                    />
-                                ) : (
-                                    <SearchableSelect
-                                        options={DEGREE_DEPARTMENTS}
-                                        value={formData.department}
-                                        onChange={(val) => setFormData(prev => ({ ...prev, department: val }))}
-                                        placeholder="Select Dept"
-                                    />
-                                )}
-                            </div>
-                            <div className="flex flex-col gap-1.5 text-left">
-                                <label className="text-white/80 text-sm font-medium">Level</label>
+                        {/* Department */}
+                        <div className="flex flex-col gap-1.5 text-left">
+                            <label className="text-white/80 text-sm font-medium">Department</label>
+                            {formData.program_type === 'nce' ? (
+                                <NceDepartmentSelect
+                                    value={formData.department}
+                                    onChange={(val) => setFormData(prev => ({ ...prev, department: val }))}
+                                    className="w-full rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary/50 border border-border-accent bg-input-bg h-12 px-4 text-base font-normal appearance-none cursor-pointer"
+                                />
+                            ) : (
+                                <SearchableSelect
+                                    options={DEGREE_DEPARTMENTS}
+                                    value={formData.department}
+                                    onChange={(val) => setFormData(prev => ({ ...prev, department: val }))}
+                                    placeholder="Search your department"
+                                />
+                            )}
+                        </div>
+
+                        {/* Level */}
+                        <div className="flex flex-col gap-1.5 text-left">
+                            <label className="text-white/80 text-sm font-medium">Level</label>
+                            <div className="relative">
                                 <select
                                     name="level"
                                     value={formData.level}
                                     onChange={handleInputChange}
-                                    className="w-full rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary/50 border border-border-accent bg-input-bg h-12 px-4 text-base font-normal appearance-none cursor-pointer"
+                                    className="w-full rounded-lg text-white appearance-none focus:outline-none focus:ring-2 focus:ring-primary/50 border border-border-accent bg-input-bg h-12 px-4 text-base font-normal cursor-pointer"
                                     required
                                 >
-                                    <option value="" disabled>Select Level</option>
+                                    <option value="" disabled>Select your level</option>
                                     {getLevelOptions(formData.program_type).map(opt => (
                                         <option key={opt.value} value={opt.value}>{opt.label}</option>
                                     ))}
                                 </select>
+                                <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-white/30 pointer-events-none">
+                                    arrow_drop_down
+                                </span>
                             </div>
                         </div>
 
