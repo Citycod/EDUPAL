@@ -116,7 +116,12 @@ export async function GET(req: Request) {
             `);
 
         if (finalProgramCode) {
-            query = query.eq('national_programs_view.nuc_code', finalProgramCode);
+            if (finalProgramCode.startsWith('NCE_')) {
+                // If it's an NCE program, fetch BOTH the specific department courses AND the general NCE_EDU and NCE_GSE courses
+                query = query.in('national_programs_view.nuc_code', [finalProgramCode, 'NCE_EDU', 'NCE_GSE']);
+            } else {
+                query = query.eq('national_programs_view.nuc_code', finalProgramCode);
+            }
         }
 
         // Optional Level Filter
