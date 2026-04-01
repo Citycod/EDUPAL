@@ -285,16 +285,11 @@ ALTER TABLE academic.posts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE academic.comments ENABLE ROW LEVEL SECURITY;
 
 -- 5.1 ACADEMIC POLICIES
-DROP POLICY IF EXISTS "academic_institutions_select_auth" ON academic.institutions;
-CREATE POLICY "academic_institutions_select_auth" ON academic.institutions FOR SELECT USING (auth.role() = 'authenticated');
+DROP POLICY IF EXISTS "academic_institutions_select_public" ON academic.institutions;
+CREATE POLICY "academic_institutions_select_public" ON academic.institutions FOR SELECT USING (true);
 
-DROP POLICY IF EXISTS "academic_departments_select_inst" ON academic.departments;
-CREATE POLICY "academic_departments_select_inst" ON academic.departments FOR SELECT USING (
-  EXISTS (
-    SELECT 1 FROM academic.student_profiles sp 
-    WHERE sp.institution_id = academic.departments.institution_id AND sp.id = auth.uid()
-  )
-);
+DROP POLICY IF EXISTS "academic_departments_select_public" ON academic.departments;
+CREATE POLICY "academic_departments_select_public" ON academic.departments FOR SELECT USING (true);
 
 DROP POLICY IF EXISTS "academic_profiles_select_auth" ON academic.student_profiles;
 CREATE POLICY "academic_profiles_select_auth" ON academic.student_profiles FOR SELECT USING (auth.role() = 'authenticated');
@@ -425,9 +420,9 @@ LEFT JOIN academic.student_profiles sp ON p.id = sp.id
 LEFT JOIN academic.institutions i ON COALESCE(p.institution_id, sp.institution_id) = i.id
 LEFT JOIN academic.departments d ON COALESCE(p.department_id, sp.department_id) = d.id;
 
--- Grant access to authenticated users
-GRANT SELECT ON public.hub_institutions TO authenticated;
-GRANT SELECT ON public.hub_departments TO authenticated;
+-- Grant access to authenticated and anonymous users (for signup)
+GRANT SELECT ON public.hub_institutions TO authenticated, anon;
+GRANT SELECT ON public.hub_departments TO authenticated, anon;
 GRANT SELECT ON public.hub_courses TO authenticated;
 GRANT SELECT ON public.hub_resources TO authenticated;
 GRANT SELECT ON public.hub_posts TO authenticated;

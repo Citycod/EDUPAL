@@ -7,6 +7,44 @@ import EduPalLogo from '@/assets/images/edupal.png';
 import { supabase } from '@/lib/supabase';
 import { getLevelOptions, ProgramType } from '@/lib/nce';
 import { NceDepartmentSelect } from '@/components/NceDepartmentSelect';
+import { SearchableSelect } from '@/components/SearchableSelect';
+
+// Expanded list of standard degree departments
+const DEGREE_DEPARTMENTS = [
+    'Agricultural Science',
+    'Biology',
+    'Business Education',
+    'Chemistry',
+    'Christian Religious Studies',
+    'Computer Science',
+    'Creative Arts',
+    'Curriculum & Instruction Studies',
+    'Early Childhood Care and Education',
+    'Economics',
+    'Educational Foundation',
+    'Educational Psychology',
+    'Educational Technology',
+    'English',
+    'Entrepreneurship Education',
+    'Fine and Applied Arts',
+    'General Studies in Education',
+    'Geography',
+    'Guidance and Counselling',
+    'History',
+    'Home Economics',
+    'Islamic Studies',
+    'Integrated Science',
+    'Library and Information Science',
+    'Mathematics',
+    'Nursery and Primary Education',
+    'Physical and Health Education',
+    'Physics',
+    'Political Science',
+    'Primary Education (Double Major)',
+    'Social Studies',
+    'Technical Education',
+    'Transport Planning'
+].sort();
 
 export default function SignUp() {
     const router = useRouter();
@@ -201,27 +239,13 @@ export default function SignUp() {
                         {/* Institution */}
                         <div className="flex flex-col gap-1.5 text-left">
                             <label className="text-white/80 text-sm font-medium">Institution</label>
-                            <div className="relative">
-                                <select
-                                    name="institution"
-                                    value={formData.institution}
-                                    onChange={handleInputChange}
-                                    className="w-full rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary/50 border border-border-accent bg-input-bg h-12 px-4 text-base font-normal appearance-none cursor-pointer placeholder:text-white/30"
-                                    required
-                                >
-                                    <option value="" disabled>Select your University</option>
-                                    {institutionsList.length > 0 ? (
-                                        institutionsList.map((inst) => (
-                                            <option key={inst} value={inst} className="bg-background-dark text-white">{inst}</option>
-                                        ))
-                                    ) : (
-                                        <option value="" disabled>Loading institutions...</option>
-                                    )}
-                                </select>
-                                <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-white/30 pointer-events-none">
-                                    arrow_drop_down
-                                </span>
-                            </div>
+                            <SearchableSelect
+                                options={institutionsList}
+                                value={formData.institution}
+                                onChange={(val) => setFormData(prev => ({ ...prev, institution: val }))}
+                                placeholder={institutionsList.length > 0 ? "Select your University" : "Loading institutions..."}
+                                disabled={institutionsList.length === 0}
+                            />
                         </div>
 
                         {/* Program Type */}
@@ -252,35 +276,12 @@ export default function SignUp() {
                                         className="w-full rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary/50 border border-border-accent bg-input-bg h-12 px-4 text-base font-normal appearance-none cursor-pointer"
                                     />
                                 ) : (
-                                    <select
-                                        name="department"
+                                    <SearchableSelect
+                                        options={DEGREE_DEPARTMENTS}
                                         value={formData.department}
-                                        onChange={handleInputChange}
-                                        className="w-full rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary/50 border border-border-accent bg-input-bg h-12 px-4 text-base font-normal appearance-none cursor-pointer"
-                                        required
-                                    >
-                                        <option value="" disabled>Select Dept</option>
-                                        <option>Agricultural Science</option>
-                                        <option>Biology</option>
-                                        <option>Business Education</option>
-                                        <option>Chemistry</option>
-                                        <option>Computer Science</option>
-                                        <option>Creative Arts</option>
-                                        <option>Economic</option>
-                                        <option>Educational Technology</option>
-                                        <option>English</option>
-                                        <option>Entrepreneurship Education</option>
-                                        <option>Geography</option>
-                                        <option>Guidance and Counselling</option>
-                                        <option>Library and Information Science</option>
-                                        <option>Mathematics</option>
-                                        <option>Nursery and Primary Education</option>
-                                        <option>Physical and Health Education</option>
-                                        <option>Physics</option>
-                                        <option>Political Science</option>
-                                        <option>Social Studies</option>
-                                        <option>Transport Planning</option>
-                                    </select>
+                                        onChange={(val) => setFormData(prev => ({ ...prev, department: val }))}
+                                        placeholder="Select Dept"
+                                    />
                                 )}
                             </div>
                             <div className="flex flex-col gap-1.5 text-left">
