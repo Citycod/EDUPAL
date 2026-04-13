@@ -17,6 +17,11 @@ import {
     MoreVertical,
     CheckCircle2,
     AlertCircle,
+    BookOpen,
+    Link2,
+    Trash2,
+    Plus,
+    Loader2,
     type LucideIcon
 } from 'lucide-react';
 
@@ -61,6 +66,24 @@ interface Stats {
     recentReports: any[];
 }
 
+interface NucProgram {
+    id: string;
+    name: string;
+    nuc_code: string;
+}
+
+interface ProgramMapping {
+    id: string;
+    effective_from: string;
+    institution_id: string;
+    institution_name: string;
+    department_id: string;
+    department_name: string;
+    program_id: string;
+    program_name: string;
+    program_nuc_code: string;
+}
+
 // --- Components ---
 
 const SidebarItem = ({ icon: Icon, label, active, onClick, collapsed }: SidebarItemProps) => (
@@ -101,6 +124,22 @@ export default function SuperAdminDashboard() {
     const [institutions, setInstitutions] = useState<Institution[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+
+    // Catalog state
+    const [nucPrograms, setNucPrograms] = useState<NucProgram[]>([]);
+    const [mappings, setMappings] = useState<ProgramMapping[]>([]);
+    const [catalogLoading, setCatalogLoading] = useState(false);
+    const [onboardSubmitting, setOnboardSubmitting] = useState(false);
+    const [onboardSuccess, setOnboardSuccess] = useState('');
+    const [onboardError, setOnboardError] = useState('');
+    const [useNewInstitution, setUseNewInstitution] = useState(false);
+    const [onboardForm, setOnboardForm] = useState({
+        institution_id: '',
+        institution_name: '',
+        institution_location: '',
+        department_name: '',
+        program_id: '',
+    });
 
     useEffect(() => {
         const checkAuth = async () => {
@@ -153,6 +192,72 @@ export default function SuperAdminDashboard() {
         }
     };
 
+    const fetchCatalogData = async () => {
+        setCatalogLoading(true);
+        try {
+            const [programsRes, mappingsRes] = await Promise.all([
+                fetch('/api/admin/catalog/programs'),
+                fetch('/api/admin/catalog/onboard'),
+            ]);
+            const [programsData, mappingsData] = await Promise.all([
+                programsRes.json(),
+                mappingsRes.json(),
+            ]);
+            setNucPrograms(Array.isArray(programsData) ? programsData : []);
+            setMappings(Array.isArray(mappingsData) ? mappingsData : []);
+        } catch (error) {
+            console.error('Error fetching catalog data:', error);
+        } finally {
+            setCatalogLoading(false);
+        }
+    };
+
+    // Fetch catalog data when catalog tab is selected
+    useEffect(() => {
+        if (activeTab === 'catalog' && nucPrograms.length === 0) {
+            fetchCatalogData();
+        }
+    }, [activeTab]);
+
+    const handleOnboard = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setOnboardSubmitting(true);
+        setOnboardError('');
+        setOnboardSuccess('');
+
+        try {
+            const res = await fetch('/api/admin/catalog/onboard', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(onboardForm),
+            });
+            const data = await res.json();
+
+            if (!res.ok) throw new Error(data.error || 'Onboarding failed');
+
+            setOnboardSuccess('University onboarded successfully! Students in this department will now see the mapped program\'s courses.');
+            setOnboardForm({ institution_id: '', institution_name: '', institution_location: '', department_name: '', program_id: '' });
+            setUseNewInstitution(false);
+            // Refresh data
+            await Promise.all([fetchCatalogData(), fetchData()]);
+        } catch (error: any) {
+            setOnboardError(error.message);
+        } finally {
+            setOnboardSubmitting(false);
+        }
+    };
+
+    const handleDeleteMapping = async (id: string) => {
+        if (!confirm('Remove this program mapping? Students in this department will no longer see catalog courses.')) return;
+        try {
+            const res = await fetch(`/api/admin/catalog/onboard?id=${id}`, { method: 'DELETE' });
+            if (!res.ok) throw new Error('Delete failed');
+            setMappings(prev => prev.filter(m => m.id !== id));
+        } catch (error: any) {
+            alert(error.message);
+        }
+    };
+
     const handleUpdateRole = async (userId: string, newRole: string) => {
         try {
             const res = await fetch('/api/admin/users', {
@@ -195,6 +300,7 @@ export default function SuperAdminDashboard() {
                     <SidebarItem icon={BarChart3} label="Overview" active={activeTab === 'overview'} onClick={() => setActiveTab('overview')} collapsed={isSidebarCollapsed} />
                     <SidebarItem icon={Users} label="Users" active={activeTab === 'users'} onClick={() => setActiveTab('users')} collapsed={isSidebarCollapsed} />
                     <SidebarItem icon={School} label="Institutions" active={activeTab === 'institutions'} onClick={() => setActiveTab('institutions')} collapsed={isSidebarCollapsed} />
+                    <SidebarItem icon={BookOpen} label="Catalog" active={activeTab === 'catalog'} onClick={() => setActiveTab('catalog')} collapsed={isSidebarCollapsed} />
                     <SidebarItem icon={ShieldAlert} label="Moderation" active={activeTab === 'moderation'} onClick={() => setActiveTab('moderation')} collapsed={isSidebarCollapsed} />
                 </nav>
 
@@ -455,6 +561,236 @@ export default function SuperAdminDashboard() {
                         </div>
                     )}
 
+                    {activeTab === 'catalog' && (
+                        <div className="space-y-6 sm:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+                                <div>
+                                    <h1 className="text-3xl sm:text-4xl font-black tracking-tighter mb-1">Catalog Manager</h1>
+                                    <p className="text-slate-400 text-sm sm:text-base font-medium italic">Map universities to NUC programs — one mapping, instant course access</p>
+                                </div>
+                                <button
+                                    onClick={fetchCatalogData}
+                                    className="p-3 bg-white dark:bg-[#1c2720] border border-slate-200 dark:border-[#234832]/20 rounded-2xl hover:text-[#13ec6a] hover:border-[#13ec6a]/30 transition-all shadow-sm active:scale-95 w-fit"
+                                >
+                                    <span className="material-symbols-outlined block">refresh</span>
+                                </button>
+                            </div>
+
+                            {/* Stats Row */}
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+                                <StatCard label="NUC Programs Seeded" value={nucPrograms.length} icon={BookOpen} color="bg-purple-500" />
+                                <StatCard label="Active Mappings" value={mappings.length} icon={Link2} color="bg-[#13ec6a]" />
+                                <StatCard label="Universities Onboarded" value={new Set(mappings.map(m => m.institution_id)).size} icon={School} color="bg-blue-500" />
+                            </div>
+
+                            {/* Onboarding Form */}
+                            <div className="bg-white dark:bg-[#1c2720]/40 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] border border-slate-200 dark:border-[#234832]/20 shadow-xl shadow-slate-200/50 dark:shadow-none">
+                                <div className="flex items-center gap-3 mb-6 sm:mb-8">
+                                    <div className="p-2.5 bg-[#13ec6a]/10 text-[#13ec6a] rounded-xl">
+                                        <Plus size={20} />
+                                    </div>
+                                    <h3 className="text-base sm:text-lg font-black uppercase tracking-tight">Onboard University → Program</h3>
+                                </div>
+
+                                <form onSubmit={handleOnboard} className="space-y-5">
+                                    {/* Institution Toggle */}
+                                    <div className="flex items-center gap-3 mb-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => { setUseNewInstitution(false); setOnboardForm(f => ({ ...f, institution_name: '', institution_location: '' })); }}
+                                            className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                                                !useNewInstitution
+                                                    ? 'bg-[#13ec6a] text-[#102217] shadow-lg shadow-[#13ec6a]/20'
+                                                    : 'text-slate-400 hover:text-white bg-white/5'
+                                            }`}
+                                        >
+                                            Existing University
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => { setUseNewInstitution(true); setOnboardForm(f => ({ ...f, institution_id: '' })); }}
+                                            className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                                                useNewInstitution
+                                                    ? 'bg-[#13ec6a] text-[#102217] shadow-lg shadow-[#13ec6a]/20'
+                                                    : 'text-slate-400 hover:text-white bg-white/5'
+                                            }`}
+                                        >
+                                            + New University
+                                        </button>
+                                    </div>
+
+                                    {!useNewInstitution ? (
+                                        <div>
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 block">Select University</label>
+                                            <select
+                                                className="w-full h-14 px-4 bg-slate-50 dark:bg-[#102217] border border-slate-200 dark:border-[#234832]/30 rounded-2xl font-bold text-sm outline-none focus:ring-2 focus:ring-[#13ec6a]/20 transition-all"
+                                                value={onboardForm.institution_id}
+                                                onChange={(e) => setOnboardForm(f => ({ ...f, institution_id: e.target.value }))}
+                                                required
+                                            >
+                                                <option value="">— Choose an institution —</option>
+                                                {institutions.map(inst => (
+                                                    <option key={inst.id} value={inst.id}>{inst.name}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    ) : (
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 block">University Name</label>
+                                                <input
+                                                    className="w-full h-14 px-4 bg-slate-50 dark:bg-[#102217] border border-slate-200 dark:border-[#234832]/30 rounded-2xl font-bold text-sm outline-none focus:ring-2 focus:ring-[#13ec6a]/20 transition-all placeholder:text-slate-400"
+                                                    placeholder="e.g. Delta State University, Abraka"
+                                                    value={onboardForm.institution_name}
+                                                    onChange={(e) => setOnboardForm(f => ({ ...f, institution_name: e.target.value }))}
+                                                    required
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 block">Location (Optional)</label>
+                                                <input
+                                                    className="w-full h-14 px-4 bg-slate-50 dark:bg-[#102217] border border-slate-200 dark:border-[#234832]/30 rounded-2xl font-bold text-sm outline-none focus:ring-2 focus:ring-[#13ec6a]/20 transition-all placeholder:text-slate-400"
+                                                    placeholder="e.g. Delta State"
+                                                    value={onboardForm.institution_location}
+                                                    onChange={(e) => setOnboardForm(f => ({ ...f, institution_location: e.target.value }))}
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 block">Department Name</label>
+                                            <input
+                                                className="w-full h-14 px-4 bg-slate-50 dark:bg-[#102217] border border-slate-200 dark:border-[#234832]/30 rounded-2xl font-bold text-sm outline-none focus:ring-2 focus:ring-[#13ec6a]/20 transition-all placeholder:text-slate-400"
+                                                placeholder="e.g. Philosophy"
+                                                value={onboardForm.department_name}
+                                                onChange={(e) => setOnboardForm(f => ({ ...f, department_name: e.target.value }))}
+                                                required
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 block">Map to NUC Program</label>
+                                            <select
+                                                className="w-full h-14 px-4 bg-slate-50 dark:bg-[#102217] border border-slate-200 dark:border-[#234832]/30 rounded-2xl font-bold text-sm outline-none focus:ring-2 focus:ring-[#13ec6a]/20 transition-all"
+                                                value={onboardForm.program_id}
+                                                onChange={(e) => setOnboardForm(f => ({ ...f, program_id: e.target.value }))}
+                                                required
+                                            >
+                                                <option value="">— Select NUC program —</option>
+                                                {nucPrograms.map(p => (
+                                                    <option key={p.id} value={p.id}>[{p.nuc_code}] {p.name}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    {onboardError && (
+                                        <div className="p-4 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-2xl text-red-600 dark:text-red-400 text-sm font-bold">
+                                            {onboardError}
+                                        </div>
+                                    )}
+
+                                    {onboardSuccess && (
+                                        <div className="p-4 bg-[#13ec6a]/10 border border-[#13ec6a]/20 rounded-2xl text-[#13ec6a] text-sm font-bold">
+                                            {onboardSuccess}
+                                        </div>
+                                    )}
+
+                                    <button
+                                        type="submit"
+                                        disabled={onboardSubmitting}
+                                        className="h-14 w-full sm:w-auto px-8 bg-[#13ec6a] text-[#102217] rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-[#13ec6a]/20 hover:scale-[1.03] active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                    >
+                                        {onboardSubmitting ? (
+                                            <><Loader2 size={18} className="animate-spin" /> Processing...</>
+                                        ) : (
+                                            <><Link2 size={18} /> Onboard & Map Program</>
+                                        )}
+                                    </button>
+                                </form>
+                            </div>
+
+                            {/* Active Mappings Table */}
+                            <div className="bg-white dark:bg-[#1c2720]/40 rounded-[2rem] sm:rounded-[2.5rem] border border-slate-200 dark:border-[#234832]/20 shadow-2xl shadow-slate-200/50 dark:shadow-none">
+                                <div className="px-6 sm:px-8 py-6 border-b border-slate-100 dark:border-[#234832]/20">
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2.5 bg-purple-500/10 text-purple-500 rounded-xl">
+                                            <Link2 size={20} />
+                                        </div>
+                                        <h3 className="text-base sm:text-lg font-black uppercase tracking-tight">Active Program Mappings</h3>
+                                    </div>
+                                </div>
+
+                                {catalogLoading ? (
+                                    <div className="py-16 text-center">
+                                        <Loader2 size={32} className="animate-spin text-[#13ec6a] mx-auto mb-3" />
+                                        <p className="text-slate-400 text-sm font-bold">Loading catalog data...</p>
+                                    </div>
+                                ) : mappings.length === 0 ? (
+                                    <div className="py-16 text-center">
+                                        <BookOpen size={40} className="text-slate-300 mx-auto mb-3" />
+                                        <p className="text-slate-400 text-sm font-bold uppercase tracking-widest">No mappings yet</p>
+                                        <p className="text-slate-400 text-xs mt-1">Use the form above to onboard your first university</p>
+                                    </div>
+                                ) : (
+                                    <div className="overflow-x-auto no-scrollbar">
+                                        <table className="w-full text-left border-collapse min-w-[700px]">
+                                            <thead>
+                                                <tr className="border-b border-slate-100 dark:border-[#234832]/20">
+                                                    <th className="px-6 sm:px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">University</th>
+                                                    <th className="px-6 sm:px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Department</th>
+                                                    <th className="px-6 sm:px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">NUC Program</th>
+                                                    <th className="px-6 sm:px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Since</th>
+                                                    <th className="px-6 sm:px-8 py-5"></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-slate-100 dark:divide-[#234832]/10">
+                                                {mappings.map(m => (
+                                                    <tr key={m.id} className="hover:bg-slate-50/80 dark:hover:bg-[#112419] transition-all group">
+                                                        <td className="px-6 sm:px-8 py-5">
+                                                            <div className="flex items-center gap-3">
+                                                                <div className="w-10 h-10 rounded-2xl bg-[#13ec6a]/10 dark:bg-white/5 flex items-center justify-center">
+                                                                    <School size={18} className="text-[#13ec6a]" />
+                                                                </div>
+                                                                <span className="text-sm font-black truncate max-w-[200px]">{m.institution_name}</span>
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-6 sm:px-8 py-5">
+                                                            <span className="text-xs font-bold text-slate-500 bg-slate-100 dark:bg-white/5 px-2.5 py-1 rounded-lg">
+                                                                {m.department_name}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-6 sm:px-8 py-5">
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="px-2.5 py-1 bg-purple-500/10 text-purple-500 rounded-full text-[9px] font-black uppercase tracking-tighter">
+                                                                    {m.program_nuc_code}
+                                                                </span>
+                                                                <span className="text-xs font-bold text-slate-600 dark:text-slate-300 truncate max-w-[150px]">{m.program_name}</span>
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-6 sm:px-8 py-5 text-[11px] font-bold text-slate-400 whitespace-nowrap italic">
+                                                            {new Date(m.effective_from).toLocaleDateString()}
+                                                        </td>
+                                                        <td className="px-6 sm:px-8 py-5 text-right">
+                                                            <button
+                                                                onClick={() => handleDeleteMapping(m.id)}
+                                                                className="p-2.5 text-slate-300 hover:text-red-500 hover:bg-red-500/10 transition-all rounded-xl"
+                                                                title="Remove mapping"
+                                                            >
+                                                                <Trash2 size={16} />
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
                 </div>
             </main>
 
@@ -482,6 +818,7 @@ export default function SuperAdminDashboard() {
                             { id: 'overview', label: 'Overview', icon: BarChart3 },
                             { id: 'users', label: 'Users', icon: Users },
                             { id: 'institutions', label: 'Institutions', icon: School },
+                            { id: 'catalog', label: 'Catalog', icon: BookOpen },
                             { id: 'moderation', label: 'Moderation', icon: ShieldAlert },
                         ].map((item) => (
                             <button

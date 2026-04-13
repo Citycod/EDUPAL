@@ -60,27 +60,65 @@ export default function SignUp() {
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [institutionsList, setInstitutionsList] = useState<string[]>([]);
-    const [departmentsList, setDepartmentsList] = useState<string[]>([]); // Future: dynamic based on inst
+    const [institutionsData, setInstitutionsData] = useState<{ id: string; name: string }[]>([]);
+    const [departmentsList, setDepartmentsList] = useState<string[]>([]);
+    const [loadingDepts, setLoadingDepts] = useState(false);
 
     useEffect(() => {
         const fetchInstitutions = async () => {
             try {
                 const { data, error } = await supabase
                     .from('hub_institutions')
-                    .select('name')
+                    .select('id, name')
                     .order('name');
 
                 if (data) {
-                    setInstitutionsList(data.map(i => i.name));
+                    setInstitutionsData(data);
                 }
             } catch (err) {
                 console.error('Failed to fetch institutions', err);
-                // Fallback or retry?
             }
         };
         fetchInstitutions();
     }, []);
+
+    // Fetch departments when institution changes
+    useEffect(() => {
+        const fetchDepartments = async () => {
+            if (!formData.institution) {
+                setDepartmentsList([]);
+                return;
+            }
+
+            setLoadingDepts(true);
+            try {
+                // Find institution ID from name
+                const inst = institutionsData.find(i => i.name === formData.institution);
+                if (!inst) return;
+
+                const { data, error } = await supabase
+                    .from('hub_departments')
+                    .select('name')
+                    .eq('institution_id', inst.id)
+                    .order('name');
+
+                if (data && data.length > 0) {
+                    setDepartmentsList(data.map(d => d.name));
+                } else {
+                    setDepartmentsList([]); // Fallback to hardcoded list handled in render
+                }
+            } catch (err) {
+                console.error('Failed to fetch departments', err);
+                setDepartmentsList([]);
+            } finally {
+                setLoadingDepts(false);
+            }
+        };
+
+        if (formData.program_type === 'degree') {
+            fetchDepartments();
+        }
+    }, [formData.institution, formData.program_type, institutionsData]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
@@ -240,11 +278,11 @@ export default function SignUp() {
                         <div className="flex flex-col gap-1.5 text-left">
                             <label className="text-white/80 text-sm font-medium">Institution</label>
                             <SearchableSelect
-                                options={institutionsList}
+                                options={institutionsData.map(i => i.name)}
                                 value={formData.institution}
-                                onChange={(val) => setFormData(prev => ({ ...prev, institution: val }))}
-                                placeholder={institutionsList.length > 0 ? "Select your University" : "Loading institutions..."}
-                                disabled={institutionsList.length === 0}
+                                onChange={(val) => setFormData(prev => ({ ...prev, institution: val, department: '' }))}
+                                placeholder={institutionsData.length > 0 ? "Select your University" : "Loading institutions..."}
+                                disabled={institutionsData.length === 0}
                             />
                         </div>
 
@@ -276,10 +314,10 @@ export default function SignUp() {
                                 />
                             ) : (
                                 <SearchableSelect
-                                    options={DEGREE_DEPARTMENTS}
+                                    options={departmentsList.length > 0 ? departmentsList : DEGREE_DEPARTMENTS}
                                     value={formData.department}
                                     onChange={(val) => setFormData(prev => ({ ...prev, department: val }))}
-                                    placeholder="Search your department"
+                                    placeholder={loadingDepts ? "Loading departments..." : "Search your department"}
                                 />
                             )}
                         </div>
