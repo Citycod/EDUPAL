@@ -118,17 +118,43 @@ ${safeText}
         }
 
         // 4. Save to DB
-        const { data, error } = await supabaseAdmin
+        const { data: existing } = await supabaseAdmin
             .from('hub_study_roadmaps')
-            .upsert({
-                user_id: userId,
-                resource_id: resourceId,
-                exam_date: examDate,
-                roadmap: generatedRoadmap,
-                updated_at: new Date().toISOString()
-            }, { onConflict: 'user_id,resource_id' })
-            .select()
-            .single();
+            .select('id')
+            .eq('user_id', userId)
+            .eq('resource_id', resourceId)
+            .maybeSingle();
+
+        let data, error;
+
+        if (existing) {
+            const result = await supabaseAdmin
+                .from('hub_study_roadmaps')
+                .update({
+                    exam_date: examDate,
+                    roadmap: generatedRoadmap,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', existing.id)
+                .select()
+                .single();
+            data = result.data;
+            error = result.error;
+        } else {
+            const result = await supabaseAdmin
+                .from('hub_study_roadmaps')
+                .insert({
+                    user_id: userId,
+                    resource_id: resourceId,
+                    exam_date: examDate,
+                    roadmap: generatedRoadmap,
+                    updated_at: new Date().toISOString()
+                })
+                .select()
+                .single();
+            data = result.data;
+            error = result.error;
+        }
 
         if (error) throw error;
 

@@ -102,18 +102,45 @@ Example structure:
         }
 
         // 3. Save to DB
-        const { data, error } = await supabaseAdmin
+        const { data: existing } = await supabaseAdmin
             .from('hub_study_roadmaps')
-            .upsert({
-                user_id: userId,
-                catalog_course_code: courseCode,
-                resource_id: null,
-                exam_date: examDate,
-                roadmap: generatedRoadmap,
-                updated_at: new Date().toISOString()
-            }, { onConflict: 'user_id,catalog_course_code' })
-            .select()
-            .single();
+            .select('id')
+            .eq('user_id', userId)
+            .eq('catalog_course_code', courseCode)
+            .is('resource_id', null)
+            .maybeSingle();
+
+        let data, error;
+
+        if (existing) {
+            const result = await supabaseAdmin
+                .from('hub_study_roadmaps')
+                .update({
+                    exam_date: examDate,
+                    roadmap: generatedRoadmap,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', existing.id)
+                .select()
+                .single();
+            data = result.data;
+            error = result.error;
+        } else {
+            const result = await supabaseAdmin
+                .from('hub_study_roadmaps')
+                .insert({
+                    user_id: userId,
+                    catalog_course_code: courseCode,
+                    resource_id: null,
+                    exam_date: examDate,
+                    roadmap: generatedRoadmap,
+                    updated_at: new Date().toISOString()
+                })
+                .select()
+                .single();
+            data = result.data;
+            error = result.error;
+        }
 
         if (error) throw error;
 
