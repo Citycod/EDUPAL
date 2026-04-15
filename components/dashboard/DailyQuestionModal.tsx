@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
+import { getPushSubscriptionStatus, subscribeUserToPush } from '@/lib/push-helper';
 
 interface QuestionData {
   question: string;
@@ -28,6 +29,8 @@ export default function DailyQuestionModal({ user, isOpen, onClose, onComplete }
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<{ isCorrect: boolean; correctAnswer: string; explanation: string; points: number } | null>(null);
+  const [pushStatus, setPushStatus] = useState<string>('DEFAULT');
+  const [subscribingPush, setSubscribingPush] = useState(false);
 
   useEffect(() => {
     if (!isOpen || !user) return;
@@ -64,7 +67,19 @@ export default function DailyQuestionModal({ user, isOpen, onClose, onComplete }
     }
 
     fetchDailyQuestion();
+
+    // Check push status
+    getPushSubscriptionStatus().then(setPushStatus);
   }, [isOpen, user]);
+
+  const handlePushSubscribe = async () => {
+    setSubscribingPush(true);
+    const res = await subscribeUserToPush();
+    if (res.success) {
+      setPushStatus('GRANTED');
+    }
+    setSubscribingPush(false);
+  };
 
   const handleAnswerSubmit = async (answer: string) => {
     if (submitting || result || hasAnswered) return;
@@ -216,9 +231,30 @@ export default function DailyQuestionModal({ user, isOpen, onClose, onComplete }
                       </p>
                     </div>
                   </div>
+                  
+                  {/* Push Reminder CTA - Only show on success if not already subscribed */}
+                  {result.isCorrect && pushStatus === 'DEFAULT' && (
+                    <div className="mb-4 p-4 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-between gap-4 animate-in fade-in slide-in-from-right-4 duration-700 delay-300">
+                        <div className="flex items-center gap-3">
+                            <span className="text-xl">🔔</span>
+                            <div className="text-left">
+                                <p className="text-xs font-black text-white uppercase tracking-wider">Never miss a streak</p>
+                                <p className="text-[10px] text-slate-400 font-medium">Get a daily push reminder</p>
+                            </div>
+                        </div>
+                        <button 
+                            onClick={handlePushSubscribe}
+                            disabled={subscribingPush}
+                            className="bg-primary text-slate-900 px-4 py-2 rounded-xl font-black text-[10px] uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/20 disabled:opacity-50"
+                        >
+                            {subscribingPush ? 'Enabling...' : 'Remind Me Daily'}
+                        </button>
+                    </div>
+                  )}
+
                   <button 
                     onClick={onClose}
-                    className="w-full mt-6 bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-black py-4 rounded-2xl text-xs uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg shadow-black/10"
+                    className="w-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-black py-4 rounded-2xl text-xs uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg shadow-black/10"
                   >
                     Continue to Dashboard
                   </button>

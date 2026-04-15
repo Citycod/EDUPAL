@@ -16,10 +16,12 @@ CREATE TABLE IF NOT EXISTS academic.daily_question_cache (
 ALTER TABLE academic.daily_question_cache ENABLE ROW LEVEL SECURITY;
 
 -- Policies
+DROP POLICY IF EXISTS "Users can view their own question cache" ON academic.daily_question_cache;
 CREATE POLICY "Users can view their own question cache" 
     ON academic.daily_question_cache FOR SELECT 
     USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can insert their own question cache" ON academic.daily_question_cache;
 CREATE POLICY "Users can insert their own question cache" 
     ON academic.daily_question_cache FOR INSERT 
     WITH CHECK (auth.uid() = user_id);

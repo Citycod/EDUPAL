@@ -20,10 +20,12 @@ CREATE TABLE IF NOT EXISTS academic.daily_question_logs (
 ALTER TABLE academic.daily_question_logs ENABLE ROW LEVEL SECURITY;
 
 -- Policies
+DROP POLICY IF EXISTS "Users can view their own question logs" ON academic.daily_question_logs;
 CREATE POLICY "Users can view their own question logs" 
     ON academic.daily_question_logs FOR SELECT 
     USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can insert their own question logs" ON academic.daily_question_logs;
 CREATE POLICY "Users can insert their own question logs" 
     ON academic.daily_question_logs FOR INSERT 
     WITH CHECK (auth.uid() = user_id);

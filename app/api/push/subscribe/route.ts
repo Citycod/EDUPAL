@@ -8,29 +8,40 @@ const supabaseAdmin = createClient(
 
 export async function POST(req: NextRequest) {
     try {
-        const { subscription, userId } = await req.json();
+        const authHeader = req.headers.get('Authorization');
+        if (!authHeader) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-        if (!subscription || !userId) {
-            return NextResponse.json({ error: 'Missing required parameters' }, { status: 400 });
+        const token = authHeader.replace('Bearer ', '');
+        const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
+        if (authError || !user) return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+
+        const { subscription } = await req.json();
+        if (!subscription || !subscription.endpoint) {
+            return NextResponse.json({ error: 'Invalid subscription object' }, { status: 400 });
         }
 
-        const { data, error } = await supabaseAdmin
+        // Upsert subscription for this user and endpoint (multi-device)
+        // Note: 'endpoint' is a generated column in our migration, so we don't insert to it directly,
+        // but it is used for the onConflict check.
+        const { error } = await supabaseAdmin
             .from('hub_push_subscriptions')
             .upsert({
-                user_id: userId,
-                endpoint: subscription.endpoint,
-                subscription_json: subscription,
-                updated_at: new Date().toISOString()
-            }, { onConflict: 'endpoint' })
-            .select()
-            .single();
+                user_id: user.id,
+                subscription: subscription,
+                last_used_at: new Date().toISOString()
+            }, { 
+                onConflict: 'user_id,endpoint' 
+            });
 
-        if (error) throw error;
+        if (error) {
+            console.error('Database Upsert Error:', error);
+            throw error;
+        }
 
         return NextResponse.json({ success: true });
 
-    } catch (error: any) {
-        console.error('Push Subscribe error:', error);
-        return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
+    } catch (e: any) {
+        console.error('Push Subscribe Error:', e.message);
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }
