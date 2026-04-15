@@ -8,6 +8,7 @@ import { useInstitutionContext } from '@/lib/hooks/useInstitutionContext';
 import ProjectTopicGenerator from '@/components/premium/ProjectTopicGenerator';
 import CoachWidget from '@/components/dashboard/CoachWidget';
 import OnboardingTour from '@/components/OnboardingTour';
+import DailyQuestionWidget from '@/components/dashboard/DailyQuestionWidget';
 
 export default function Home() {
   const router = useRouter();
@@ -179,6 +180,16 @@ export default function Home() {
           {/* AI Coach Section */}
           <div id="tour-coach" className="max-w-3xl mx-auto mb-16">
             <CoachWidget />
+          </div>
+
+          {/* Daily Question Section */}
+          <div className="max-w-3xl mx-auto mb-16">
+            <DailyQuestionWidget user={user} onComplete={() => {
+              // Update local state smoothly if needed
+              if (user && typeof user.current_streak === 'number') {
+                setUser((prev: any) => ({ ...prev, current_streak: prev.current_streak })); // Streak updated logic handled inside component but local refresh optional
+              }
+            }} />
           </div>
 
           <div className="space-y-20">
