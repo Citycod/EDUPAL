@@ -54,7 +54,24 @@ export async function GET(req: NextRequest) {
             });
         }
 
-        // 2. Fetch User Profile for Department Info
+        // 2. Check Cache first
+        const { data: cached } = await supabaseAdmin
+            .from('hub_daily_question_cache')
+            .select('question_data, _secure_hash')
+            .eq('user_id', user.id)
+            .eq('question_date', today)
+            .maybeSingle();
+
+        if (cached) {
+            return NextResponse.json({
+                status: 'pending',
+                answered: false,
+                questionData: cached.question_data,
+                _secure_hash: cached._secure_hash
+            });
+        }
+
+        // 3. Fetch User Profile for Department Info
         const { data: profile } = await supabaseAdmin
             .from('hub_profiles')
             .select('department_name, level')
@@ -66,9 +83,9 @@ export async function GET(req: NextRequest) {
             context = `introductory/foundational concepts in ${profile.department_name} (Level: ${profile.level || '100'}). Make it interesting and strictly related to their major but easy enough for a daily quick-hit.`;
         }
 
-        // 3. Generate Question
+        // 4. Generate Question
         const aiClient = initAI();
-        if (!aiClient) return NextResponse.json({ error: 'AI unavailable' }, { status: 503 });
+        if (!aiClient) return NextResponse.json({ error: 'AI unavailable' }, status: 503);
 
         const prompt = `
 You are an engaging academic coach for a university student.
@@ -109,27 +126,26 @@ Return ONLY a raw JSON object with this exact structure (no markdown blocks):
         }
 
         const generatedData = JSON.parse(rawText.trim());
+        const secureHash = Buffer.from(JSON.stringify(generatedData)).toString('base64');
+        const questionData = {
+            question: generatedData.question,
+            options: generatedData.options
+        };
 
-        // 4. Return the payload to frontend (OMIT the correct answer for security)
+        // 5. Save to Cache
+        await supabaseAdmin.from('hub_daily_question_cache').insert({
+            user_id: user.id,
+            question_date: today,
+            question_data: questionData,
+            _secure_hash: secureHash
+        });
+
+        // 6. Return the payload to frontend (OMIT the correct answer for security)
         return NextResponse.json({
             status: 'pending',
             answered: false,
-            questionData: {
-                question: generatedData.question,
-                options: generatedData.options,
-                // We do NOT send correct_answer to the client!
-            },
-            // We pass a hashed or encrypted payload, but since we are generating on the fly, 
-            // we will return the correct answer temporarily embedded in a signed JWT in a real production MVP.
-            // For this version without auth signing keys locally, we will keep it safe in the temporary session or
-            // just expect the frontend to pass the question text back so we can evaluate it.
-             // Best strategy to avoid complex state: verify the answer on the client for instant UX, but trust the API
-            // Wait, we need it to be secure. We will store today's generated question temporarily in the DB or 
-            // return it base64 encoded so it's mildly obfuscated against casual network tab sniffer, OR better yet,
-            // the secure way without DB overhead per load: save the generated session info to a temp table, 
-            // or trust the user since it's a daily 15 point micro-task. 
-            // Let's use simple encryption or base64. 
-            _secure_hash: Buffer.from(JSON.stringify(generatedData)).toString('base64')
+            questionData,
+            _secure_hash: secureHash
         });
 
     } catch (e: any) {
@@ -160,7 +176,7 @@ export async function POST(req: NextRequest) {
 
         const today = getTodayDateString();
         const isCorrect = userAnswer === questionData.correct_answer;
-        const rewardPoints = 20; // Changed to 20 as requested
+        const rewardPoints = isCorrect ? 20 : 0; // Only award points if correct
 
         // 1. Check if already answered independently
         const { data: existing } = await supabaseAdmin

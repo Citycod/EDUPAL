@@ -8,7 +8,7 @@ import { useInstitutionContext } from '@/lib/hooks/useInstitutionContext';
 import ProjectTopicGenerator from '@/components/premium/ProjectTopicGenerator';
 import CoachWidget from '@/components/dashboard/CoachWidget';
 import OnboardingTour from '@/components/OnboardingTour';
-import DailyQuestionWidget from '@/components/dashboard/DailyQuestionWidget';
+import DailyQuestionModal from '@/components/dashboard/DailyQuestionModal';
 
 export default function Home() {
   const router = useRouter();
@@ -17,6 +17,7 @@ export default function Home() {
   const { institution, loading: contextLoading } = useInstitutionContext();
   const [recentResources, setRecentResources] = useState<any[]>([]);
   const [trendingResources, setTrendingResources] = useState<any[]>([]);
+  const [isDailyQuestionModalOpen, setIsDailyQuestionModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -80,6 +81,33 @@ export default function Home() {
     };
 
     fetchData();
+
+    // Check if daily question needs to pop up
+    const checkDailyQuestionStatus = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return;
+
+        const res = await fetch('/api/study/daily-question', {
+          headers: { 'Authorization': `Bearer ${session.access_token}` }
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          // Only pop up if they haven't answered today
+          if (!data.answered && data.status !== 'completed') {
+            // Small delay for better UX after page load
+            setTimeout(() => {
+              setIsDailyQuestionModalOpen(true);
+            }, 1500);
+          }
+        }
+      } catch (e) {
+        console.error('Failed to check daily question status:', e);
+      }
+    };
+
+    checkDailyQuestionStatus();
   }, []);
 
   if (loading) {
@@ -130,6 +158,14 @@ export default function Home() {
         </nav>
 
         <main className="max-w-5xl mx-auto w-full px-4 pt-10 pb-20">
+          <DailyQuestionModal 
+            user={user} 
+            isOpen={isDailyQuestionModalOpen} 
+            onClose={() => setIsDailyQuestionModalOpen(false)}
+            onComplete={() => {
+              // Optionally refresh stats or streaks here
+            }}
+          />
           {/* Search-Centric Hero Section */}
           <div id="tour-welcome" className="text-center mb-16">
             <h1 className="text-slate-900 dark:text-white tracking-tighter text-3xl sm:text-4xl md:text-5xl font-black leading-tight mb-4">
@@ -180,16 +216,6 @@ export default function Home() {
           {/* AI Coach Section */}
           <div id="tour-coach" className="max-w-3xl mx-auto mb-16">
             <CoachWidget />
-          </div>
-
-          {/* Daily Question Section */}
-          <div className="max-w-3xl mx-auto mb-16">
-            <DailyQuestionWidget user={user} onComplete={() => {
-              // Update local state smoothly if needed
-              if (user && typeof user.current_streak === 'number') {
-                setUser((prev: any) => ({ ...prev, current_streak: prev.current_streak })); // Streak updated logic handled inside component but local refresh optional
-              }
-            }} />
           </div>
 
           <div className="space-y-20">
