@@ -38,14 +38,11 @@ export default function BottomNav({ navItems: customNavItems }: BottomNavProps) 
 
   const navItems = customNavItems || [
     { id: 'tour-nav-home', icon: 'home', label: 'Home', path: '/home', filled: true },
-    { id: 'tour-nav-library', icon: 'history_edu', label: 'Library', path: '/library' },
-    { id: 'tour-nav-ranks', icon: 'leaderboard', label: 'Ranks', path: '/leaderboard' },
+    { id: 'tour-nav-library', icon: 'history_edu', label: 'Archive', path: '/library' },
     ...(['admin', 'school_admin', 'super_admin'].includes(role)
       ? [{ icon: 'admin_panel_settings', label: 'Admin', path: '/admin/school' }]
       : []
     ),
-    { id: 'tour-nav-community', icon: 'forum', label: 'Discuss', path: '/community' },
-    { icon: 'workspace_premium', label: 'Premium', path: '/subscription' },
     { icon: 'person', label: 'Profile', path: '/profile' },
   ];
 

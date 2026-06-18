@@ -27,20 +27,6 @@ export default function Onboarding() {
             desc: "Massive paper repository",
             color: "from-blue-500/20 to-transparent",
             iconColor: "text-blue-400"
-        },
-        {
-            title: "Study Groups",
-            icon: "group_work",
-            desc: "Collaborate with peers",
-            color: "from-purple-500/20 to-transparent",
-            iconColor: "text-purple-400"
-        },
-        {
-            title: "Virtual Classes",
-            icon: "video_call",
-            desc: "Real-time sessions",
-            color: "from-amber-500/20 to-transparent",
-            iconColor: "text-amber-400"
         }
     ];
 
@@ -72,7 +58,7 @@ export default function Onboarding() {
             </div>
 
             {/* Feature Grid */}
-            <div className="flex-1 max-w-4xl mx-auto w-full grid grid-cols-1 md:grid-cols-3 gap-6 my-8">
+            <div className="flex-1 max-w-sm mx-auto w-full grid grid-cols-1 gap-6 my-8">
                 {features.map((feature, idx) => (
                     <div 
                         key={idx}
@@ -101,7 +87,7 @@ export default function Onboarding() {
                     </div>
                 </button>
                 <p className="text-center text-white/30 text-sm">
-                    Join 10,000+ students already winning
+                    Be one of the first students at your school.
                 </p>
             </div>
         </div>
