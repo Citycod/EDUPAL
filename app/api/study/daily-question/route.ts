@@ -85,7 +85,7 @@ export async function GET(req: NextRequest) {
 
         // 4. Generate Question
         const aiClient = initAI();
-        if (!aiClient) return NextResponse.json({ error: 'AI unavailable' }, status: 503);
+        if (!aiClient) return NextResponse.json({ error: 'AI unavailable' }, { status: 503 });
 
         const prompt = `
 You are an engaging academic coach for a university student.
