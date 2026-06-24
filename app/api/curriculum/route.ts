@@ -60,7 +60,8 @@ export async function GET(req: Request) {
 
 
         const { data, error } = await supabase
-            .from('academic.curriculum_resolution_view')
+            .schema('academic')
+            .from('curriculum_resolution_view')
             .select('*')
             .eq('institution_id', institution_id)
             .eq('department_id', department_id)

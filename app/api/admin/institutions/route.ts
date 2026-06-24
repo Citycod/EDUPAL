@@ -49,7 +49,8 @@ export async function POST(request: Request) {
         }
 
         const { data, error } = await supabaseAdmin
-            .from('academic.institutions')
+            .schema('academic')
+            .from('institutions')
             .insert({ name, location, logo_url })
             .select()
             .single();

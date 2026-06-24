@@ -22,7 +22,8 @@ export async function GET(req: Request) {
             
             // First, see if the department name starts with NCE_
             const { data: rawDept } = await supabaseAdmin
-                .from('academic.departments')
+                .schema('academic')
+                .from('departments')
                 .select('name')
                 .eq('id', departmentId)
                 .maybeSingle();
@@ -32,7 +33,8 @@ export async function GET(req: Request) {
             } else {
                 // 1. Get the catalog program ID from the mapping table
                 const { data: mapData } = await supabaseAdmin
-                    .from('academic.department_program_map')
+                    .schema('academic')
+                    .from('department_program_map')
                     .select('catalog_program_id')
                     .eq('department_id', departmentId)
                     .maybeSingle();

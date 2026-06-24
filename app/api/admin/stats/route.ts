@@ -5,8 +5,8 @@ export async function GET() {
     try {
         // Fetch global stats
         const { count: userCount } = await supabaseAdmin.from('profiles').select('*', { count: 'exact', head: true });
-        const { count: instCount } = await supabaseAdmin.from('academic.institutions').select('*', { count: 'exact', head: true });
-        const { count: resourceCount } = await supabaseAdmin.from('academic.resources').select('*', { count: 'exact', head: true });
+        const { count: instCount } = await supabaseAdmin.schema('academic').from('institutions').select('*', { count: 'exact', head: true });
+        const { count: resourceCount } = await supabaseAdmin.schema('academic').from('resources').select('*', { count: 'exact', head: true });
 
         // Fetch recent activity (last 5 reports)
         const { data: recentReports } = await supabaseAdmin

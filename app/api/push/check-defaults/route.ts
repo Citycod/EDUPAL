@@ -83,7 +83,8 @@ export async function GET(req: NextRequest) {
 
                     // Update last_notified_date to avoid re-notifying
                     await supabaseAdmin
-                        .from('academic.study_roadmaps')
+                        .schema('academic')
+                        .from('study_roadmaps')
                         .update({ last_notified_date: yesterday })
                         .eq('id', roadmap.id);
 
